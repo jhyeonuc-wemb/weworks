@@ -202,11 +202,11 @@ export function ProjectExpenseTab({
                                 type="button"
                                 onClick={handleRecalculate}
                                 disabled={saving}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                title="데이터 재계산"
+                                className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 h-10 text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                                title="데이터 갱신"
                             >
                                 <RefreshCw className="h-4 w-4" />
-                                재계산
+                                데이터 갱신
                             </button>
                             <button
                                 type="button"

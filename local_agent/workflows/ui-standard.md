@@ -108,6 +108,11 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
       - **위치:** 헤더가 아닌 **각 탭(Tab) 또는 콘텐츠 영역 내부** 우측 상단에 배치합니다.
       - **스타일:** `inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`
       - 헤더는 "완료" 및 "상태 관리"에 집중하고, 수시 저장은 콘텐츠 영역에서 수행합니다.
+    - **Data Refresh Button (데이터 갱신):**
+      - **아이콘:** `RefreshCw`
+      - **텍스트:** "데이터 갱신"
+      - **스타일:** `inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 h-10 text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors`
+      - 외부 데이터(인력 계획, 기준 정보 등)를 가져와 현재 페이지의 연산 데이터를 동기화할 때 사용합니다.
 
 3.  **상태 전환 로직:**
     - **초기 상태:** `STANDBY`
