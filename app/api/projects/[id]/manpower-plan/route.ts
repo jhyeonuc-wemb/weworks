@@ -10,29 +10,28 @@ export async function GET(
     const { id } = await params;
     const projectId = parseInt(id);
 
-    // 인력 계획 조회
-    const result = await query(
-      `SELECT 
-        id,
-        project_name,
-        role,
-        detailed_task,
-        company_name,
-        affiliation_group,
-        wmb_rank,
-        grade,
-        name,
-        user_id,
-        monthly_allocation,
-        proposed_unit_price,
-        proposed_amount,
-        internal_unit_price,
-        internal_amount
+    const searchParams = request.nextUrl.searchParams;
+    const profitabilityId = searchParams.get("profitabilityId");
+
+    let sql = `
+      SELECT 
+        id, project_name, role, detailed_task, company_name, affiliation_group, wmb_rank, grade, name, user_id,
+        monthly_allocation, proposed_unit_price, proposed_amount, internal_unit_price, internal_amount, profitability_id
       FROM we_project_manpower_plan
-      WHERE project_id = $1
-      ORDER BY id ASC`,
-      [projectId]
-    );
+    `;
+    const dbParams: any[] = [];
+
+    if (profitabilityId) {
+      sql += ` WHERE profitability_id = $1`;
+      dbParams.push(parseInt(profitabilityId));
+    } else {
+      sql += ` WHERE project_id = $1 AND profitability_id = (SELECT id FROM we_project_profitability WHERE project_id = $1 ORDER BY version DESC LIMIT 1)`;
+      dbParams.push(projectId);
+    }
+
+    sql += ` ORDER BY id ASC`;
+
+    const result = await query(sql, dbParams);
 
     const items = result.rows.map((row: any) => ({
       id: row.id,
@@ -53,13 +52,18 @@ export async function GET(
     }));
 
     // 수지분석서 헤더에서 기간 조회
-    const profResult = await query(
-      `SELECT analysis_start_date, analysis_end_date 
-       FROM we_project_profitability 
-       WHERE project_id = $1 AND status IN ('not_started', 'in_progress', 'review', 'rejected', 'completed', 'approved')
-       ORDER BY version DESC LIMIT 1`,
-      [projectId]
-    );
+    let profSql = `SELECT id, analysis_start_date, analysis_end_date FROM we_project_profitability`;
+    const profParams: any[] = [];
+
+    if (profitabilityId) {
+      profSql += ` WHERE id = $1`;
+      profParams.push(parseInt(profitabilityId));
+    } else {
+      profSql += ` WHERE project_id = $1 ORDER BY version DESC LIMIT 1`;
+      profParams.push(projectId);
+    }
+
+    const profResult = await query(profSql, profParams);
 
     let analysisStartMonth = "";
     let analysisEndMonth = "";
@@ -94,38 +98,49 @@ export async function PUT(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
-    const { items, startMonth, endMonth } = await request.json();
+    const body = await request.json();
+    const { items, startMonth, endMonth, profitabilityId: bodyProfitabilityId } = body;
+    const searchParams = request.nextUrl.searchParams;
+    let profitabilityId = bodyProfitabilityId || searchParams.get("profitabilityId");
 
-    console.log("Saving manpower plan for project:", projectId);
+    console.log("Saving manpower plan for project:", projectId, "profitabilityId:", profitabilityId);
 
-    // 기존 인력 계획 삭제
+    // profitabilityId 가 없으면 최신 draft/not_started 찾기
+    if (!profitabilityId) {
+      const draftRes = await query(
+        `SELECT id FROM we_project_profitability WHERE project_id = $1 AND status IN ('STANDBY', 'IN_PROGRESS') ORDER BY version DESC LIMIT 1`,
+        [projectId]
+      );
+      if (draftRes.rows.length > 0) {
+        profitabilityId = draftRes.rows[0].id;
+      }
+    }
+
+    if (!profitabilityId) {
+      // 신규 버전 생성
+      const versionCheck = await query(`SELECT COALESCE(MAX(version), 0) as max_v FROM we_project_profitability WHERE project_id = $1`, [projectId]);
+      const newV = versionCheck.rows[0].max_v + 1;
+      const insRes = await query(`INSERT INTO we_project_profitability (project_id, version, status, created_by) VALUES ($1, $2, 'STANDBY', 1) RETURNING id`, [projectId, newV]);
+      profitabilityId = insRes.rows[0].id;
+    }
+
+    // 기존 인력 계획 삭제 (해당 분석서 ID 기준)
     await query(
-      "DELETE FROM we_project_manpower_plan WHERE project_id = $1",
-      [projectId]
+      "DELETE FROM we_project_manpower_plan WHERE profitability_id = $1",
+      [profitabilityId]
     );
 
     // 새 인력 계획 삽입
     for (const item of items) {
       await query(
         `INSERT INTO we_project_manpower_plan (
-          project_id,
-          project_name,
-          role,
-          detailed_task,
-          company_name,
-          affiliation_group,
-          wmb_rank,
-          grade,
-          name,
-          user_id,
-          monthly_allocation,
-          proposed_unit_price,
-          proposed_amount,
-          internal_unit_price,
-          internal_amount
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          project_id, profitability_id, project_name, role, detailed_task, company_name,
+          affiliation_group, wmb_rank, grade, name, user_id, monthly_allocation,
+          proposed_unit_price, proposed_amount, internal_unit_price, internal_amount
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
         [
           projectId,
+          profitabilityId,
           item.projectName,
           item.role,
           item.detailedTask,
@@ -148,45 +163,15 @@ export async function PUT(
     const analysisStartDate = startMonth ? `${startMonth}-01` : null;
     const analysisEndDate = endMonth ? `${endMonth}-01` : null;
 
-    const checkRes = await query(
-      `SELECT id FROM we_project_profitability WHERE project_id = $1 AND status IN ('not_started', 'in_progress')`,
-      [projectId]
-    );
-
-    if (checkRes.rows.length > 0) {
+    if (profitabilityId) {
       await query(
         `UPDATE we_project_profitability 
-         SET status = 'in_progress', 
+         SET status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END,
              updated_at = CURRENT_TIMESTAMP,
              analysis_start_date = COALESCE($2, analysis_start_date),
              analysis_end_date = COALESCE($3, analysis_end_date)
-         WHERE project_id = $1 AND status = 'not_started'`,
-        [projectId, analysisStartDate, analysisEndDate]
-      );
-      // 만약 status가 'in_progress'라면 status 업데이트는 필요없지만 날짜는 업데이트 해야 함.
-      // 위 쿼리는 status='not_started'인 경우만 업데이트함.
-      // 별도로 status 상관없이 날짜 업데이트 (draft 상태인 경우)
-      await query(
-        `UPDATE we_project_profitability 
-         SET updated_at = CURRENT_TIMESTAMP,
-             analysis_start_date = COALESCE($2, analysis_start_date),
-             analysis_end_date = COALESCE($3, analysis_end_date)
-         WHERE project_id = $1 AND status IN ('not_started', 'in_progress')`,
-        [projectId, analysisStartDate, analysisEndDate]
-      );
-    } else {
-      // 진행 중인 건이 없으면 새로 생성
-      const versionCheck = await query(
-        `SELECT MAX(version) AS max_version FROM we_project_profitability WHERE project_id = $1 AND status = 'completed'`,
-        [projectId]
-      );
-      const newVersion = Number(versionCheck.rows[0]?.max_version || 0) + 1;
-
-      await query(
-        `INSERT INTO we_project_profitability (
-          project_id, version, status, created_by, analysis_start_date, analysis_end_date
-        ) VALUES ($1, $2, 'in_progress', 1, $3, $4)`,
-        [projectId, newVersion, analysisStartDate, analysisEndDate]
+         WHERE id = $1`,
+        [profitabilityId, analysisStartDate, analysisEndDate]
       );
     }
 

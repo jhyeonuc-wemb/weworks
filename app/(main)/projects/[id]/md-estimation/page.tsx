@@ -18,9 +18,13 @@ import {
   Copy,
   BarChart3,
   AlertCircle,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
 import { formatNumber, Currency, formatCurrency } from "@/lib/utils/currency";
 import { AutoCalculatedField } from "@/components/AutoCalculatedField";
+import { Button, Input, Dropdown, Badge, StatusDropdown } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 // 난이도 옵션
 const difficultyOptions = [
@@ -28,6 +32,13 @@ const difficultyOptions = [
   { value: 1.0, label: "중 (1.0)" },
   { value: 1.2, label: "상 (1.2)" },
   { value: 1.5, label: "최상 (1.5)" },
+];
+
+const scoreOptions = [
+  { value: 0, label: "0" },
+  { value: 1, label: "1" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3" },
 ];
 
 // 개발항목 기본 데이터 (이미지 기반)
@@ -98,15 +109,67 @@ const initialMdEstimations = [
 ];
 
 // 임시 프로젝트 데이터 가져오기 함수
+// 초기 공통 난이도 산정 항목 (DB 연동 전까지 또는 로딩 실패 시 대비용)
+const INITIAL_COMMON_DIFFICULTY_ITEMS = [
+  // 요구사항
+  { id: 1, category: "요구사항", content: "요구사항 정의서 미제공", description: "구두/회의 중심 전달", difficulty: 2, weight: null },
+  { id: 2, category: "요구사항", content: "요구사항 수시 변경 예상", description: "스펙 Freeze 어려움", difficulty: 2, weight: null },
+  { id: 3, category: "요구사항", content: "고객의 IT 이해도 낮음", description: "기술적 소통 난이도 상승", difficulty: 2, weight: null },
+  { id: 4, category: "요구사항", content: "고객 의사결정자 부재 또는 다수", description: "승인/결정 지연 가능성", difficulty: 2, weight: null },
+  // 화면, 기능
+  { id: 5, category: "화면, 기능", content: "화면 ≥ 20개", description: "CRUD 중심 화면, 팝업포함", difficulty: 3, weight: null },
+  { id: 6, category: "화면, 기능", content: "업무 기능 ≥ 5개 모듈로 나눠짐", description: "업무 도메인 분리가 뚜렷함", difficulty: 1, weight: null },
+  { id: 7, category: "화면, 기능", content: "사용자 정의 기능 많음", description: "워크플로우, 조건부 입력 등", difficulty: 3, weight: null },
+  { id: 8, category: "화면, 기능", content: "권한, 조직별 접근 제한 포함", description: "Role-based UI 구성 필요", difficulty: 2, weight: null },
+  { id: 9, category: "화면, 기능", content: "배치 프로세스 포함", description: "예약 실행, 로그처리 등 필요", difficulty: 2, weight: null },
+  { id: 10, category: "화면, 기능", content: "반응형 지원", description: "반응형 지원 개발 필요", difficulty: 3, weight: null },
+  { id: 11, category: "화면, 기능", content: "UI/접근성", description: "모바일 지원 포함 (앱, 웹앱)", difficulty: 3, weight: null },
+  // 연계 및 외부 시스템
+  { id: 12, category: "연계 및 외부 시스템", content: "외부 시스템 연계 ≥ 5개", description: "API, DB 연동 등", difficulty: 1, weight: null },
+  { id: 13, category: "연계 및 외부 시스템", content: "실시간 연계 포함", description: "Webhook, Event 등", difficulty: 2, weight: null },
+  { id: 14, category: "연계 및 외부 시스템", content: "레거시 시스템 연계", description: "명세 미비, 파악 난이도 ↑", difficulty: 2, weight: null },
+  { id: 15, category: "연계 및 외부 시스템", content: "인증/SSO 연동 포함", description: "AD, OAuth 등", difficulty: 3, weight: null },
+  // 데이터 및 보고서
+  { id: 16, category: "데이터 및 보고서", content: "정형 보고서 ≥ 20건", description: "PDF/Excel 출력 등", difficulty: 1, weight: null },
+  { id: 17, category: "데이터 및 보고서", content: "대용량 데이터 처리", description: "100만건 이상", difficulty: 2, weight: null },
+  { id: 18, category: "데이터 및 보고서", content: "마이그레이션 포함", description: "데이터 정제/이관", difficulty: 0, weight: null },
+  { id: 19, category: "데이터 및 보고서", content: "정합성 검증 포함", description: "정확도 중요", difficulty: 2, weight: null },
+  // 기술 환경
+  { id: 20, category: "기술 환경", content: "클라우드 환경 구축", description: "AWS, Azure 등", difficulty: 3, weight: null },
+  { id: 21, category: "기술 환경", content: "Hybrid 인프라", description: "온프 + 클라우드 병행", difficulty: 0, weight: null },
+  { id: 22, category: "기술 환경", content: "신규 기술 도입", description: "AI, IoT, GIS 등", difficulty: 0, weight: null },
+  { id: 23, category: "기술 환경", content: "복잡한 DB (30테이블 이상)", description: "관계 정규화 + 성능 고려", difficulty: 2, weight: null },
+  // 보안 및 인증
+  { id: 24, category: "보안 및 인증", content: "사용자 권한 분기 3단계 이상", description: "화면별 권한 설정 필수", difficulty: 2, weight: null },
+  { id: 25, category: "보안 및 인증", content: "데이터 암호화 필요", description: "전송/저장 모두 포함", difficulty: 2, weight: null },
+  { id: 26, category: "보안 및 인증", content: "공공기관 보안규격 준수", description: "ISMS, CC 등 인증 요건 있음", difficulty: 3, weight: null },
+  // 운영/인력관리
+  { id: 27, category: "운영/인력관리", content: "납기 ≤ 2개월", description: "기간 촉박", difficulty: 0, weight: null },
+  { id: 28, category: "운영/인력관리", content: "프로젝트 기간 ≥ 12개월", description: "장기 인력 유지/교체 이슈", difficulty: 3, weight: null },
+  { id: 29, category: "운영/인력관리", content: "병행 프로젝트 존재", description: "일정/자원 집중 어려움", difficulty: 3, weight: null },
+  { id: 30, category: "운영/인력관리", content: "개발 서버 운영", description: "운영서버 직접 반영은 어려움", difficulty: 1, weight: null },
+  { id: 31, category: "운영/인력관리", content: "고객 내부 승인 절차 복잡", description: "화면마다 승인 필요", difficulty: 1, weight: null },
+  { id: 32, category: "운영/인력관리", content: "주 단위 납품 일정 요구", description: "세분화된 일정 관리 필요", difficulty: 2, weight: null },
+  { id: 33, category: "운영/인력관리", content: "고객사 상주 필수", description: "피로도, 업무 밀도, 팀 운영 난이도 ↑", difficulty: 2, weight: null },
+  { id: 34, category: "운영/인력관리", content: "상주 위치 원거리", description: "출장, 교통, 숙소 등 추가 리스크", difficulty: 3, weight: null },
+  { id: 35, category: "운영/인력관리", content: "외주 인력과의 협업 필수", description: "SI 협력사, 고객 IT팀, 프리랜서 등 협조 필요", difficulty: 3, weight: null },
+  { id: 36, category: "운영/인력관리", content: "인력 교체 가능성 있음 (예: 6개월 계약)", description: "인수인계 등 중간 공백 위험 존재", difficulty: 2, weight: null },
+  { id: 37, category: "운영/인력관리", content: "고객 내부 정치적 이슈 있음", description: "팀 변경 등 승인 구조 변경", difficulty: 2, weight: null },
+  // 감리
+  { id: 38, category: "감리", content: "감리 대상 프로젝트, 공공산출물", description: "일정금액 이상 또는 공공과제", difficulty: 3, weight: null },
+  { id: 40, category: "감리", content: "감리 전담 인력 부재", description: "기존 개발팀이 대응까지 담당", difficulty: 3, weight: null },
+  { id: 39, category: "감리", content: "단계별 감리 진행 (4단계 이상)", description: "분석/설계/개발/종료 감리", difficulty: 3, weight: null },
+];
+
 export default function MdEstimationPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [project, setProject] = useState<{ id: number; name: string; currency: Currency } | null>(null);
+  const [project, setProject] = useState<{ id: number; name: string; currency: Currency; projectCode?: string; customerName?: string; fieldName?: string; categoryName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("difficulty");
+  const [activeTab, setActiveTab] = useState("overview");
   const [isSaving, setIsSaving] = useState(false);
   const [mdEstimations, setMdEstimations] = useState<any[]>([]);
   const [currentEstimationId, setCurrentEstimationId] = useState<number | null>(null);
@@ -161,6 +224,26 @@ export default function MdEstimationPage({
           }
         }
 
+        // 공통 난이도 항목 마스터 데이터 로드
+        const difficultyResponse = await fetch('/api/md-weights/difficulty-items');
+        if (difficultyResponse.ok) {
+          const difficultyData = await difficultyResponse.json();
+          if (difficultyData.items && difficultyData.items.length > 0) {
+            setCommonDifficultyItems(difficultyData.items);
+
+            // 신규 자동 생성 시 디폴트 난이도 세팅
+            setSelectedDifficultyItems(prev => {
+              const next = { ...prev };
+              difficultyData.items.forEach((item: any) => {
+                if (next[item.id] === undefined) {
+                  next[item.id] = item.difficulty;
+                }
+              });
+              return next;
+            });
+          }
+        }
+
         // 분야별 난이도 항목 마스터 데이터 로드 (새 작성 모드용)
         const fieldDifficultyResponse = await fetch('/api/md-weights/field-difficulty-items');
         if (fieldDifficultyResponse.ok) {
@@ -169,7 +252,26 @@ export default function MdEstimationPage({
             // 저장된 데이터가 없을 때만 마스터 데이터로 초기화
             setFieldDifficultyItems((prev) => {
               if (prev.length === 0) {
-                return fieldDifficultyData.items;
+                // ID 기준 중복 제거
+                const uniqueItems = fieldDifficultyData.items.filter((item: any, index: number, self: any[]) =>
+                  index === self.findIndex((t) => t.id === item.id)
+                );
+
+                // 신규 자동 생성 시 디폴트 난이도 세팅 (사이드 이펙트 처리)
+                setTimeout(() => {
+                  setSelectedFieldDifficultyItems(prevSelected => {
+                    const next = { ...prevSelected };
+                    uniqueItems.forEach((item: any) => {
+                      // 기존에 선택된 값이 없으면 마스터 데이터의 디폴트값(item.difficulty) 할당
+                      if (next[item.id] === undefined) {
+                        next[item.id] = item.difficulty;
+                      }
+                    });
+                    return next;
+                  });
+                }, 0);
+
+                return uniqueItems;
               }
               return prev;
             });
@@ -195,7 +297,11 @@ export default function MdEstimationPage({
           setProject({
             id: projectData.project.id,
             name: projectData.project.name,
+            projectCode: projectData.project.project_code,
+            customerName: projectData.project.customer_name || "미지정",
             currency: (projectData.project.currency || "KRW") as Currency,
+            fieldName: projectData.project.field_name,
+            categoryName: projectData.project.category_name,
           });
         }
 
@@ -240,18 +346,16 @@ export default function MdEstimationPage({
           });
 
           setMdEstimations(filteredEstimations);
-          // draft 상태의 산정이 있으면 그것을 선택, 없으면 완료된 최신 산정 선택
-          const draftEstimation = filteredEstimations.find((est: any) => est.status === 'draft');
+          // standby 또는 in_progress 상태의 산정이 있으면 그것을 선택, 없으면 완료된 최신 산정 선택
+          const draftEstimation = filteredEstimations.find((est: any) => est.status === 'STANDBY' || est.status === 'IN_PROGRESS');
           if (draftEstimation) {
-            console.log('[INIT] draft 산정 선택:', { id: draftEstimation.id, type: typeof draftEstimation.id });
+            console.log('[INIT] 작성 중 산정 선택:', { id: draftEstimation.id, type: typeof draftEstimation.id });
             setCurrentEstimationId(draftEstimation.id);
             setIsNewEstimation(false);
-            // draft estimation이 있으면 즉시 데이터 로드
-            // loadEstimationData useEffect가 실행되도록 상태 업데이트
           } else if (filteredEstimations.length > 0) {
             // 완료된 산정 중 최신 버전 선택
             const completedEstimations = filteredEstimations
-              .filter((est: any) => est.status === 'completed')
+              .filter((est: any) => est.status === 'COMPLETED')
               .sort((a: any, b: any) => b.version - a.version);
             if (completedEstimations.length > 0) {
               console.log('[INIT] 완료된 산정 선택:', { id: completedEstimations[0].id, type: typeof completedEstimations[0].id });
@@ -290,61 +394,14 @@ export default function MdEstimationPage({
 
   // 프로젝트 난이도는 calculateDifficulty() 함수로 계산됨
 
-  // 공통 난이도 산정 항목 (템플릿 기반)
-  const commonDifficultyItems = [
-    // 요구사항
-    { id: 1, category: "요구사항", content: "요구사항 정의서 미제공", description: "구두/회의 중심 전달", difficulty: 2, weight: null },
-    { id: 2, category: "요구사항", content: "요구사항 수시 변경 예상", description: "스펙 Freeze 어려움", difficulty: 2, weight: null },
-    { id: 3, category: "요구사항", content: "고객의 IT 이해도 낮음", description: "기술적 소통 난이도 상승", difficulty: 2, weight: null },
-    { id: 4, category: "요구사항", content: "고객 의사결정자 부재 또는 다수", description: "승인/결정 지연 가능성", difficulty: 2, weight: null },
-    // 화면, 기능
-    { id: 5, category: "화면, 기능", content: "화면 ≥ 20개", description: "CRUD 중심 화면, 팝업포함", difficulty: 3, weight: null },
-    { id: 6, category: "화면, 기능", content: "업무 기능 ≥ 5개 모듈로 나눠짐", description: "업무 도메인 분리가 뚜렷함", difficulty: 1, weight: null },
-    { id: 7, category: "화면, 기능", content: "사용자 정의 기능 많음", description: "워크플로우, 조건부 입력 등", difficulty: 3, weight: null },
-    { id: 8, category: "화면, 기능", content: "권한, 조직별 접근 제한 포함", description: "Role-based UI 구성 필요", difficulty: 2, weight: null },
-    { id: 9, category: "화면, 기능", content: "배치 프로세스 포함", description: "예약 실행, 로그처리 등 필요", difficulty: 2, weight: null },
-    { id: 10, category: "화면, 기능", content: "반응형 지원", description: "반응형 지원 개발 필요", difficulty: 3, weight: null },
-    { id: 11, category: "화면, 기능", content: "UI/접근성", description: "모바일 지원 포함 (앱, 웹앱)", difficulty: 3, weight: null },
-    // 연계 및 외부 시스템
-    { id: 12, category: "연계 및 외부 시스템", content: "외부 시스템 연계 ≥ 5개", description: "API, DB 연동 등", difficulty: 1, weight: null },
-    { id: 13, category: "연계 및 외부 시스템", content: "실시간 연계 포함", description: "Webhook, Event 등", difficulty: 2, weight: null },
-    { id: 14, category: "연계 및 외부 시스템", content: "레거시 시스템 연계", description: "명세 미비, 파악 난이도 ↑", difficulty: 2, weight: null },
-    { id: 15, category: "연계 및 외부 시스템", content: "인증/SSO 연동 포함", description: "AD, OAuth 등", difficulty: 3, weight: null },
-    // 데이터 및 보고서
-    { id: 16, category: "데이터 및 보고서", content: "정형 보고서 ≥ 20건", description: "PDF/Excel 출력 등", difficulty: 1, weight: null },
-    { id: 17, category: "데이터 및 보고서", content: "대용량 데이터 처리", description: "100만건 이상", difficulty: 2, weight: null },
-    { id: 18, category: "데이터 및 보고서", content: "마이그레이션 포함", description: "데이터 정제/이관", difficulty: 0, weight: null },
-    { id: 19, category: "데이터 및 보고서", content: "정합성 검증 포함", description: "정확도 중요", difficulty: 2, weight: null },
-    // 기술 환경
-    { id: 20, category: "기술 환경", content: "클라우드 환경 구축", description: "AWS, Azure 등", difficulty: 3, weight: null },
-    { id: 21, category: "기술 환경", content: "Hybrid 인프라", description: "온프 + 클라우드 병행", difficulty: 0, weight: null },
-    { id: 22, category: "기술 환경", content: "신규 기술 도입", description: "AI, IoT, GIS 등", difficulty: 0, weight: null },
-    { id: 23, category: "기술 환경", content: "복잡한 DB (30테이블 이상)", description: "관계 정규화 + 성능 고려", difficulty: 2, weight: null },
-    // 보안 및 인증
-    { id: 24, category: "보안 및 인증", content: "사용자 권한 분기 3단계 이상", description: "화면별 권한 설정 필수", difficulty: 2, weight: null },
-    { id: 25, category: "보안 및 인증", content: "데이터 암호화 필요", description: "전송/저장 모두 포함", difficulty: 2, weight: null },
-    { id: 26, category: "보안 및 인증", content: "공공기관 보안규격 준수", description: "ISMS, CC 등 인증 요건 있음", difficulty: 3, weight: null },
-    // 운영/인력관리
-    { id: 27, category: "운영/인력관리", content: "납기 ≤ 2개월", description: "기간 촉박", difficulty: 0, weight: null },
-    { id: 28, category: "운영/인력관리", content: "프로젝트 기간 ≥ 12개월", description: "장기 인력 유지/교체 이슈", difficulty: 3, weight: null },
-    { id: 29, category: "운영/인력관리", content: "병행 프로젝트 존재", description: "일정/자원 집중 어려움", difficulty: 3, weight: null },
-    { id: 30, category: "운영/인력관리", content: "개발 서버 운영", description: "운영서버 직접 반영은 어려움", difficulty: 1, weight: null },
-    { id: 31, category: "운영/인력관리", content: "고객 내부 승인 절차 복잡", description: "화면마다 승인 필요", difficulty: 1, weight: null },
-    { id: 32, category: "운영/인력관리", content: "주 단위 납품 일정 요구", description: "세분화된 일정 관리 필요", difficulty: 2, weight: null },
-    { id: 33, category: "운영/인력관리", content: "고객사 상주 필수", description: "피로도, 업무 밀도, 팀 운영 난이도 ↑", difficulty: 2, weight: null },
-    { id: 34, category: "운영/인력관리", content: "상주 위치 원거리", description: "출장, 교통, 숙소 등 추가 리스크", difficulty: 3, weight: null },
-    { id: 35, category: "운영/인력관리", content: "외주 인력과의 협업 필수", description: "SI 협력사, 고객 IT팀, 프리랜서 등 협조 필요", difficulty: 3, weight: null },
-    { id: 36, category: "운영/인력관리", content: "인력 교체 가능성 있음 (예: 6개월 계약)", description: "인수인계 등 중간 공백 위험 존재", difficulty: 2, weight: null },
-    { id: 37, category: "운영/인력관리", content: "고객 내부 정치적 이슈 있음", description: "팀 변경 등 승인 구조 변경", difficulty: 2, weight: null },
-    // 감리
-    { id: 38, category: "감리", content: "감리 대상 프로젝트, 공공산출물", description: "일정금액 이상 또는 공공과제", difficulty: 3, weight: null },
-    { id: 39, category: "감리", content: "단계별 감리 진행 (4단계 이상)", description: "분석/설계/개발/종료 감리", difficulty: 3, weight: null },
-    { id: 40, category: "감리", content: "감리 전담 인력 부재", description: "기존 개발팀이 대응까지 담당", difficulty: 3, weight: null },
-  ];
+
+
+  // 공통 난이도 산정 항목
+  const [commonDifficultyItems, setCommonDifficultyItems] = useState(INITIAL_COMMON_DIFFICULTY_ITEMS);
 
   // 선택된 난이도 항목 (각 항목별로 난이도 값 선택) - 공통 난이도는 디폴트로 모두 2로 초기화
   const [selectedDifficultyItems, setSelectedDifficultyItems] = useState<Record<number, number>>(
-    commonDifficultyItems.reduce((acc, item) => {
+    INITIAL_COMMON_DIFFICULTY_ITEMS.reduce((acc, item) => {
       acc[item.id] = item.difficulty; // 각 항목의 기본 난이도 값으로 초기화
       return acc;
     }, {} as Record<number, number>)
@@ -396,7 +453,43 @@ export default function MdEstimationPage({
     } else {
       return 0;
     }
-  }, [selectedDifficultyItems, selectedFieldCategories, selectedFieldDifficultyItems, fieldDifficultyItems]);
+  }, [commonDifficultyItems, selectedDifficultyItems, selectedFieldCategories, selectedFieldDifficultyItems, fieldDifficultyItems]);
+
+  // 렌더링을 위한 정렬된 항목 (Category 기준으로 정렬하여 rowSpan 오동작 방지)
+  const sortedCommonDifficultyItems = useMemo(() => {
+    return [...commonDifficultyItems].sort((a, b) => {
+      // 카테고리 정렬
+      const catDiff = a.category.localeCompare(b.category);
+      if (catDiff !== 0) return catDiff;
+      // 카테고리 내에서는 ID 정렬 (안정성을 위해)
+      return a.id - b.id;
+    });
+  }, [commonDifficultyItems]);
+
+  const sortedFieldDifficultyItems = useMemo(() => {
+    return [...fieldDifficultyItems].sort((a, b) => {
+      const catDiff = a.category.localeCompare(b.category);
+      if (catDiff !== 0) return catDiff;
+      return a.id - b.id;
+    });
+  }, [fieldDifficultyItems]);
+
+  // 카테고리별 아이템 개수 계산 (rowSpan용)
+  const commonCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    commonDifficultyItems.forEach((item) => {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    });
+    return counts;
+  }, [commonDifficultyItems]);
+
+  const fieldCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fieldDifficultyItems.forEach((item) => {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    });
+    return counts;
+  }, [fieldDifficultyItems]);
 
   // 공통 난이도 항목 난이도 선택 핸들러 - useCallback으로 최적화
   const handleDifficultyItemChange = useCallback((itemId: number, difficulty: number) => {
@@ -724,8 +817,8 @@ export default function MdEstimationPage({
   // 탭 배열 - useMemo로 최적화 (상수이므로 dependency 없음)
   const tabs = useMemo(
     () => [
-      { id: "difficulty", label: "가중치", icon: BarChart3 },
       { id: "overview", label: "예상 M/D", icon: FileText },
+      { id: "difficulty", label: "가중치", icon: BarChart3 },
       { id: "development", label: "개발", icon: TrendingUp },
       { id: "modeling3d", label: "3D 모델링", icon: Box },
       { id: "pid", label: "P&ID", icon: Settings },
@@ -920,15 +1013,15 @@ export default function MdEstimationPage({
 
       // 새 M/D 산정인 경우 먼저 생성 또는 기존 draft 산정 찾기
       if (isNewEstimation || !estimationId) {
-        // 먼저 기존 draft 상태의 산정이 있는지 확인
-        const listResponse = await fetch(`/api/md-estimations?projectId=${id}&status=draft`);
+        // 먼저 기존 STANDBY 상태의 산정이 있는지 확인
+        const listResponse = await fetch(`/api/md-estimations?projectId=${id}&status=STANDBY`);
         let existingDraft = null;
         if (listResponse.ok) {
           const listData = await listResponse.json();
           const filtered = (listData.estimations || []).filter(
-            (est: any) => est.project_id === parseInt(id) && est.status === 'draft'
+            (est: any) => est.project_id === parseInt(id) && est.status === 'STANDBY'
           );
-          // 최신 draft 산정 사용
+          // 최신 STANDBY 산정 사용
           if (filtered.length > 0) {
             existingDraft = filtered.sort((a: any, b: any) => b.version - a.version)[0];
           }
@@ -1090,7 +1183,10 @@ export default function MdEstimationPage({
       const saveResponse = await fetch(`/api/md-estimations/${estimationId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(saveData),
+        body: JSON.stringify({
+          ...saveData,
+          status: 'IN_PROGRESS'
+        }),
       });
 
       if (!saveResponse.ok) {
@@ -1168,12 +1264,12 @@ export default function MdEstimationPage({
           throw new Error("M/D 산정을 먼저 저장해주세요.");
         }
 
-        // 상태를 'completed'로 변경
+        // 상태를 'COMPLETED'로 변경
         const completeResponse = await fetch(`/api/md-estimations/${estimationId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            status: "completed",
+            status: "COMPLETED",
           }),
         });
 
@@ -1278,10 +1374,10 @@ export default function MdEstimationPage({
       if (isNewEstimation) {
         console.log('[LOAD] 신규 작성 모드 - 모든 데이터 기본값으로 초기화');
 
-        // 공통 난이도 기본값 초기화 (모두 2로 강제 설정)
+        // 공통 난이도 기본값 초기화 (기초데이터 값 사용)
         setSelectedDifficultyItems(
           commonDifficultyItems.reduce((acc, item) => {
-            acc[item.id] = 2; // 강제로 2로 설정
+            acc[item.id] = item.difficulty || 0;
             return acc;
           }, {} as Record<number, number>)
         );
@@ -1296,11 +1392,15 @@ export default function MdEstimationPage({
           .then(data => {
             if (data.items && data.items.length > 0) {
               console.log('[LOAD] 분야별 난이도 항목 Master Data로 초기화');
-              setFieldDifficultyItems(data.items);
+              // ID 기준 중복 제거
+              const uniqueItems = data.items.filter((item: any, index: number, self: any[]) =>
+                index === self.findIndex((t) => t.id === item.id)
+              );
+              setFieldDifficultyItems(uniqueItems);
 
-              // 분야별 난이도 선택값도 모두 0으로 초기화
-              const initialFieldDifficulties = data.items.reduce((acc: any, item: any) => {
-                acc[item.id] = 0;
+              // 분야별 난이도 선택값 초기화 (기초데이터 값 사용)
+              const initialFieldDifficulties = uniqueItems.reduce((acc: any, item: any) => {
+                acc[item.id] = item.difficulty || 0;
                 return acc;
               }, {});
               setSelectedFieldDifficultyItems(initialFieldDifficulties);
@@ -1611,10 +1711,32 @@ export default function MdEstimationPage({
             setMmCalculationBase(parseFloat(estimation.mmCalculationBase) || 21);
           }
 
+          // 공통 난이도 항목 로드
+          if (estimation.difficulties && Array.isArray(estimation.difficulties)) {
+            // DB에 저장된 선택값 로드
+            const savedDifficulties: Record<number, number> = {};
+            const savedFieldDifficulties: Record<number, number> = {};
+
+            estimation.difficulties.forEach((d: any) => {
+              if (d.difficulty_item_id) {
+                savedDifficulties[d.difficulty_item_id] = d.selected_difficulty;
+              } else if (d.field_difficulty_item_id) {
+                savedFieldDifficulties[d.field_difficulty_item_id] = d.selected_difficulty;
+              }
+            });
+
+            setSelectedDifficultyItems(prev => ({ ...prev, ...savedDifficulties }));
+            setSelectedFieldDifficultyItems(prev => ({ ...prev, ...savedFieldDifficulties }));
+          }
+
           // 분야별 난이도 항목 마스터 데이터 로드
           if (estimation.fieldDifficultyItems && Array.isArray(estimation.fieldDifficultyItems) && estimation.fieldDifficultyItems.length > 0) {
             console.log('[LOAD] fieldDifficultyItems 설정:', { count: estimation.fieldDifficultyItems.length, items: estimation.fieldDifficultyItems });
-            setFieldDifficultyItems(estimation.fieldDifficultyItems);
+            // ID 기준 중복 제거
+            const uniqueItems = estimation.fieldDifficultyItems.filter((item: any, index: number, self: any[]) =>
+              index === self.findIndex((t) => t.id === item.id)
+            );
+            setFieldDifficultyItems(uniqueItems);
           } else {
             console.log('[LOAD] ⚠️ fieldDifficultyItems가 없음 - 빈 배열로 유지');
           }
@@ -1711,6 +1833,39 @@ export default function MdEstimationPage({
     [mdEstimations, currentEstimationId]
   );
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!currentEstimationId) {
+      alert("먼저 저장을 해주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/md-estimations/${currentEstimationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setMdEstimations(prev => prev.map(est =>
+          est.id === currentEstimationId ? { ...est, status: newStatus } : est
+        ));
+        // alert("상태가 변경되었습니다."); // UI가 즉시 반영되므로 알림은 생략하거나 토스트로 대체 가능
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`상태 변경 실패: ${errorData.message || '알 수 없는 오류'}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("상태 변경 중 오류가 발생했습니다.");
+    }
+  };
+
   if (loading || !project) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1734,31 +1889,39 @@ export default function MdEstimationPage({
             <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
               M/D 산정 - {project.name}
             </h1>
+            <p className="text-sm text-gray-600">
+              {project.projectCode} | {project.customerName}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowListModal(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        <div className="flex items-center gap-3">
+          <StatusDropdown
+            status={currentEstimation?.status || 'STANDBY'}
+            onStatusChange={handleStatusChange}
+            disabled={currentEstimation?.status === 'COMPLETED' || currentEstimation?.status === 'approved'}
+            phase="MD_ESTIMATION"
+          />
+
+          <Button
+            variant="secondary"
+            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm"
           >
-            <List className="h-4 w-4" />
-            목록
-          </button>
-          <button
-            onClick={handleNewEstimation}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Plus className="h-4 w-4" />
-            새로 만들기
-          </button>
-          <button
-            onClick={handleComplete}
-            disabled={isSaving || !currentEstimationId && !isNewEstimation}
-            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+            <Download className="h-4 w-4" />
+            엑셀
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={async () => {
+              await handleSave();
+              await handleStatusChange('COMPLETED');
+            }}
+            disabled={isSaving || (currentEstimation?.status === 'COMPLETED' || currentEstimation?.status === 'approved')}
+            className="flex items-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" />
-            M/D 산정 완료
-          </button>
+            작성완료
+          </Button>
         </div>
       </div>
 
@@ -1788,9 +1951,19 @@ export default function MdEstimationPage({
       <div className="rounded-lg border border-gray-200 bg-white">
         {activeTab === "overview" && (
           <div className="p-6" key={`overview-${currentEstimationId || 'new'}`}>
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              M/D 산정 요약
-            </h2>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                M/D 산정 요약
+              </h2>
+              <button
+                onClick={handleSave}
+                disabled={isSaving || (currentEstimation?.status === "COMPLETED")}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? "저장 중..." : "저장"}
+              </button>
+            </div>
 
             {/* 요약 카드 */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -1862,9 +2035,10 @@ export default function MdEstimationPage({
                 M/D 가중치 산정
               </h2>
               <button
+                type="button"
                 onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSaving || (currentEstimation?.status === "COMPLETED")}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "저장 중..." : "저장"}
@@ -1900,173 +2074,205 @@ export default function MdEstimationPage({
             </div>
 
             {/* 난이도 산정 안내 */}
-            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
               <p className="text-sm text-blue-800">
-                <strong>산정 방식:</strong> 각 항목에 대해 난이도(0, 1, 2, 3)를 선택하면 가중치가 자동 계산됩니다.
+                <span className="font-bold">※ 산정 방식:</span> 각 항목에 대해 난이도(0, 1, 2, 3)를 선택하면 가중치가 자동 계산됩니다.
                 <br />
-                <strong>최종 M/D 가중치:</strong> 선택된 항목들의 난이도 합계를 기반으로 계산됩니다.
+                <span className="font-bold">※ 최종 M/D 가중치:</span> 선택된 항목들의 난이도 합계를 기반으로 계산됩니다.
               </p>
             </div>
 
             {/* 공통 난이도 */}
-            <div className="mb-6">
-              <h3 className="mb-4 text-base font-semibold text-gray-900">○ 공통</h3>
-              <div className="space-y-6">
-                {Object.entries(commonDifficultyByCategory).map(([category, items]) => (
-                  <div key={category} className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                      <h4 className="text-sm font-semibold text-gray-900">{category}</h4>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="w-1/3 px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                              내용
-                            </th>
-                            <th className="w-1/3 px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                              설명
-                            </th>
-                            <th className="w-1/3 px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                              난이도
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
-                          {items.map((item) => {
-                            const selectedDifficulty = selectedDifficultyItems[item.id] ?? item.difficulty;
-                            const isHighDifficulty = selectedDifficulty === 3;
+            <div className="mb-10">
+              <h3 className="mb-4 text-base font-bold text-gray-900 px-1 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                공통 난이도 산정
+              </h3>
+              <div className="neo-light-card border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-slate-50 border-b border-gray-200">
+                      <tr>
+                        <th className="w-[150px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                          구분
+                        </th>
+                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                          내용
+                        </th>
+                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                          설명
+                        </th>
+                        <th className="w-[120px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center">
+                          난이도
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {sortedCommonDifficultyItems.map((item, index) => {
+                        const selectedDifficulty = selectedDifficultyItems[item.id] ?? item.difficulty;
+                        const isHighDifficulty = selectedDifficulty === 3;
 
-                            return (
-                              <tr
-                                key={item.id}
-                                className={
-                                  isHighDifficulty
-                                    ? "bg-orange-50 hover:bg-orange-100 border-l-2 border-l-orange-400"
-                                    : "hover:bg-gray-50"
-                                }
+                        // 카테고리 셀 병합 로직
+                        const prevItem = index > 0 ? sortedCommonDifficultyItems[index - 1] : null;
+                        const isFirstInCategory = !prevItem || prevItem.category !== item.category;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className={cn(
+                              "transition-all duration-200 h-[52px] relative",
+                              isHighDifficulty
+                                ? "bg-orange-50/50 hover:bg-orange-100/50"
+                                : "hover:bg-slate-50/50"
+                            )}
+                            style={{ zIndex: sortedCommonDifficultyItems.length - index }}
+                          >
+                            {isFirstInCategory && (
+                              <td
+                                rowSpan={commonCategoryCounts[item.category]}
+                                className="px-4 py-2 text-sm font-bold text-center border-r border-gray-200 bg-gray-50/50 text-gray-900 align-middle"
                               >
-                                <td className={`px-3 py-2 text-sm ${isHighDifficulty ? "font-medium text-orange-900" : "text-gray-900"}`}>
-                                  {item.content}
-                                </td>
-                                <td className={`px-3 py-2 text-sm ${isHighDifficulty ? "text-orange-700" : "text-gray-600"}`}>
-                                  {item.description}
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-2 text-center">
-                                  <select
-                                    value={selectedDifficulty}
-                                    onChange={(e) => handleDifficultyItemChange(item.id, parseInt(e.target.value) || 0)}
-                                    disabled={currentEstimation?.status === "completed"}
-                                    className={`w-32 rounded-md px-2 py-1 text-sm text-center font-medium focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${isHighDifficulty
-                                      ? "border border-orange-400 bg-orange-50 text-orange-900 focus:border-orange-500 focus:ring-orange-400"
-                                      : "border border-gray-300 focus:border-gray-900 focus:ring-gray-900"
-                                      }`}
-                                  >
-                                    <option value="0">0</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                  </select>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
+                                {item.category}
+                              </td>
+                            )}
+                            <td className={cn(
+                              "px-4 py-2 text-sm border-r border-gray-200",
+                              isHighDifficulty ? "font-bold text-orange-900" : "text-gray-900 font-medium"
+                            )}>
+                              {item.content}
+                            </td>
+                            <td className={cn(
+                              "px-4 py-2 text-sm border-r border-gray-200",
+                              isHighDifficulty ? "text-orange-700 font-medium" : "text-gray-500 font-medium"
+                            )}>
+                              {item.description}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <Dropdown
+                                value={selectedDifficulty}
+                                onChange={(val) => handleDifficultyItemChange(item.id, Number(val))}
+                                disabled={currentEstimation?.status === "COMPLETED"}
+                                options={scoreOptions}
+                                align="center"
+                                variant="premium"
+                                className={cn(
+                                  "w-full max-w-[80px] mx-auto transition-transform active:scale-95",
+                                  isHighDifficulty && "border-orange-400 ring-orange-200"
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
             {/* 분야별 난이도 */}
-            <div className="mb-6">
-              <h3 className="mb-4 text-base font-semibold text-gray-900">○ 분야별 적용</h3>
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="mb-10">
+              <h3 className="mb-4 text-base font-bold text-gray-900 px-1 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                분야별 난이도 산정
+              </h3>
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>안내:</strong> 체크박스를 선택한 분야의 난이도만 프로젝트 난이도 계산에 적용됩니다.
+                  <span className="font-bold">※ 안내:</span> 체크박스를 선택한 분야의 난이도만 프로젝트 난이도 계산에 적용됩니다.
                 </p>
               </div>
-              <div className="space-y-6">
-                {Object.entries(fieldDifficultyByCategory).map(([category, items]) => (
-                  <div key={category} className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedFieldCategories.has(category)}
-                          onChange={() => handleFieldCategoryToggle(category)}
-                          disabled={currentEstimation?.status === "completed"}
-                          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        />
-                        <h4 className="text-sm font-semibold text-gray-900">{category}</h4>
-                      </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="w-1/3 px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                              내용
-                            </th>
-                            <th className="w-1/3 px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                              설명
-                            </th>
-                            <th className="w-1/3 px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                              난이도
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
-                          {items.map((item) => {
-                            const isCategorySelected = selectedFieldCategories.has(category);
-                            // 카테고리가 선택되지 않았으면 난이도를 0으로 간주 (화면 표시용)
-                            const rawDifficulty = selectedFieldDifficultyItems[item.id] ?? item.difficulty;
-                            const selectedDifficulty = isCategorySelected ? rawDifficulty : 0;
-                            const isHighDifficulty = selectedDifficulty === 3;
+              <div className="neo-light-card border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-slate-50 border-b border-gray-200">
+                      <tr>
+                        <th className="w-[150px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                          적용 분야
+                        </th>
+                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                          내용
+                        </th>
+                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                          설명
+                        </th>
+                        <th className="w-[120px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center">
+                          난이도
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {sortedFieldDifficultyItems.map((item, index) => {
+                        const isCategorySelected = selectedFieldCategories.has(item.category);
+                        const rawDifficulty = selectedFieldDifficultyItems[item.id] ?? item.difficulty;
+                        const selectedDifficulty = rawDifficulty;
+                        const isHighDifficulty = selectedDifficulty === 3;
 
-                            return (
-                              <tr
-                                key={item.id}
-                                className={
-                                  isHighDifficulty
-                                    ? "bg-orange-50 hover:bg-orange-100 border-l-2 border-l-orange-400"
-                                    : "hover:bg-gray-50"
-                                }
+                        const prevItem = index > 0 ? sortedFieldDifficultyItems[index - 1] : null;
+                        const isFirstInCategory = !prevItem || prevItem.category !== item.category;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className={cn(
+                              "transition-all duration-200 h-[52px] relative",
+                              !isCategorySelected && "opacity-60 bg-slate-50/30",
+                              isHighDifficulty
+                                ? "bg-orange-50/50 hover:bg-orange-100/50"
+                                : isCategorySelected && "hover:bg-slate-50/50"
+                            )}
+                            style={{ zIndex: sortedFieldDifficultyItems.length - index }}
+                          >
+                            {isFirstInCategory && (
+                              <td
+                                rowSpan={fieldCategoryCounts[item.category]}
+                                className="px-4 py-2 border-r border-gray-200 bg-gray-50/50 align-middle"
                               >
-                                <td className={`px-3 py-2 text-sm ${isHighDifficulty ? "font-medium text-orange-900" : "text-gray-900"}`}>
-                                  {item.content}
-                                </td>
-                                <td className={`px-3 py-2 text-sm ${isHighDifficulty ? "text-orange-700" : "text-gray-600"}`}>
-                                  {item.description}
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-2 text-center">
-                                  <select
-                                    value={selectedDifficulty}
-                                    onChange={(e) => handleFieldDifficultyItemChange(item.id, parseInt(e.target.value) || 0)}
-                                    disabled={currentEstimation?.status === "completed" || !isCategorySelected}
-                                    className={`w-32 rounded-md px-2 py-1 text-sm text-center font-medium focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${isHighDifficulty
-                                      ? "border border-orange-400 bg-orange-50 text-orange-900 focus:border-orange-500 focus:ring-orange-400"
-                                      : "border border-gray-300 focus:border-gray-900 focus:ring-gray-900"
-                                      }`}
-                                  >
-                                    <option value="0">0</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                  </select>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
+                                <div className="flex items-center justify-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isCategorySelected}
+                                    onChange={() => handleFieldCategoryToggle(item.category)}
+                                    disabled={currentEstimation?.status === "COMPLETED"}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
+                                  />
+                                  <span className="text-sm font-bold text-gray-900">{item.category}</span>
+                                </div>
+                              </td>
+                            )}
+                            <td className={cn(
+                              "px-4 py-2 text-sm border-r border-gray-200",
+                              isHighDifficulty ? "font-bold text-orange-900" : "text-gray-900 font-medium"
+                            )}>
+                              {item.content}
+                            </td>
+                            <td className={cn(
+                              "px-4 py-2 text-sm border-r border-gray-200",
+                              isHighDifficulty ? "text-orange-700 font-medium" : "text-gray-500 font-medium"
+                            )}>
+                              {item.description}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <Dropdown
+                                value={selectedDifficulty}
+                                onChange={(val) => handleFieldDifficultyItemChange(item.id, Number(val))}
+                                disabled={currentEstimation?.status === "COMPLETED" || !isCategorySelected}
+                                options={scoreOptions}
+                                align="center"
+                                variant="premium"
+                                className={cn(
+                                  "w-full max-w-[80px] mx-auto transition-transform active:scale-95",
+                                  isHighDifficulty && "border-orange-400 ring-orange-200"
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-
           </div>
         )}
 
@@ -2077,9 +2283,10 @@ export default function MdEstimationPage({
                 개발 공수 기준표
               </h2>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "저장 중..." : "저장"}
@@ -2088,11 +2295,11 @@ export default function MdEstimationPage({
 
             {/* 난이도 작성 안내 */}
             <div className="mb-4 flex items-center gap-4">
-              <div className="flex-1 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+              <div className="flex-1 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <p className="text-sm text-yellow-800">
-                    <strong>안내:</strong> 프로젝트 가중치는 <strong>가중치 탭</strong>에서 작성해주세요.
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm text-blue-800">
+                    <span className="font-bold">※ 안내:</span> 프로젝트 가중치는 <span className="font-bold">가중치 탭</span>에서 작성해주세요.
                   </p>
                 </div>
               </div>
@@ -2228,31 +2435,31 @@ export default function MdEstimationPage({
                   항목 추가
                 </button>
               </div>
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                <p className="text-xs text-blue-800">
-                  <strong>계산 방식:</strong> M/D = 수량 × 기준M/D, 최종 M/M = 개발항목 M/D 합계 × 프로젝트 가중치
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-sm text-blue-800">
+                  <span className="font-bold">※ 계산 방식:</span> M/D = 수량 × 기준M/D, 최종 M/M = 개발항목 M/D 합계 × 프로젝트 가중치
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-slate-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
                         구분
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
                         내용
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
                         수량
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
                         기준M/D
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
                         산정M/D
                       </th>
-                      <th className="relative px-3 py-2">
+                      <th className="relative px-3 py-4">
                         <span className="sr-only">Actions</span>
                       </th>
                     </tr>
@@ -2268,27 +2475,29 @@ export default function MdEstimationPage({
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="whitespace-nowrap px-3 py-2">
                             {isNewItem ? (
-                              <select
+                              <Dropdown
                                 value={item.classification || ""}
-                                onChange={(e) =>
+                                onChange={(val) =>
                                   handleDevelopmentItemChange(
                                     item.id,
                                     "classification",
-                                    e.target.value
+                                    val
                                   )
                                 }
                                 disabled={currentEstimation?.status === "completed"}
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              >
-                                <option value="">구분 선택</option>
-                                <option value="PM">PM</option>
-                                <option value="개발">개발</option>
-                                <option value="I/F">I/F</option>
-                                <option value="2D디자인">2D디자인</option>
-                                <option value="포탈">포탈</option>
-                              </select>
+                                options={[
+                                  { value: "", label: "구분 선택" },
+                                  { value: "PM", label: "PM" },
+                                  { value: "개발", label: "개발" },
+                                  { value: "I/F", label: "I/F" },
+                                  { value: "2D디자인", label: "2D디자인" },
+                                  { value: "포탈", label: "포탈" },
+                                ]}
+                                variant="premium"
+                                className="w-full"
+                              />
                             ) : (
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-bold text-gray-900">
                                 {item.classification}
                               </span>
                             )}
@@ -2405,7 +2614,7 @@ export default function MdEstimationPage({
               <button
                 onClick={handleSave}
                 disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "저장 중..." : "저장"}
@@ -2590,7 +2799,7 @@ export default function MdEstimationPage({
                       value={mmCalculationBase}
                       onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
                       disabled={currentEstimation?.status === "completed"}
-                      className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-20 rounded-xl border border-gray-300 px-2 h-10 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm text-gray-600">일</span>
                   </div>
@@ -2605,31 +2814,31 @@ export default function MdEstimationPage({
                   ○ 3D 모델링(배치 포함) 공수 기준표
                 </h3>
               </div>
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                <p className="text-xs text-blue-800">
-                  <strong>계산 방식:</strong> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-sm text-blue-800">
+                  <span className="font-bold">※ 계산 방식:</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-slate-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         구분
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         난이도
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         수량
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         기준M/D
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         산정M/D
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left">
                         비고
                       </th>
                     </tr>
@@ -2725,7 +2934,7 @@ export default function MdEstimationPage({
               <button
                 onClick={handleSave}
                 disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "저장 중..." : "저장"}
@@ -2899,7 +3108,7 @@ export default function MdEstimationPage({
                       value={mmCalculationBase}
                       onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
                       disabled={currentEstimation?.status === "completed"}
-                      className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-20 rounded-xl border border-gray-300 px-2 h-10 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm text-gray-600">일</span>
                   </div>
@@ -2914,28 +3123,28 @@ export default function MdEstimationPage({
                   ○ P&ID 공수 기준표
                 </h3>
               </div>
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                <p className="text-xs text-blue-800">
-                  <strong>계산 방식:</strong> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-sm text-blue-800">
+                  <span className="font-bold">※ 계산 방식:</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-slate-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         구분
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         수량
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         기준M/D
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
                         산정M/D
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left">
                         비고
                       </th>
                     </tr>
@@ -3030,15 +3239,8 @@ export default function MdEstimationPage({
               </h2>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleNewEstimation}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  <Plus className="h-4 w-4" />
-                  새로 만들기
-                </button>
-                <button
                   onClick={() => setShowListModal(false)}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-gray-300 bg-white px-4 h-10 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   닫기
                 </button>
@@ -3132,36 +3334,20 @@ export default function MdEstimationPage({
         </div>
       )}
 
-      {/* 현재 선택된 M/D 산정 표시 */}
       {currentEstimation && !isNewEstimation && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900">
-                현재 선택: M/D 산정 v{currentEstimation.version} ({currentEstimation.status === "completed" ? "완료" : "작성중"})
+                <span className="font-bold">현재 선택:</span> M/D 산정 v{currentEstimation.version} ({currentEstimation.status === "completed" ? "완료" : "작성중"})
               </span>
             </div>
-            <button
-              onClick={() => setShowListModal(true)}
-              className="text-sm text-blue-600 hover:text-blue-900"
-            >
-              변경
-            </button>
           </div>
         </div>
       )}
 
-      {isNewEstimation && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-          <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-900">
-              새로운 M/D 산정 작성 중
-            </span>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

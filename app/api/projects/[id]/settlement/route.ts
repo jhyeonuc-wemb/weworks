@@ -115,7 +115,7 @@ export async function POST(
                 settlement.actual_expense_general || 0,
                 settlement.actual_expense_special || 0,
                 settlement.notes,
-                settlement.status || 'draft',
+                settlement.status || 'STANDBY',
                 1, // TODO: 실제 사용자 ID
                 settlement.planned_svc_mm_own || 0,
                 settlement.planned_svc_mm_ext || 0,
@@ -242,7 +242,7 @@ export async function PUT(
                 settlement.actual_expense_general || 0,
                 settlement.actual_expense_special || 0,
                 settlement.notes,
-                settlement.status || 'draft',
+                settlement.status || 'STANDBY',
                 settlement.planned_svc_mm_own || 0,
                 settlement.planned_svc_mm_ext || 0,
                 settlement.id,
@@ -254,6 +254,21 @@ export async function PUT(
                 { error: "Settlement not found" },
                 { status: 404 }
             );
+        }
+
+        const updatedSettlement = settlementResult.rows[0];
+
+        // 정산서가 완료되면 프로젝트 상태도 업데이트
+        if (updatedSettlement.status === 'COMPLETED') {
+            try {
+                console.log(`Settlement COMPLETED. Updating project ${projectId} status to completed`);
+                await query(
+                    "UPDATE we_projects SET status = 'completed', current_phase = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+                    [projectId]
+                );
+            } catch (err) {
+                console.error(`Failed to update project status for ${projectId}:`, err);
+            }
         }
 
         // 기존 데이터 삭제

@@ -1,7 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Edit, Trash2, Users, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Button,
+  DraggablePanel,
+} from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 interface LaborCategory {
   id: number;
@@ -14,6 +25,8 @@ interface LaborCategory {
 export default function RolesPage() {
   const [roles, setRoles] = useState<LaborCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchCategories();
@@ -33,8 +46,16 @@ export default function RolesPage() {
       setLoading(false);
     }
   };
+
+  const paginatedRoles = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return roles.slice(startIndex, startIndex + itemsPerPage);
+  }, [roles, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(roles.length / itemsPerPage);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [editingRole, setEditingRole] = useState<LaborCategory | null>(null);
   const [formData, setFormData] = useState({
     id: "",
@@ -42,17 +63,19 @@ export default function RolesPage() {
     description: "",
   });
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent) => {
     setFormData({ id: "", name: "", description: "" });
+    setTriggerRect(e.currentTarget.getBoundingClientRect());
     setIsAddModalOpen(true);
   };
 
-  const handleEdit = (role: LaborCategory) => {
+  const handleEdit = (role: LaborCategory, e: React.MouseEvent) => {
     setFormData({
       id: role.code,
       name: role.name,
       description: role.description || "",
     });
+    setTriggerRect(e.currentTarget.getBoundingClientRect());
     setEditingRole(role);
     setIsEditModalOpen(true);
   };
@@ -123,205 +146,226 @@ export default function RolesPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8">
       <div className="flex items-center justify-between px-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             인력구분 관리
           </h1>
-          <p className="mt-1.5 text-sm font-medium text-muted-foreground opacity-70">
-            M/D 산정 매트릭스에 사용되는 핵심 인력 노드를 관리합니다.
-          </p>
         </div>
-        <button
-          onClick={handleAdd}
-          className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+        <Button
+          onClick={(e) => handleAdd(e)}
+          variant="primary"
+          className="h-11 px-6"
         >
-          <Plus className="h-4 w-4" />
-          신규 인력구분 추가
-        </button>
+          <Plus className="h-4 w-4 mr-1.5" />
+          인력구분
+        </Button>
       </div>
 
-      <div className="neo-light-card overflow-hidden">
+      <div className="neo-light-card overflow-hidden border border-border/40">
         <div className="overflow-x-auto custom-scrollbar-main">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-muted/30 border-b border-border/40">
-                <th className="px-8 py-5 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-70">
-                  Category ID
-                </th>
-                <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-70">
-                  Display Name / Label
-                </th>
-                <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-70">
-                  Descriptive Context
-                </th>
-                <th className="relative px-8 py-5">
-                  <span className="sr-only">Operations</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/20">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">Category ID</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">표시 이름</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">설명</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/10">
               {loading ? (
-                <tr>
-                  <td colSpan={4} className="px-8 py-24 text-center">
+                <TableRow>
+                  <TableCell colSpan={4} className="px-8 py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      <p className="text-xs font-bold text-muted-foreground animate-pulse tracking-widest uppercase">Initializing Category Repository...</p>
+                      <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm font-medium text-muted-foreground">데이터를 불러오고 있습니다...</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : roles.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-8 py-24 text-center">
+                <TableRow>
+                  <TableCell colSpan={4} className="px-8 py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4 opacity-40">
-                      <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center">
-                        <Users className="h-8 w-8 text-muted-foreground" />
+                      <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                       </div>
-                      <p className="text-sm font-bold text-muted-foreground italic">등록된 인력구분 노드가 없습니다</p>
+                      <p className="text-sm font-medium text-foreground">등록된 인력구분이 없습니다</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
-                roles.map((role) => (
-                  <tr key={role.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="whitespace-nowrap px-8 py-5">
+                paginatedRoles.map((role) => (
+                  <TableRow key={role.id} className="hover:bg-primary/[0.02] transition-colors group">
+                    <TableCell className="whitespace-nowrap px-8 py-3">
                       <span className="text-sm font-bold text-foreground/80 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/10 font-mono italic">
                         {role.code}
                       </span>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-5 text-base font-bold text-foreground tracking-tight">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap px-8 py-3 text-sm font-bold text-foreground tracking-tight">
                       {role.name}
-                    </td>
-                    <td className="px-6 py-5 text-sm font-medium text-muted-foreground/80">
-                      {role.description || <span className="text-muted-foreground/30 italic">No additional context provided</span>}
-                    </td>
-                    <td className="whitespace-nowrap px-8 py-5 text-right">
+                    </TableCell>
+                    <TableCell className="px-8 py-3 text-sm font-medium text-muted-foreground/80">
+                      {role.description || <span className="text-muted-foreground/30 italic">설명 없음</span>}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap px-8 py-3 text-right">
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 transition-transform">
                         <button
-                          onClick={() => handleEdit(role)}
-                          className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
-                          title="Modify Node"
+                          onClick={(e) => handleEdit(role, e)}
+                          className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                          title="수정"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(role.id)}
-                          className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
-                          title="Purge Node"
+                          className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
+                          title="삭제"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
-        <div className="bg-muted/30 px-8 py-5 border-t border-border/20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] opacity-40">System Role Index</span>
-            <span className="h-1 w-1 rounded-full bg-border" />
-            <div className="text-xs font-bold text-foreground/50 uppercase tracking-widest">Total Active Nodes: <span className="text-primary ml-1">{roles.length}</span></div>
+        <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+          <div className="absolute left-8 flex items-center gap-6">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{roles.length}</span></div>
+
+            <div className="flex items-center gap-2 border-l border-border/40 pl-6">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
+              >
+                {[10, 20, 30, 50, 100].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                    currentPage === page
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
+                      : "text-muted-foreground hover:bg-white hover:text-foreground"
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 추가/수정 모달 - Neo Integrated */}
-      {(isAddModalOpen || isEditModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300"
-            onClick={() => {
-              setIsAddModalOpen(false);
-              setIsEditModalOpen(false);
-              setEditingRole(null);
-            }}
-          />
-          <div className="relative w-full max-w-lg neo-light-card border-white bg-white shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="border-b border-border/40 px-8 py-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">
-                    {isAddModalOpen ? "신규 인력구분 등록" : "인력구분 속성 수정"}
-                  </h2>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 opacity-60 italic">
-                    Category Node Configuration Manager
-                  </p>
-                </div>
-              </div>
-            </div>
+      <DraggablePanel
+        open={isAddModalOpen || isEditModalOpen}
+        onOpenChange={(val) => {
+          if (!val) {
+            setIsAddModalOpen(false);
+            setIsEditModalOpen(false);
+            setEditingRole(null);
+            setFormData({ id: "", name: "", description: "" });
+          }
+        }}
+        triggerRect={triggerRect}
+        title={isAddModalOpen ? "신규 인력구분 등록" : "인력구분 속성 수정"}
+        description="인력의 구분을 정의하고 관리합니다."
+        className="max-w-lg"
+      >
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500">
+              코드 (ID) {!isEditModalOpen && <span className="text-primary">*</span>}
+            </label>
+            <input
+              type="text"
+              value={formData.id}
+              disabled={isEditModalOpen}
+              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+              placeholder="예: PM, DEV, DESIGN"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all disabled:bg-muted/30 disabled:text-muted-foreground/60"
+            />
+            {isEditModalOpen && <p className="text-[10px] text-muted-foreground mt-1">등록된 코드는 수정할 수 없습니다.</p>}
+          </div>
 
-            <div className="p-8 space-y-6">
-              <div className="space-y-2 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 transition-colors group-focus-within:text-primary">
-                  Unique Identifier (ID) <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.id}
-                  disabled={isEditModalOpen}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  placeholder="예: PM, DEV, DESIGN"
-                  className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-base font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none disabled:opacity-50 disabled:bg-muted/40 font-mono italic"
-                />
-                {isEditModalOpen && <p className="text-[9px] font-bold text-muted-foreground opacity-50 ml-1">Unique IDs cannot be modified after registration.</p>}
-              </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500">
+              표시 명칭 <span className="text-primary">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="인력구분 호출 명칭"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all"
+            />
+          </div>
 
-              <div className="space-y-2 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 transition-colors group-focus-within:text-primary">
-                  Display Label <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="인력구분 호출 명칭"
-                  className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-base font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                />
-              </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500">설명</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="상세 내용을 입력하세요"
+              rows={3}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all resize-none"
+            />
+          </div>
 
-              <div className="space-y-2 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 transition-colors group-focus-within:text-primary">
-                  Operational Context / Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="해당 인력 노드에 대한 상세 설명을 입력하세요"
-                  rows={3}
-                  className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-base font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 p-8 bg-muted/10 border-t border-border/20">
-              <button
-                onClick={() => {
-                  setIsAddModalOpen(false);
-                  setIsEditModalOpen(false);
-                  setEditingRole(null);
-                  setFormData({ id: "", name: "", description: "" });
-                }}
-                className="rounded-2xl border border-border/40 bg-white px-6 py-3 text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-all active:scale-95"
-              >
-                Abort
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!formData.name || (!isEditModalOpen && !formData.id)}
-                className="rounded-2xl bg-primary px-8 py-3 text-sm font-black text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:translate-y-[-2px] active:scale-95 transition-all duration-300 disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none"
-              >
-                Commit Changes
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setIsEditModalOpen(false);
+                setEditingRole(null);
+                setFormData({ id: "", name: "", description: "" });
+              }}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!formData.name || (!isEditModalOpen && !formData.id)}
+              className="px-8 min-w-[120px]"
+            >
+              저장
+            </Button>
           </div>
         </div>
-      )}
+      </DraggablePanel>
     </div>
   );
 }

@@ -4,18 +4,20 @@ import { Save, Plus, Trash2 } from "lucide-react";
 import { useProductPlan } from "@/hooks/useProductPlan";
 import { formatCurrency, Currency } from "@/lib/utils/currency";
 import { ProductType } from "@/types/profitability";
-import { DatePicker } from "@/components/ui";
+import { DatePicker, Button, Input, Select, Badge } from "@/components/ui";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ProductPlanTabProps {
     projectId: number;
     currency: Currency;
     status: string;
     onSave?: () => void;
+    profitabilityId?: number;
 }
 
-export function ProductPlanTab({ projectId, currency, status, onSave }: ProductPlanTabProps) {
-    const isReadOnly = status === "completed";
+export function ProductPlanTab({ projectId, currency, status, onSave, profitabilityId }: ProductPlanTabProps) {
+    const isReadOnly = status === "completed" || status === "approved" || status === "review";
     const {
         items,
         masterItems,
@@ -28,7 +30,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
         getSubtotal,
         getTotal,
         saveProductPlan,
-    } = useProductPlan(projectId);
+    } = useProductPlan(projectId, profitabilityId);
 
 
 
@@ -97,7 +99,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                                     value={item.companyName}
                                     onChange={(e) => updateItem(item.id, "companyName", e.target.value)}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-[14px] text-center disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-sm text-center font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                                 />
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
@@ -109,7 +111,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                                             value={item.productName}
                                             onChange={(e) => selectProduct(item.id, e.target.value)}
                                             disabled={isReadOnly}
-                                            className="w-full rounded border border-gray-200 px-2 py-1 text-[14px] disabled:bg-gray-50 disabled:text-gray-500"
+                                            className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                                             placeholder="제품명"
                                         />
                                         <datalist id={`products-${item.id}`}>
@@ -141,7 +143,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-right text-[14px] disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-right text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                                 />
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
@@ -156,7 +158,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-right text-[14px] disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-right text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                                 />
                             </td>
                             <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
@@ -174,7 +176,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-right text-[14px] font-medium text-blue-600 disabled:bg-gray-50 disabled:text-blue-400"
+                                    className="w-full h-10 rounded-xl border-2 border-primary/20 px-3 py-1 text-right text-sm font-black text-primary transition-all duration-300 focus:border-primary/40 focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-primary/40"
                                 />
                             </td>
                             <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-600">
@@ -344,13 +346,15 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-[14px] text-gray-500">(단위:천원)</span>
+                    <div className="flex flex-col justify-end pb-1.5 h-full">
+                        <span className="text-sm text-gray-500">(단위:천원)</span>
+                    </div>
                     {!isReadOnly && (
                         <button
                             type="button"
                             onClick={(e) => handleSave(e)}
                             disabled={saving}
-                            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-[14px] font-medium text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             <Save className="h-4 w-4" />
                             {saving ? "저장 중..." : "저장"}
@@ -462,6 +466,6 @@ export function ProductPlanTab({ projectId, currency, status, onSave }: ProductP
                 </table>
             </div>
 
-        </div>
+        </div >
     );
 }

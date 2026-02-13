@@ -39,7 +39,7 @@ INSERT INTO we_clients (name, type, code, description) VALUES
 ('한국전력기술', 'orderer', 'KEPCO_TECH', '한국전력기술(주)'),
 ('한국전력공사', 'customer', 'KEPCO', '한국전력공사'),
 ('한수원', 'orderer', 'KHNP', '한국수력원자력(주)')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- ============================================
 -- 1. 프로젝트 카테고리
@@ -117,7 +117,7 @@ INSERT INTO we_md_difficulty_items (category, content, description, default_diff
 ('감리', '감리 대상 프로젝트, 공공산출물', '일정금액 이상 또는 공공과제', 3, 38),
 ('감리', '단계별 감리 진행 (4단계 이상)', '분석/설계/개발/종료 감리', 3, 39),
 ('감리', '감리 전담 인력 부재', '기존 개발팀이 대응까지 담당', 3, 40)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (category, content) DO NOTHING;
 
 -- ============================================
 -- 4. M/D 산정 분야별 난이도 항목
@@ -138,7 +138,7 @@ INSERT INTO we_md_field_difficulty_items (field_category, content, description, 
 ('디지털트윈', '외부 물리엔진 연계 필요', 'Unity, Unreal, MATLAB 등 포함', 0, 11),
 ('디지털트윈', '애니메이션 구현', '효과, 애니메이션, 사운드 등 포함', 3, 12),
 ('디지털트윈', '공간정보 시스템 연계 필요', 'GIS, LBS 포함 시', 0, 13)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (field_category, content) DO NOTHING;
 
 -- ============================================
 -- 5. M/D 산정 개발 항목 기준표
@@ -174,7 +174,7 @@ INSERT INTO we_md_development_items (classification, content, default_quantity, 
 ('포탈', '운영 환경 구축', 0, 5, 23),
 ('포탈', '공통 (로그인, 메뉴, 권한, 레이아웃 등)', 0, 10, 24),
 ('포탈', '포탈 (보고서/통계/설정)', 0, 2, 25)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (classification, content) DO NOTHING;
 
 -- ============================================
 -- 6. M/D 산정 3D 모델링 가중치
@@ -185,7 +185,7 @@ INSERT INTO we_md_modeling_3d_weights (content, description, weight, display_ord
 ('CAD 일부 + 사진 병행', '누락 도면 보완 필요', 1.15, 3),
 ('사진/실측 제공', '3D 모델링을 사진 기반 추정', 1.3, 4),
 ('실측 필요', '현장 실측 → 모델화', 1.5, 5)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (content) DO NOTHING;
 
 -- ============================================
 -- 7. M/D 산정 3D 모델링 기준표
@@ -208,7 +208,7 @@ INSERT INTO we_md_modeling_3d_items (category, difficulty, default_quantity, bas
 ('설비/장비', '중복', 300, 0.1, '중복 사용 (배치 필요)', 11),
 -- 캐릭터
 ('캐릭터', '', 2, 5, '메타버스', 12)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (category, difficulty) DO NOTHING;
 
 -- ============================================
 -- 8. M/D 산정 P&ID 가중치
@@ -217,7 +217,7 @@ INSERT INTO we_md_pid_weights (content, description, weight, display_order) VALU
 ('수기 작성', '배경을 따라서 수기로 작성', 1.0, 1),
 ('DrawDX', '자동 인식 후 결과 보정', 0.15, 2),
 ('MS Visio', 'Visio 인식 (지원 예정)', 0.1, 3)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (content) DO NOTHING;
 
 -- ============================================
 -- 9. M/D 산정 P&ID 기준표
@@ -225,4 +225,4 @@ ON CONFLICT DO NOTHING;
 INSERT INTO we_md_pid_items (category, default_quantity, base_md, remarks, display_order) VALUES
 ('P&ID', 500, 1, '', 1),
 ('SLD', 0, 0.5, '', 2)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (category) DO NOTHING;

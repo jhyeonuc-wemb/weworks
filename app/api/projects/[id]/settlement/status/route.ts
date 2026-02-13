@@ -35,8 +35,18 @@ export async function PUT(
             );
         }
 
-        // 수지정산서가 완료되면 필요시 프로젝트 상태 변경 (여기서는 이미 진행중일 것이므로 생략 가능)
-        // 만약 정산 완료시 프로젝트 완료 처리가 필요하다면 추가
+        // 수지정산서가 완료되면 프로젝트 상태를 'completed'로 변경
+        if (status === 'COMPLETED') {
+            try {
+                console.log(`Settlement COMPLETED via status API. Updating project ${projectId} status to completed`);
+                await query(
+                    "UPDATE we_projects SET status = 'completed', current_phase = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+                    [projectId]
+                );
+            } catch (err) {
+                console.error(`Failed to update project status for ${projectId}:`, err);
+            }
+        }
 
         return NextResponse.json({
             success: true,

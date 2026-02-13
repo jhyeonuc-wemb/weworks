@@ -23,6 +23,7 @@ interface ProfitabilityDiffTabProps {
   isReadOnly?: boolean;
   onSave?: () => void;
   refreshAllData?: () => void;
+  profitabilityId?: number;
 }
 
 export function ProfitabilityDiffTab({
@@ -34,6 +35,7 @@ export function ProfitabilityDiffTab({
   isReadOnly = false,
   onSave,
   refreshAllData,
+  profitabilityId,
 }: ProfitabilityDiffTabProps) {
   // --- 부가 수익/비용 수동 입력 상태 ---
   const [extraRevenue, setExtraRevenue] = React.useState(0);
@@ -46,7 +48,7 @@ export function ProfitabilityDiffTab({
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await ProfitabilityService.fetchProfitabilityDiff(projectId);
+        const data = await ProfitabilityService.fetchProfitabilityDiff(projectId, profitabilityId);
         setExtraRevenue(data.extraRevenue || 0);
         setExtraRevenueDesc(data.extraRevenueDesc || "");
         setExtraExpense(data.extraExpense || 0);
@@ -56,7 +58,7 @@ export function ProfitabilityDiffTab({
       }
     };
     loadData();
-  }, [projectId]);
+  }, [projectId, profitabilityId]);
 
   // --- 최근 공유된 요약 계산 로직 사용 ---
   const summary = useMemo(() => {
@@ -122,7 +124,7 @@ export function ProfitabilityDiffTab({
         totalCost: summary.totalCost,
         netProfit: summary.netProfit,
         profitRate: summary.profitRate,
-      });
+      }, profitabilityId);
       alert("데이터가 성공적으로 저장되었습니다.");
       if (onSave) onSave();
     } catch (error) {
@@ -159,7 +161,7 @@ export function ProfitabilityDiffTab({
                       refreshAllData();
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-200 shadow-sm hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="전체 데이터 갱신"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -170,7 +172,7 @@ export function ProfitabilityDiffTab({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="h-4 w-4" />
                 {saving ? "저장 중..." : "저장"}
@@ -466,7 +468,7 @@ export function ProfitabilityDiffTab({
         </table>
       </div>
 
-      <div className="rounded-md bg-blue-50 p-4 border border-blue-100">
+      <div className="rounded-xl bg-blue-50 p-4 border border-blue-100">
         <p className="text-sm text-blue-800 flex items-center gap-2">
           <span className="font-bold">※ 참고:</span>
           수익 분석표의 모든 금액은 인력 계획, 제품 계획, 프로젝트 경비의 데이터를 기반으로 자동 계산됩니다.

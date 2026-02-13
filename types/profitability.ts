@@ -8,6 +8,7 @@ export interface Project {
   contractStartDate: string | null;
   contractEndDate: string | null;
   customerName?: string;
+  projectCode?: string;
 }
 
 export interface ProjectUnitPrice {

@@ -10,7 +10,7 @@ import type {
 import { ProductService } from "@/services/product.service";
 import { ProfitabilityService } from "@/services/profitability.service";
 
-export function useProductPlan(projectId?: number) {
+export function useProductPlan(projectId?: number, profitabilityId?: number) {
   const [items, setItems] = useState<ProductPlanItem[]>([
     {
       id: 1,
@@ -69,7 +69,7 @@ export function useProductPlan(projectId?: number) {
     if (!projectId) return;
     try {
       setLoading(true);
-      const savedItems = await ProfitabilityService.fetchProductPlan(projectId);
+      const savedItems = await ProfitabilityService.fetchProductPlan(projectId, profitabilityId);
 
       if (savedItems.length > 0) {
         setItems(savedItems);
@@ -83,7 +83,7 @@ export function useProductPlan(projectId?: number) {
 
   useEffect(() => {
     loadProductPlan();
-  }, [loadProductPlan]);
+  }, [loadProductPlan, profitabilityId]);
 
   // ... (rest of file)
 
@@ -257,7 +257,7 @@ export function useProductPlan(projectId?: number) {
 
     try {
       setSaving(true);
-      await ProfitabilityService.saveProductPlan(projectId, items);
+      await ProfitabilityService.saveProductPlan(projectId, items, profitabilityId);
       return true;
     } catch (error) {
       console.error("Error saving product plan:", error);

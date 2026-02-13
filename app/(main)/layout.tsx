@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sidebar } from "@/components/sidebar";
 import { cn } from "@/lib/utils";
 import { Search, Menu, X, ChevronLeft } from "lucide-react";
+import { SearchInput } from "@/components/ui";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
 
   return (
     <div className="min-h-screen bg-background text-slate-800 font-sans selection:bg-indigo-50 selection:text-indigo-600">
@@ -30,27 +32,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
           )}>
             {!sidebarCollapsed ? (
               <div className="flex w-full items-center justify-between gap-3 animate-in fade-in slide-in-from-left-2 duration-500">
-                <Link href="/dashboard" className="flex items-center gap-2 group/logo">
-                  <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-slate-200 group-hover/logo:scale-110 transition-transform duration-300">
-                    <span className="text-white font-black text-lg italic mt-0.5 ml-0.5 pointer-events-none">W</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black tracking-tight text-slate-900">WEWORKS</span>
-                    <span className="text-[9px] font-black text-slate-400 tracking-[0.15em] uppercase -mt-0.5 italic">Consensus System</span>
+                <Link href="/dashboard" className="flex items-center gap-2 group/logo py-2">
+                  <div className="flex items-center justify-center transition-transform duration-300 group-hover/logo:scale-105">
+                    <img src="/weworks.png" alt="WEWORKS" className="h-[28px] object-contain" />
                   </div>
                 </Link>
               </div>
             ) : (
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xl shadow-slate-100 hover:scale-105 active:scale-95 transition-all duration-300"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300"
               >
-                <span className="font-black text-lg italic">W</span>
+                <img src="/weworks.png" alt="W" className="h-[20px] w-auto object-contain" />
               </button>
             )}
           </div>
 
-          <div className="py-6 h-[calc(100%-5rem)] custom-scrollbar">
+          <div className="py-6 h-[calc(100%-5rem)] overflow-y-auto custom-scrollbar">
             <Sidebar
               collapsed={sidebarCollapsed}
               onExpand={() => setSidebarCollapsed(false)}
@@ -74,11 +72,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
           )}
         >
           <div className="mb-8 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-black text-lg italic">W</span>
-              </div>
-              <span className="text-sm font-black tracking-tight text-slate-900 uppercase">WEWORKS</span>
+            <Link href="/dashboard" className="flex items-center gap-3 py-1">
+              <img src="/weworks.png" alt="WEWORKS" className="h-[24px] object-contain" />
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -91,8 +86,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden relative">
-          <header className="flex h-20 shrink-0 items-center justify-between bg-white/[0.6] backdrop-blur-xl px-6 sm:px-10 z-20 border-b border-slate-100/60 sticky top-0">
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto relative custom-scrollbar-main">
+          <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -118,11 +113,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="hidden lg:flex items-center bg-slate-50 p-1 rounded-xl border border-slate-100 group pr-4 transition-all focus-within:bg-white focus-within:shadow-xl focus-within:shadow-slate-100 focus-within:border-slate-200">
-                <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-100/50 flex items-center justify-center">
-                  <Search className="h-3.5 w-3.5 text-slate-400" />
-                </div>
-                <input type="text" placeholder="통합 검색..." className="bg-transparent border-none outline-none text-[11px] font-bold text-slate-700 ml-3 w-40 placeholder:text-slate-300 placeholder:font-bold italic" />
+              <div className="hidden lg:flex items-center w-80">
+                <SearchInput
+                  placeholder="통합 검색..."
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="h-11"
+                />
               </div>
 
               <div className="flex items-center gap-4 border-l border-slate-100 pl-6">
@@ -140,8 +137,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar-main px-6 py-6 sm:px-10 sm:py-10 relative z-10 bg-[#FBFBFC]">
-            <div className="max-w-[1700px] mx-auto min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-700">
+          <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 relative z-10 bg-[#FBFBFC]">
+            <div className="w-full min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-700">
               {children}
             </div>
           </main>

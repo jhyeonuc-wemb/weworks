@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const projectId = searchParams.get("projectId");
     const status = searchParams.get("status");
+    const latestOnly = searchParams.get("latestOnly") === "true";
 
     let sql = `
       SELECT 
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
         p.project_id,
         p.version,
         p.status,
+        p.version_comment,
         COALESCE(p.total_revenue, 0) as total_revenue,
         COALESCE(p.total_cost, 0) as total_cost,
         COALESCE(p.net_profit, 0) as net_profit,
@@ -25,18 +27,20 @@ export async function GET(request: NextRequest) {
         pr.project_code,
         c.name AS customer_name,
         COALESCE(m.our_mm, 0) as our_mm,
-        COALESCE(m.others_mm, 0) as others_mm
+        COALESCE(m.others_mm, 0) as others_mm,
+        u.name AS creator_name
       FROM we_project_profitability p
       LEFT JOIN we_projects pr ON p.project_id = pr.id
       LEFT JOIN we_clients c ON pr.customer_id = c.id
+      LEFT JOIN we_users u ON p.created_by = u.id
       LEFT JOIN (
         SELECT 
-          project_id,
+          profitability_id,
           SUM(CASE WHEN affiliation_group NOT LIKE '외주%' THEN (SELECT SUM(val::numeric) FROM jsonb_each_text(COALESCE(monthly_allocation, '{}'::jsonb)) AS x(key, val)) ELSE 0 END) as our_mm,
           SUM(CASE WHEN affiliation_group LIKE '외주%' THEN (SELECT SUM(val::numeric) FROM jsonb_each_text(COALESCE(monthly_allocation, '{}'::jsonb)) AS x(key, val)) ELSE 0 END) as others_mm
         FROM we_project_manpower_plan
-        GROUP BY project_id
-      ) m ON p.project_id = m.project_id
+        GROUP BY profitability_id
+      ) m ON p.id = m.profitability_id
       WHERE 1=1
     `;
     const params: any[] = [];
@@ -44,6 +48,9 @@ export async function GET(request: NextRequest) {
     if (projectId && !isNaN(parseInt(projectId, 10))) {
       sql += ` AND p.project_id = $${params.length + 1}`;
       params.push(parseInt(projectId, 10));
+    } else {
+      // 전체 목록 조회 시 작업이 시작되지 않은(Placeholder) 자료는 제외
+      sql += ` AND p.status != 'STANDBY'`;
     }
 
     if (status) {
@@ -51,7 +58,14 @@ export async function GET(request: NextRequest) {
       params.push(status);
     }
 
-    sql += ` ORDER BY p.project_id, p.version DESC`;
+    if (latestOnly) {
+      sql = `
+        SELECT DISTINCT ON (project_id) * FROM (${sql} ORDER BY p.project_id, p.version DESC) sub
+        ORDER BY project_id, version DESC
+      `;
+    } else {
+      sql += ` ORDER BY p.project_id, p.version DESC`;
+    }
 
     const result = await query(sql, params);
 
@@ -65,11 +79,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 수지분석서 헤더 생성 (M/D 산정과 동일한 패턴: 기존 draft 재사용)
+// 수지분석서 헤더 생성
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { project_id, created_by = 1 } = body;
+    const { project_id, created_by = 1, version_comment = "" } = body;
 
     if (!project_id) {
       return NextResponse.json(
@@ -78,66 +92,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 프로젝트 존재 여부 확인
-    const projectCheck = await query(
-      `SELECT id FROM we_projects WHERE id = $1`,
-      [project_id]
-    );
-
-    if (projectCheck.rows.length === 0) {
-      return NextResponse.json(
-        { error: "Project not found" },
-        { status: 404 }
-      );
-    }
-
     const projectIdNum = parseInt(project_id);
 
-    // 기존 작성 중이거나 미작성인 수지분석서가 있는지 확인
-    const existingDraftCheck = await query(
-      `SELECT id, version, project_id, status FROM we_project_profitability 
-       WHERE project_id = $1 AND status IN ('not_started', 'in_progress') 
+    // 진행 중인 버전 확인
+    const draftCheck = await query(
+      `SELECT id, version, status FROM we_project_profitability 
+       WHERE project_id = $1 AND status IN ('STANDBY', 'IN_PROGRESS') 
        ORDER BY version DESC LIMIT 1`,
       [projectIdNum]
     );
 
-    if (existingDraftCheck.rows.length > 0) {
-      const existing = existingDraftCheck.rows[0];
+    if (draftCheck.rows.length > 0) {
+      const draft = draftCheck.rows[0];
       return NextResponse.json({
-        id: existing.id,
-        version: existing.version,
-        profitability: existing,
+        id: draft.id,
+        version: draft.version,
         isExisting: true,
+        profitability: { id: draft.id, version: draft.version, status: draft.status || 'STANDBY' }
       });
     }
 
-    // 완료된 버전 중 최대 버전 확인
+    // 새 버전 생성
     const versionCheck = await query(
-      `SELECT MAX(version) AS max_version FROM we_project_profitability WHERE project_id = $1 AND status = 'completed'`,
+      `SELECT COALESCE(MAX(version), 0) as max_version FROM we_project_profitability WHERE project_id = $1`,
       [projectIdNum]
     );
-    const maxVersion = versionCheck.rows[0]?.max_version || 0;
-    const newVersion = Number(maxVersion) + 1;
+    const newVersion = Number(versionCheck.rows[0].max_version) + 1;
 
-    const insertSql = `
-      INSERT INTO we_project_profitability (
-        project_id, version, status, created_by
-      ) VALUES ($1, $2, 'not_started', $3)
-      RETURNING id, project_id, version, status
-    `;
+    // created_by를 '정현우'(ID: 10)로 우선 설정. 없으면 첫 사용자.
+    const insertResult = await query(
+      `INSERT INTO we_project_profitability (project_id, version, status, created_by, version_comment)
+       VALUES ($1, $2, 'STANDBY', COALESCE((SELECT id FROM we_users WHERE id = 10), (SELECT id FROM we_users ORDER BY id LIMIT 1)), $3) RETURNING id`,
+      [projectIdNum, newVersion, version_comment]
+    );
 
-    const result = await query(insertSql, [
-      projectIdNum,
-      newVersion,
-      created_by,
-    ]);
-    const row = result.rows[0];
+    const newId = insertResult.rows[0].id;
+
+    // 만약 이전 버전이 존재한다면 데이터 복사 로직
+    if (newVersion > 1) {
+      const prevVersionResult = await query(
+        `SELECT id FROM we_project_profitability WHERE project_id = $1 AND version = $2`,
+        [projectIdNum, newVersion - 1]
+      );
+      if (prevVersionResult.rows.length > 0) {
+        const prevId = prevVersionResult.rows[0].id;
+
+        // 인력 계획 복사
+        await query(`
+          INSERT INTO we_project_manpower_plan (project_id, profitability_id, project_name, role, detailed_task, company_name, affiliation_group, wmb_rank, grade, name, user_id, monthly_allocation, proposed_unit_price, proposed_amount, internal_unit_price, internal_amount)
+          SELECT project_id, $1, project_name, role, detailed_task, company_name, affiliation_group, wmb_rank, grade, name, user_id, monthly_allocation, proposed_unit_price, proposed_amount, internal_unit_price, internal_amount
+          FROM we_project_manpower_plan WHERE profitability_id = $2
+        `, [newId, prevId]);
+
+        // 제품 계획 복사
+        await query(`
+          INSERT INTO we_project_product_plan (project_id, profitability_id, type, product_id, company_name, product_name, quantity, unit_price, base_price, proposal_price, discount_rate, cost_price, request_date, request_type)
+          SELECT project_id, $1, type, product_id, company_name, product_name, quantity, unit_price, base_price, proposal_price, discount_rate, cost_price, request_date, request_type
+          FROM we_project_product_plan WHERE profitability_id = $2
+        `, [newId, prevId]);
+
+        // 경비 계획 복사
+        await query(`
+          INSERT INTO we_project_expense_plan (project_id, profitability_id, category, item, monthly_values, is_auto_calculated)
+          SELECT project_id, $1, category, item, monthly_values, is_auto_calculated
+          FROM we_project_expense_plan WHERE profitability_id = $2
+        `, [newId, prevId]);
+
+        // 수지차 데이터 복사
+        await query(`
+          INSERT INTO we_project_profitability_extra_revenue (project_id, profitability_id, extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc)
+          SELECT project_id, $1, extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc
+          FROM we_project_profitability_extra_revenue WHERE profitability_id = $2
+        `, [newId, prevId]);
+
+        // 수주품의 데이터 복사
+        await query(`
+          INSERT INTO we_project_order_proposal (project_id, profitability_id, contract_type, contract_category, main_contract, main_operator, execution_location, overview, special_notes, risk, payment_terms, partners)
+          SELECT project_id, $1, contract_type, contract_category, main_contract, main_operator, execution_location, overview, special_notes, risk, payment_terms, partners
+          FROM we_project_order_proposal WHERE profitability_id = $2
+        `, [newId, prevId]);
+      }
+    }
 
     return NextResponse.json({
-      id: row.id,
-      project_id: row.project_id,
+      id: newId,
       version: newVersion,
-      profitability: row,
+      profitability: { id: newId, version: newVersion, status: 'STANDBY' }
     });
   } catch (error: any) {
     console.error("Error creating profitability:", error);
@@ -147,4 +187,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

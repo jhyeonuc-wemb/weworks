@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { X, GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
@@ -104,18 +105,21 @@ export function DraggablePanel({
 
     if (!mounted && !open) return null;
 
-    return (
+    if (typeof document === "undefined") return null;
+
+    return createPortal(
         <>
             {/* Global overlay to handle drag constraints if needed, but here we want to allow underlying clicks */}
             <div
                 className={cn(
-                    "fixed inset-0 z-50 pointer-events-none transition-opacity duration-300",
+                    "fixed inset-0 z-[9999] pointer-events-none transition-opacity duration-300",
                     open ? "opacity-100" : "opacity-0 invisible"
                 )}
             >
                 <div
                     className={cn(
-                        "pointer-events-auto absolute transform transition-all duration-300 ease-out",
+                        "pointer-events-auto absolute transform ease-out",
+                        !isDragging && "transition-all duration-300",
                         open ? "opacity-100 scale-100" : "opacity-0 scale-95 translate-y-4"
                     )}
                     style={{
@@ -126,7 +130,7 @@ export function DraggablePanel({
                     <div
                         className={cn(
                             "pointer-events-auto relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200 flex flex-col",
-                            isDragging && "cursor-grabbing ring-2 ring-indigo-500/20",
+                            isDragging && "cursor-grabbing ring-2 ring-indigo-500/20 select-none",
                             className
                         )}
                         style={{ width: '700px', maxHeight: '85vh' }}
@@ -162,5 +166,5 @@ export function DraggablePanel({
                 </div>
             </div>
         </>
-    );
+        , document.body);
 }

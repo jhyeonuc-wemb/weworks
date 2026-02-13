@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Button,
+  SearchInput,
+  DraggablePanel,
+} from "@/components/ui";
+import { Save, X } from "lucide-react";
 
 export interface Product {
   id: number;
@@ -18,9 +31,14 @@ interface ProductMasterProps {
   fullPage?: boolean;
   /** 외부에서 신규 등록 버튼을 눌렀을 때 모달을 열기 위한 트리거 값 (증가형 카운터 등) */
   externalNewTrigger?: number;
+  /** 외부 트리거 시 사용할 위치 정보 */
+  externalTriggerRect?: DOMRect | null;
 }
-
-export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMasterProps) {
+export function ProductMaster({
+  fullPage = true,
+  externalNewTrigger,
+  externalTriggerRect
+}: ProductMasterProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -32,6 +50,9 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
   const [lastExternalTrigger, setLastExternalTrigger] = useState<number | undefined>(
     externalNewTrigger
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchProducts();
@@ -43,10 +64,11 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
       externalNewTrigger !== undefined &&
       externalNewTrigger !== lastExternalTrigger
     ) {
+      if (externalTriggerRect) setTriggerRect(externalTriggerRect);
       openNewForm();
       setLastExternalTrigger(externalNewTrigger);
     }
-  }, [externalNewTrigger, lastExternalTrigger]);
+  }, [externalNewTrigger, lastExternalTrigger, externalTriggerRect]);
 
   useEffect(() => {
     const s = search.trim().toLowerCase();
@@ -62,6 +84,17 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
       )
     );
   }, [products, search]);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const fetchProducts = async () => {
     try {
@@ -80,13 +113,15 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
     }
   };
 
-  const openNewForm = () => {
+  const openNewForm = (rect?: DOMRect) => {
+    if (rect) setTriggerRect(rect);
     setEditing(null);
     setForm({ companyName: "", productName: "", unitPrice: 0, isActive: true });
     setUnitPriceInput("");
   };
 
-  const openEditForm = (product: Product) => {
+  const openEditForm = (product: Product, e: React.MouseEvent) => {
+    setTriggerRect(e.currentTarget.getBoundingClientRect());
     setEditing(product);
     setForm({
       id: product.id,
@@ -178,110 +213,83 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
   };
 
   const content = (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8">
       {/* 헤더 (단독 메뉴에서만 사용) */}
       {fullPage && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-sm border border-primary/20">
-              <Search className="h-7 w-7" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground">제품 단가 마스터</h1>
-              <p className="mt-1.5 text-sm font-medium text-muted-foreground opacity-70">
-                제품 및 서비스 단가 관리
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">제품 단가 마스터</h1>
           </div>
-          <button
-            type="button"
-            onClick={openNewForm}
-            className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+          <Button
+            onClick={(e) => openNewForm(e.currentTarget.getBoundingClientRect())}
+            variant="primary"
           >
-            <Plus className="h-4 w-4" />
-            신규 제품 등록
-          </button>
+            <Plus className="h-4 w-4 mr-1.5" />
+            제품 등록
+          </Button>
         </div>
       )}
 
       {/* 검색 바 - Neo Modern Style */}
-      <div className="flex items-center gap-4 px-2">
-        <div className="relative group w-full max-w-md">
-          <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-          <input
-            type="text"
-            placeholder="업체명 또는 제품명으로 검색..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl bg-muted/20 border-transparent py-4 pl-12 pr-6 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-          />
-        </div>
+      <div className="flex items-center gap-x-4 mx-1">
+        <SearchInput
+          placeholder="업체명 또는 제품명으로 검색..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       {/* 제품 목록 테이블 */}
-      <div className="overflow-hidden bg-white/40 backdrop-blur-sm rounded-[2rem] border border-border/40 shadow-sm animate-in zoom-in-95 duration-500">
+      <div className="neo-light-card overflow-hidden border border-border/40">
         <div className="overflow-x-auto custom-scrollbar-main">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/30 border-b border-border/20">
-                <tr className="bg-muted/30 border-b border-border/20">
-                  <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    업체명
-                  </th>
-                  <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    제품명
-                  </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    단가 (천원)
-                  </th>
-                  <th className="px-6 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    사용여부
-                  </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    작업
-                  </th>
-                </tr>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/10">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">업체명</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">제품명</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">단가 (천원)</TableHead>
+                <TableHead className="px-8 py-3 text-center text-sm text-slate-900">사용여부</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/10">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 border-3 border-primary/10 border-t-primary rounded-full animate-spin" />
-                      <span className="text-xs font-bold text-muted-foreground animate-pulse tracking-widest uppercase">데이터를 불러오고 있습니다...</span>
+                <TableRow>
+                  <TableCell colSpan={5} className="px-8 py-24 text-center border-none">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm font-medium text-muted-foreground">데이터를 불러오고 있습니다...</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center gap-4 opacity-30">
-                      <Search className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-sm font-black uppercase tracking-widest italic">데이터가 없습니다</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((p) => (
-                  <tr key={p.id} className="group hover:bg-primary/[0.02] transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                          <Plus className="h-3 w-3 rotate-45" />
-                        </div>
-                        <span className="font-bold text-foreground truncate">{p.companyName}</span>
+                <TableRow>
+                  <TableCell colSpan={5} className="px-8 py-24 text-center border-none">
+                    <div className="flex flex-col items-center justify-center gap-4 opacity-40">
+                      <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                       </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{p.productName}</span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <span className="font-mono font-black text-foreground">{p.unitPrice.toLocaleString()}</span>
-                    </td>
-                    <td className="px-6 py-5 text-center">
+                      <p className="text-sm font-medium text-foreground">데이터가 없습니다</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedProducts.map((p) => (
+                  <TableRow key={p.id} className="group hover:bg-primary/[0.02] transition-colors">
+                    <TableCell className="px-8 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-slate-900 truncate">{p.companyName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-8 py-3">
+                      <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{p.productName}</span>
+                    </TableCell>
+                    <TableCell className="px-8 py-3 text-right">
+                      <span className="font-mono text-sm text-slate-900">{p.unitPrice.toLocaleString()}</span>
+                    </TableCell>
+                    <TableCell className="px-8 py-3 text-center">
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tighter ${p.isActive
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] tracking-tighter ${p.isActive
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
                           : "bg-muted text-muted-foreground"
                           }`}
@@ -289,144 +297,170 @@ export function ProductMaster({ fullPage = true, externalNewTrigger }: ProductMa
                         <div className={`w-1 h-1 rounded-full ${p.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
                         {p.isActive ? "사용중" : "미사용"}
                       </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
+                    </TableCell>
+                    <TableCell className="px-8 py-3 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                         <button
-                          type="button"
-                          onClick={() => openEditForm(p)}
-                          className="p-2 rounded-xl bg-white border border-border/40 hover:border-primary/40 hover:text-primary transition-all shadow-sm"
+                          onClick={(e) => openEditForm(p, e)}
+                          className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          type="button"
                           onClick={() => handleDelete(p)}
-                          className="p-2 rounded-xl bg-white border border-border/40 hover:border-destructive/40 hover:text-destructive transition-all shadow-sm"
+                          className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+        </div>
+        <div className="bg-muted/30 px-8 py-5 border-t border-border/20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-xs text-slate-500">TOTAL : <span className="text-primary ml-1">{filtered.length}</span></div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={cn(
+                      "w-8 h-8 rounded-lg text-xs transition-all",
+                      currentPage === page
+                        ? "bg-primary text-white shadow-md shadow-primary/20"
+                        : "text-muted-foreground hover:bg-white hover:text-foreground"
+                    )}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 등록/수정 모달 - Neo Integrated Design */}
-      {(form.companyName !== undefined || form.productName !== undefined) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={closeForm} />
-          <div className="relative w-full max-w-md bg-white rounded-[2.5rem] border border-white shadow-2xl animate-in zoom-in-95 duration-500 overflow-hidden">
-            {/* Modal Header */}
-            <div className="border-b border-border/30 px-10 py-8 flex items-center justify-between">
-              <div className="flex items-center gap-5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${editing ? 'bg-primary/10 text-primary' : 'bg-emerald-50 text-emerald-600 rotate-12'}`}>
-                  {editing ? <Pencil className="h-6 w-6" /> : <Plus className="h-7 w-7" />}
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-foreground tracking-tight">
-                    {editing ? "제품/상품 수정" : "신규 제품 등록"}
-                  </h3>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">제품 정보 관리</p>
-                </div>
+      {/* 등록/수정 패널 */}
+      <DraggablePanel
+        open={(form.companyName !== undefined || form.productName !== undefined)}
+        onOpenChange={(open) => {
+          if (!open) closeForm();
+        }}
+        triggerRect={triggerRect}
+        title={editing ? "제품 정보 수정" : "신규 제품 등록"}
+        description="기관별, 직군별 기준 인력 단가를 설정하고 관리합니다."
+        className="max-w-2xl"
+      >
+        <div className="space-y-8">
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                제조사/원천사 <span className="text-primary">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.companyName ?? ""}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, companyName: e.target.value }))
+                }
+                placeholder="제조사 또는 원천사 입력"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                제품명 <span className="text-primary">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.productName ?? ""}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, productName: e.target.value }))
+                }
+                placeholder="정식 모델명 또는 서비스 명칭 입력"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                단가 (천원)
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={unitPriceInput}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/,/g, "");
+                    if (raw === "") {
+                      setUnitPriceInput("");
+                      return;
+                    }
+                    const num = Number(raw);
+                    if (Number.isNaN(num)) return;
+                    setUnitPriceInput(num.toLocaleString());
+                  }}
+                  placeholder="0"
+                  className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 text-sm font-mono font-black text-foreground focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xs opacity-40">₩</span>
               </div>
             </div>
 
-            <div className="p-10 space-y-8">
-              <div className="space-y-2.5 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 transition-colors group-focus-within:text-primary">업체명</label>
-                <input
-                  type="text"
-                  value={form.companyName ?? ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, companyName: e.target.value }))
-                  }
-                  placeholder="제조사 또는 원천사 입력"
-                  className="w-full rounded-2xl bg-muted/20 border-transparent py-4 px-6 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                />
-              </div>
-
-              <div className="space-y-2.5 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 transition-colors group-focus-within:text-primary">제품명</label>
-                <input
-                  type="text"
-                  value={form.productName ?? ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, productName: e.target.value }))
-                  }
-                  placeholder="정식 모델명 또는 서비스 명칭 입력"
-                  className="w-full rounded-2xl bg-muted/20 border-transparent py-4 px-6 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                />
-              </div>
-
-              <div className="space-y-2.5 group">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 transition-colors group-focus-within:text-primary">단가 (천원)</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={unitPriceInput}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/,/g, "");
-                      if (raw === "") {
-                        setUnitPriceInput("");
-                        return;
-                      }
-                      const num = Number(raw);
-                      if (Number.isNaN(num)) return;
-                      setUnitPriceInput(num.toLocaleString());
-                    }}
-                    placeholder="0"
-                    className="w-full rounded-2xl bg-muted/20 border-transparent py-4 px-12 text-sm font-mono font-black text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none text-right"
-                  />
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xs opacity-40">₩</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/10 border border-border/20">
-                <input
-                  id="product-active"
-                  type="checkbox"
-                  checked={form.isActive ?? true}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, isActive: e.target.checked }))
-                  }
-                  className="h-5 w-5 rounded-lg border-border/40 text-primary focus:ring-primary/20 transition-all"
-                />
-                <label
-                  htmlFor="product-active"
-                  className="text-[11px] font-black text-foreground uppercase tracking-widest cursor-pointer select-none"
-                >
-                  사용 여부 활성화
-                </label>
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="flex-1 rounded-2xl border border-border/40 py-4 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted/50 transition-all active:scale-95 px-6"
-                  disabled={saving}
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:translate-y-[-2px] active:scale-95 transition-all disabled:opacity-30 px-6"
-                >
-                  {saving ? "저장 중..." : "저장"}
-                </button>
-              </div>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/10 border border-border/20">
+              <input
+                id="product-active"
+                type="checkbox"
+                checked={form.isActive ?? true}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, isActive: e.target.checked }))
+                }
+                className="h-5 w-5 rounded-lg border-border/40 text-primary focus:ring-primary/20 transition-all"
+              />
+              <label
+                htmlFor="product-active"
+                className="text-xs font-bold text-foreground cursor-pointer select-none"
+              >
+                현재 제품/상품을 활성화하여 사용합니다
+              </label>
             </div>
           </div>
+
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button variant="ghost" type="button" onClick={closeForm}>
+              취소
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={saving} className="px-8 min-w-[120px]">
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "저장 중..." : (editing ? "변경사항 저장" : "제품 등록")}
+            </Button>
+          </div>
         </div>
-      )}
+      </DraggablePanel>
     </div>
   );
 

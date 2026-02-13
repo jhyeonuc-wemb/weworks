@@ -350,7 +350,14 @@ export async function PUT(
 
     if (updateFields.length > 0) {
       values.push(id);
-      const updateQuery = `UPDATE we_project_md_estimations SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
+      let updateQuery = `UPDATE we_project_md_estimations SET ${updateFields.join(', ')}`;
+
+      // status가 명시적으로 변경되지 않는 경우에만 STANDBY -> IN_PROGRESS 자동 변경 적용
+      if (body.status === undefined) {
+        updateQuery += `, status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END`;
+      }
+
+      updateQuery += `, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
       console.log('[API PUT] 실행할 쿼리:', updateQuery);
       console.log('[API PUT] 쿼리 파라미터:', values);
       await query(updateQuery, values);
@@ -369,7 +376,7 @@ export async function PUT(
     }
 
     // M/D 산정이 완료되면 프로젝트 단계도 업데이트
-    if (body.status === 'completed') {
+    if (body.status === 'COMPLETED') {
       // 프로젝트 ID 조회
       const projectResult = await query(
         `SELECT project_id FROM we_project_md_estimations WHERE id = $1`,
@@ -378,10 +385,10 @@ export async function PUT(
 
       if (projectResult.rows.length > 0) {
         const projectId = projectResult.rows[0].project_id;
-        // 프로젝트 상태를 md_estimated로, current_phase를 vrb로 업데이트
+        // 프로젝트 상태를 md_estimation_completed로, current_phase를 vrb로 업데이트
         console.log(`[API PUT] MD Estimation completed. Updating project ${projectId} phase to vrb`);
         await query(
-          `UPDATE we_projects SET status = 'md_estimated', current_phase = 'vrb', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+          `UPDATE we_projects SET status = 'md_estimation_completed', current_phase = 'vrb', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
           [projectId]
         );
         console.log(`[API PUT] Project ${projectId} phase updated to vrb`);

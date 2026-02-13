@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest) {
       SET status = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = (
         SELECT id FROM we_project_profitability
-        WHERE project_id = $1 AND status IN ('draft', 'in_progress', 'review')
+        WHERE project_id = $1 AND status IN ('STANDBY', 'IN_PROGRESS')
         ORDER BY version DESC
         LIMIT 1
       )
@@ -30,17 +30,17 @@ export async function PUT(request: NextRequest) {
 
         if (result.rows.length === 0) {
             return NextResponse.json(
-                { error: "Draft profitability record not found for this project" },
+                { error: "Active profitability record not found for this project" },
                 { status: 404 }
             );
         }
 
-        // 수지분석서가 완료되면 프로젝트 단계를 'in_progress'로 변경
-        if (status === 'completed') {
+        // 수지분석서가 완료되면 프로젝트 단계를 'settlement'로 변경
+        if (status === 'COMPLETED') {
             try {
-                console.log(`Updating project ${projectId} phase to in_progress`);
+                console.log(`Updating project ${projectId} phase to settlement`);
                 const updateRes = await query(
-                    "UPDATE we_projects SET current_phase = 'in_progress', status = 'in_progress' WHERE id = $1",
+                    "UPDATE we_projects SET current_phase = 'settlement', status = 'profitability_completed' WHERE id = $1",
                     [projectId]
                 );
                 console.log(`Project phase update result: ${updateRes.rowCount}`);

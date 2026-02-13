@@ -7,6 +7,7 @@ import { useProjectExpense } from "@/hooks/useProjectExpense";
 import type { Project, StandardExpense, ManpowerPlanItem } from "@/types/profitability";
 import { Currency } from "@/lib/utils/currency";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { MonthPicker } from "@/components/ui/MonthPicker";
 
 interface ProjectExpenseTabProps {
     projectId: number;
@@ -16,6 +17,7 @@ interface ProjectExpenseTabProps {
     currency: Currency;
     status: string;
     onSave?: () => void;
+    profitabilityId?: number;
 }
 
 export function ProjectExpenseTab({
@@ -26,8 +28,9 @@ export function ProjectExpenseTab({
     currency,
     status,
     onSave,
+    profitabilityId,
 }: ProjectExpenseTabProps) {
-    const isReadOnly = status === "completed";
+    const isReadOnly = status === "completed" || status === "approved" || status === "review";
     const {
         items,
         loading,
@@ -42,7 +45,7 @@ export function ProjectExpenseTab({
         saveExpensePlan,
         recalculateData,
         mmSummary,
-    } = useProjectExpense(projectId, project, manpowerPlanItems, standardExpenses);
+    } = useProjectExpense(projectId, project, manpowerPlanItems, standardExpenses, profitabilityId);
 
     const handleSave = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -169,42 +172,52 @@ export function ProjectExpenseTab({
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <DatePicker
-                        label="시작월"
-                        date={startMonth ? new Date(startMonth + "-01") : undefined}
-                        setDate={(date) => setStartMonth(date ? format(date, "yyyy-MM") : "")}
-                        disabled={isReadOnly}
-                        className="w-36"
-                    />
-                    <span className="text-gray-400 mt-6">~</span>
-                    <DatePicker
-                        label="종료월"
-                        date={endMonth ? new Date(endMonth + "-01") : undefined}
-                        setDate={(date) => setEndMonth(date ? format(date, "yyyy-MM") : "")}
-                        disabled={isReadOnly}
-                        className="w-36"
-                    />
-                    <div className="flex flex-col justify-end pb-1.5 h-full">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">시작월</span>
+                        <MonthPicker
+                            date={startMonth ? new Date(startMonth + "-01") : undefined}
+                            setDate={(date) => setStartMonth(date ? format(date, "yyyy-MM") : "")}
+                            disabled={isReadOnly}
+                            className="w-28"
+                            placeholder="시작월 선택"
+                        />
+                    </div>
+                    <span className="text-gray-400 mx-1">~</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">종료월</span>
+                        <MonthPicker
+                            date={endMonth ? new Date(endMonth + "-01") : undefined}
+                            setDate={(date) => setEndMonth(date ? format(date, "yyyy-MM") : "")}
+                            disabled={isReadOnly}
+                            className="w-28"
+                            placeholder="종료월 선택"
+                        />
+                    </div>
+                    <div className="flex flex-col justify-end pb-1.5 h-full px-2">
                         <span className="text-sm text-gray-500">(단위:천원)</span>
                     </div>
                     {!isReadOnly && (
-                        <button
-                            onClick={handleRecalculate}
-                            className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                        >
-                            <RefreshCw className="h-4 w-4" />
-                            데이터 갱신
-                        </button>
-                    )}
-                    {!isReadOnly && (
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 disabled:opacity-50"
-                        >
-                            <Save className="h-4 w-4" />
-                            {saving ? "저장 중..." : "저장"}
-                        </button>
+                        <>
+                            <button
+                                type="button"
+                                onClick={handleRecalculate}
+                                disabled={saving}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="데이터 재계산"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                                재계산
+                            </button>
+                            <button
+                                type="button"
+                                onClick={(e) => handleSave(e)}
+                                disabled={saving}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Save className="h-4 w-4" />
+                                {saving ? "저장 중..." : "저장"}
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
@@ -401,7 +414,7 @@ export function ProjectExpenseTab({
                 </table>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm space-y-2">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm space-y-2">
                 <p className="text-red-600 font-medium">* 인당 계산되는 소모품비 및 음료대는 당사가 "을"로 계약시에는 당사 및 외주 인력을 합하여 승하고 당사가 "병"이하로 계약시에는 당사 인력만 승하시기 바랍니다.</p>
                 <p className="text-gray-500">* 일반경비 항목(야근식대, 프로젝트부서비)은 기준-경비 탭에서 설정된 기준액을 투여공수(M/M)와 곱하여 자동 산출됩니다.</p>
             </div>

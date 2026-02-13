@@ -43,7 +43,7 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
               type="button"
               onClick={(e) => handleSave(e)}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
             >
               <Save className="h-4 w-4" />
               {saving ? "저장 중..." : "저장"}

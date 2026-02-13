@@ -10,19 +10,19 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center rounded font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-colors";
+    const baseStyles = "inline-flex items-center justify-center rounded-xl font-bold transition-all duration-300 active:scale-95";
 
     const variantStyles = {
-      primary: "bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline-indigo-600 disabled:bg-indigo-300",
-      secondary: "bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400",
-      danger: "bg-red-600 text-white hover:bg-red-500 focus-visible:outline-red-600 disabled:bg-red-300",
-      ghost: "bg-transparent text-gray-700 hover:bg-gray-100 shadow-none disabled:text-gray-400"
+      primary: "bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20",
+      secondary: "bg-white text-foreground border border-slate-200 hover:bg-slate-50 hover:shadow-sm",
+      danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+      ghost: "bg-transparent text-foreground/70 hover:bg-muted/50"
     };
 
     const sizeStyles = {
-      sm: "h-8 px-2 text-xs",
-      md: "h-9 px-3 text-sm",
-      lg: "h-10 px-4 text-base"
+      sm: "h-8 px-4 text-xs",
+      md: "h-10 px-6 text-sm",
+      lg: "h-12 px-10 text-base"
     };
 
     return (

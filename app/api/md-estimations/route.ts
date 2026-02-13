@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
       sql += ` AND m.project_id = $${params.length + 1}`;
       // project_id를 명시적으로 숫자로 변환
       params.push(parseInt(projectId, 10));
-      console.log('[API GET] projectId 필터링:', { 
-        original: projectId, 
+      console.log('[API GET] projectId 필터링:', {
+        original: projectId,
         parsed: parseInt(projectId, 10),
         type: typeof parseInt(projectId, 10)
       });
@@ -52,16 +52,16 @@ export async function GET(request: NextRequest) {
     sql += ` ORDER BY m.project_id, m.version DESC`;
 
     const result = await query(sql, params);
-    
+
     console.log('[API GET] 조회 결과:', {
       projectId: projectId,
       '조회된 개수': result.rows.length,
-      '각 산정의 project_id': result.rows.map((r: any) => ({ 
-        id: r.id, 
-        project_id: r.project_id, 
+      '각 산정의 project_id': result.rows.map((r: any) => ({
+        id: r.id,
+        project_id: r.project_id,
         project_id_type: typeof r.project_id,
         status: r.status,
-        version: r.version 
+        version: r.version
       }))
     });
 
@@ -104,32 +104,32 @@ export async function POST(request: NextRequest) {
 
     // project_id를 숫자로 변환
     const projectIdNum = parseInt(project_id);
-    
-    // 기존 draft 산정이 있는지 먼저 확인
+
+    // 기존 standby 산정이 있는지 먼저 확인
     const existingDraftCheck = await query(
-      `SELECT id, version, project_id FROM we_project_md_estimations WHERE project_id = $1 AND status = 'draft' ORDER BY version DESC LIMIT 1`,
+      `SELECT id, version, project_id FROM we_project_md_estimations WHERE project_id = $1 AND status = 'STANDBY' ORDER BY version DESC LIMIT 1`,
       [projectIdNum]
     );
-    
-    // 기존 draft 산정이 있으면 그 ID를 반환 (새로 생성하지 않고 기존 것을 사용)
+
+    // 기존 standby 산정이 있으면 그 ID를 반환 (새로 생성하지 않고 기존 것을 사용)
     if (existingDraftCheck.rows.length > 0) {
       const existingDraft = existingDraftCheck.rows[0];
-      console.log(`Found existing draft: id=${existingDraft.id}, project_id=${existingDraft.project_id}, version=${existingDraft.version}`);
-      return NextResponse.json({ 
-        id: existingDraft.id, 
+      console.log(`Found existing standby: id=${existingDraft.id}, project_id=${existingDraft.project_id}, version=${existingDraft.version}`);
+      return NextResponse.json({
+        id: existingDraft.id,
         version: existingDraft.version,
-        isExisting: true 
+        isExisting: true
       });
     }
 
     // 최신 버전 확인 (완료된 산정만 고려)
     const versionCheck = await query(
-      `SELECT MAX(version) as max_version FROM we_project_md_estimations WHERE project_id = $1 AND status = 'completed'`,
+      `SELECT MAX(version) as max_version FROM we_project_md_estimations WHERE project_id = $1 AND status = 'COMPLETED'`,
       [projectIdNum]
     );
     const maxVersion = versionCheck.rows[0]?.max_version || 0;
     // 새 버전은 완료된 최대 버전 + 1
-    // draft 상태의 산정이 있어도 버전은 올리지 않음 (완료 시에만 버전 증가)
+    // standby 상태의 산정이 있어도 버전은 올리지 않음 (완료 시에만 버전 증가)
     const newVersion = maxVersion + 1;
 
     console.log(`Creating new MD estimation: project_id=${projectIdNum}, version=${newVersion}`);
@@ -137,13 +137,13 @@ export async function POST(request: NextRequest) {
     const sql = `
       INSERT INTO we_project_md_estimations (
         project_id, version, status, created_by
-      ) VALUES ($1, $2, 'draft', $3)
+      ) VALUES ($1, $2, 'STANDBY', $3)
       RETURNING id, project_id
     `;
 
     const result = await query(sql, [projectIdNum, newVersion, created_by]);
     const newEstimation = result.rows[0];
-    
+
     console.log(`Created new MD estimation: id=${newEstimation.id}, project_id=${newEstimation.project_id}, version=${newVersion}`);
 
     return NextResponse.json({ id: newEstimation.id, version: newVersion });

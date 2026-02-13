@@ -6,7 +6,8 @@ export function useProjectExpense(
     projectId: number,
     project: Project | null,
     manpowerPlanItems: ManpowerPlanItem[] = [],
-    standardExpenses: StandardExpense[] = []
+    standardExpenses: StandardExpense[] = [],
+    profitabilityId?: number
 ) {
     const [items, setItems] = useState<ProjectExpenseItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -124,7 +125,7 @@ export function useProjectExpense(
         if (!projectId) return;
         try {
             setLoading(true);
-            const data = await ProfitabilityService.fetchProjectExpensePlan(projectId);
+            const data = await ProfitabilityService.fetchProjectExpensePlan(projectId, profitabilityId);
             const savedItems = data.items || [];
 
             if (data.analysisStartMonth) setStartMonth(data.analysisStartMonth);
@@ -208,7 +209,7 @@ export function useProjectExpense(
     // 초기 로딩
     useEffect(() => {
         refresh();
-    }, [refresh]);
+    }, [refresh, profitabilityId]);
 
     // 값 업데이트 (수동 입력 시 자동 계산 해제)
     const updateItemValue = useCallback((id: number, month: string, value: number) => {
@@ -280,7 +281,8 @@ export function useProjectExpense(
                 projectId,
                 items,
                 startMonth,
-                endMonth
+                endMonth,
+                profitabilityId
             );
             setHasSavedData(true); // 저장 완료 시 Snapshot 모드로 전환
             return true;

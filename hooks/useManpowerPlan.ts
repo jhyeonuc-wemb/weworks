@@ -18,7 +18,8 @@ interface User {
 export function useManpowerPlan(
     projectId?: number,
     projectUnitPrices: ProjectUnitPrice[] = [],
-    project?: Project | null
+    project?: Project | null,
+    profitabilityId?: number
 ) {
     const [items, setItems] = useState<ManpowerPlanItem[]>([
         {
@@ -114,7 +115,7 @@ export function useManpowerPlan(
         if (!projectId) return;
         try {
             setLoading(true);
-            const data = await ProfitabilityService.fetchManpowerPlan(projectId);
+            const data = await ProfitabilityService.fetchManpowerPlan(projectId, profitabilityId);
 
             if (data.items && data.items.length > 0) {
                 setItems(data.items);
@@ -134,7 +135,7 @@ export function useManpowerPlan(
 
     useEffect(() => {
         loadManpowerPlan();
-    }, [loadManpowerPlan]);
+    }, [loadManpowerPlan, profitabilityId]);
 
     // ... (rest of the file)
 
@@ -297,7 +298,8 @@ export function useManpowerPlan(
                 projectId,
                 itemsWithCalculatedAmounts,
                 startMonth,
-                endMonth
+                endMonth,
+                profitabilityId
             );
             return true;
         } catch (error) {

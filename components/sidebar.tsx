@@ -12,6 +12,9 @@ import {
   DollarSign,
   Building2,
   UserCog,
+  Briefcase,
+  Wrench,
+  Calendar,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -22,6 +25,11 @@ const items = [
     href: "/dashboard",
     label: "대시보드",
     icon: LayoutDashboard,
+  },
+  {
+    href: "/sales",
+    label: "영업/PS",
+    icon: Briefcase,
   },
   {
     href: "/projects",
@@ -44,6 +52,11 @@ const items = [
         icon: CheckCircle2,
       },
       {
+        href: "/contract-status",
+        label: "계약 현황",
+        icon: FileText,
+      },
+      {
         href: "/profitability",
         label: "수지분석서 현황",
         icon: DollarSign,
@@ -56,9 +69,33 @@ const items = [
     ],
   },
   {
+    href: "/maintenance",
+    label: "유지보수",
+    icon: Wrench,
+    subItems: [
+      {
+        href: "/maintenance/free",
+        label: "무상 유지보수 현황",
+        icon: Wrench,
+      },
+      {
+        href: "/maintenance/paid",
+        label: "유상 유지보수 현황",
+        icon: DollarSign,
+      },
+    ],
+  },
+  {
     href: "/resources",
-    label: "자원 관리",
+    label: "자원",
     icon: Boxes,
+    subItems: [
+      {
+        href: "/resources/work-logs",
+        label: "개인별 작업 일지",
+        icon: Calendar,
+      },
+    ],
   },
   {
     href: "/settings",
@@ -71,18 +108,23 @@ const items = [
         icon: Building2,
       },
       {
-        href: "/settings/users",
-        label: "사용자 관리",
-        icon: Users,
+        href: "/settings/codes",
+        label: "공통 코드",
+        icon: Boxes,
       },
       {
         href: "/settings/departments",
-        label: "부서 관리",
+        label: "부서",
         icon: Building2,
       },
       {
+        href: "/settings/users",
+        label: "사용자",
+        icon: Users,
+      },
+      {
         href: "/settings/permissions",
-        label: "권한 관리",
+        label: "권한",
         icon: Shield,
       },
     ],
@@ -173,8 +215,15 @@ export function Sidebar({ onLinkClick, onExpand, collapsed = false }: SidebarPro
 
                 {!collapsed && hasSubItems && (
                   <div className={cn(
-                    "p-1 rounded-lg transition-transform duration-300",
-                    isExpanded ? "rotate-180 bg-white/10 text-white" : "text-slate-300"
+                    "p-1 rounded-lg transition-all duration-300 ml-auto",
+                    isExpanded && "rotate-180",
+                    active
+                      ? isExpanded
+                        ? "bg-white/20 text-white group-hover/item:bg-white/40"
+                        : "text-slate-400 group-hover/item:text-white"
+                      : isExpanded
+                        ? "bg-slate-100 text-slate-700 group-hover/item:bg-slate-200"
+                        : "text-slate-400 group-hover/item:text-slate-700 group-hover/item:bg-slate-100"
                   )}>
                     <ChevronDown size={12} strokeWidth={3} />
                   </div>
@@ -182,37 +231,39 @@ export function Sidebar({ onLinkClick, onExpand, collapsed = false }: SidebarPro
               </Link>
             </div>
 
-            {!collapsed && hasSubItems && isExpanded && (
-              <div className="mt-1 ml-4 pl-4 border-l border-slate-100 space-y-1 animate-in slide-in-from-top-2 duration-300">
-                {item.subItems!.map((subItem) => {
-                  const subActive = pathname === subItem.href;
+            {
+              !collapsed && hasSubItems && isExpanded && (
+                <div className="mt-1 ml-4 pl-4 border-l border-slate-100 space-y-1 animate-in slide-in-from-top-2 duration-300">
+                  {item.subItems!.map((subItem) => {
+                    const subActive = pathname === subItem.href;
 
-                  return (
-                    <Link
-                      key={subItem.href}
-                      href={subItem.href}
-                      onClick={onLinkClick}
-                      className={cn(
-                        "group/sub flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-bold transition-all duration-200",
-                        subActive
-                          ? "text-slate-900 bg-slate-50"
-                          : "text-slate-400 hover:text-slate-900 hover:bg-slate-50",
-                      )}
-                    >
-                      <div className={cn(
-                        "w-1 h-1 rounded-full transition-all duration-300",
-                        subActive ? "bg-slate-900 scale-150 shadow-sm" : "bg-slate-200 group-hover/sub:bg-slate-400"
-                      )} />
-                      <span className="flex-1 truncate">{subItem.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    return (
+                      <Link
+                        key={subItem.href}
+                        href={subItem.href}
+                        onClick={onLinkClick}
+                        className={cn(
+                          "group/sub flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-bold transition-all duration-200",
+                          subActive
+                            ? "text-slate-900 bg-slate-50"
+                            : "text-slate-400 hover:text-slate-900 hover:bg-slate-50",
+                        )}
+                      >
+                        <div className={cn(
+                          "w-1 h-1 rounded-full transition-all duration-300",
+                          subActive ? "bg-slate-900 scale-150 shadow-sm" : "bg-slate-200 group-hover/sub:bg-slate-400"
+                        )} />
+                        <span className="flex-1 truncate">{subItem.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )
+            }
+          </div >
         );
       })}
-    </nav>
+    </nav >
   );
 }
 

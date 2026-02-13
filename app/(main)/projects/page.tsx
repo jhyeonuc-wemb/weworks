@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -12,20 +12,24 @@ import { ProjectModal } from "@/components/projects/ProjectModal";
 
 
 // 날짜 포맷팅 함수
+// 날짜 포맷팅 함수
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return "-";
   try {
-    const dateStr = dateString.split('T')[0];
-    const date = new Date(dateStr);
+    let date: Date;
+    if (dateString.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [y, m, d] = dateString.split('-').map(Number);
+      date = new Date(y, m - 1, d);
+    } else {
+      date = new Date(dateString);
+    }
+
     if (isNaN(date.getTime())) return dateString;
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   } catch {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      return dateString;
-    }
     return dateString;
   }
 };
@@ -45,6 +49,7 @@ interface Project {
   expected_amount?: number;
   net_profit?: number;
   profit_rate?: number;
+  category_name: string | null;
 }
 
 const defaultProjects: Project[] = [];
@@ -59,6 +64,7 @@ const phaseLabels: Record<string, string> = {
   in_progress: "프로젝트 진행",
   settlement: "수지정산서",
   warranty: "하자보증",
+  completed: "프로젝트 종료",
 };
 
 const sortOptions = [
@@ -70,11 +76,13 @@ const sortOptions = [
 ];
 
 export default function ProjectsPage() {
-  // const router = useRouter(); // Removed as per instruction
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("project_code_desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // 모달 상태관리
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -111,6 +119,17 @@ export default function ProjectsPage() {
       }
     });
   }, [projects, sortOption, searchQuery]);
+
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedProjects.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedProjects, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortOption, itemsPerPage]);
 
   useEffect(() => {
     fetchProjects();
@@ -158,18 +177,20 @@ export default function ProjectsPage() {
 
   const getPhaseVariant = (phase: string | null): "success" | "warning" | "info" | "default" => {
     if (!phase) return "default";
-    if (["in_progress", "profitability", "settlement"].includes(phase)) return "success";
-    if (["vrb", "confirmation"].includes(phase)) return "warning";
+    if (["completed", "warranty", "settlement", "in_progress", "profitability"].includes(phase)) return "success";
+    if (["vrb", "confirmation", "team_allocation"].includes(phase)) return "warning";
     if (["md_estimation", "sales"].includes(phase)) return "info";
     return "default";
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-2">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">프로젝트 현황</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            프로젝트 현황
+          </h1>
         </div>
         <Button
           variant="primary"
@@ -179,13 +200,13 @@ export default function ProjectsPage() {
             setIsModalOpen(true);
           }}
         >
-          <Plus className="-ml-0.5 mr-1.5 h-5 w-5" />
+          <Plus className="h-4 w-4 mr-1.5" />
           프로젝트
         </Button>
       </div>
 
       {/* 검색 및 필터 */}
-      <div className="flex items-center gap-x-3">
+      <div className="flex items-center gap-x-4 mx-1">
         <SearchInput
           placeholder="프로젝트, 코드, 고객사 검색..."
           value={searchQuery}
@@ -195,115 +216,172 @@ export default function ProjectsPage() {
           value={sortOption}
           onChange={(value) => setSortOption(value as string)}
           options={sortOptions}
+          className="w-64"
+          align="center"
         />
       </div>
 
-      {/* 테이블 */}
-      <div className="bg-white shadow sm:rounded overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead align="center">프로젝트 코드</TableHead>
-              <TableHead align="left">프로젝트명</TableHead>
-              <TableHead align="center">고객사</TableHead>
-              <TableHead align="center">수주금액</TableHead>
-              <TableHead align="center">기간</TableHead>
-              <TableHead align="center">단계</TableHead>
-              <TableHead align="center">PM</TableHead>
-              <TableHead align="center">상태</TableHead>
-              <TableHead align="right">작업</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+      {/* 테이블 섹션 */}
+      <div className="neo-light-card overflow-hidden border border-border/40">
+        <div className="overflow-x-auto custom-scrollbar-main">
+          <Table>
+            <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-                    <p className="text-sm text-gray-500">데이터를 불러오고 있습니다...</p>
-                  </div>
-                </TableCell>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">분야</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계약금액</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계약기간</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">단계</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">PM</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">영업대표</TableHead>
               </TableRow>
-            ) : sortedProjects.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <FolderOpen className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
-                    <div className="space-y-1">
-                      <p className="text-base font-medium text-gray-900">조회된 프로젝트가 없습니다</p>
-                      <p className="text-sm text-gray-500">신규 프로젝트를 등록하여 관리를 시작하세요</p>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/10">
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-24 text-center border-none">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm text-muted-foreground font-medium">데이터를 불러오고 있습니다...</p>
                     </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              sortedProjects.map((project) => {
-                const phase = project.current_phase || "sales";
-                const phaseLabel = phaseLabels[phase] || phase || "-";
-
-                return (
-                  <TableRow
-                    key={project.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={(e) => {
-                      setSelectedProject(project);
-                      setTriggerRect(e.currentTarget.getBoundingClientRect());
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    <TableCell align="center">
-                      <span className="text-sm text-gray-500">{project.project_code || "-"}</span>
-                    </TableCell>
-                    <TableCell align="left">
-                      <span className="font-medium text-gray-900">{project.name}</span>
-                    </TableCell>
-                    <TableCell align="center">
-                      <span className="text-sm text-gray-900">{project.customer_name || "-"}</span>
-                    </TableCell>
-                    <TableCell align="center">
-                      <span className="text-sm font-medium text-gray-900">
-                        {project.expected_amount ? formatCurrency(project.expected_amount * 1000, "KRW") : "-"}
-                      </span>
-                    </TableCell>
-                    <TableCell align="center">
-                      <div className="flex flex-col gap-0.5 text-xs text-gray-500">
-                        <span>{project.contract_start_date ? formatDate(project.contract_start_date) : "-"}</span>
-                        <span>~ {project.contract_end_date ? formatDate(project.contract_end_date) : "-"}</span>
+                  </TableCell>
+                </TableRow>
+              ) : sortedProjects.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-24 text-center border-none">
+                    <div className="flex flex-col items-center justify-center gap-4 opacity-40">
+                      <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                       </div>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Badge variant={getPhaseVariant(phase)}>
-                        {phaseLabel}
-                      </Badge>
-                    </TableCell>
-                    <TableCell align="center">
-                      <span className="text-sm text-gray-900">{project.manager_name || "-"}</span>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Badge variant={project.status === "active" ? "success" : "default"}>
-                        {project.status === "active" ? "진행중" : "완료"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProject(project);
-                          setTriggerRect(e.currentTarget.getBoundingClientRect());
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        상세
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      <div className="space-y-1">
+                        <p className="text-base font-medium text-foreground">조회된 프로젝트가 없습니다</p>
+                        <p className="text-sm text-muted-foreground">신규 프로젝트를 등록하여 관리를 시작하세요</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedProjects.map((project) => {
+                  const phase = project.current_phase || "sales";
+                  const phaseLabel = phaseLabels[phase] || phase || "-";
+                  const phaseVariant = getPhaseVariant(phase);
+
+                  return (
+                    <TableRow
+                      key={project.id}
+                      className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                    >
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80 font-mono">
+                          {project.project_code || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell align="left" className="px-8 py-3">
+                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                          {project.name}
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80">
+                          {project.category_name || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80">
+                          {project.customer_name || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80 font-mono">
+                          {project.expected_amount ? formatCurrency(project.expected_amount, "KRW") : "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <div className="text-sm text-foreground/80 whitespace-nowrap">
+                          {project.contract_start_date ? formatDate(project.contract_start_date) : "-"}
+                          {" ~ "}
+                          {project.contract_end_date ? formatDate(project.contract_end_date) : "-"}
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <Badge variant={phaseVariant} className="rounded-xl px-3 py-1 text-[10px]">
+                          {phaseLabel}
+                        </Badge>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80">
+                          {project.manager_name || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80">
+                          {project.sales_representative_name || "-"}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+          <div className="absolute left-8 flex items-center gap-6">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{sortedProjects.length}</span></div>
+
+            <div className="flex items-center gap-2 border-l border-border/40 pl-6">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                }}
+                className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
+              >
+                {[10, 20, 30, 50, 100].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                    currentPage === page
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
+                      : "text-muted-foreground hover:bg-white hover:text-foreground"
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ProjectModal

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo } from "react";
 import {
   Plus,
   Pencil,
@@ -9,9 +9,26 @@ import {
   X,
   Search,
   Copy,
+  ChevronLeft,
+  ChevronRight,
   TrendingUp,
   TrendingDown,
+  FolderOpen,
+  Edit,
 } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Button,
+  SearchInput,
+  Dropdown,
+  DraggablePanel,
+} from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 interface UnitPrice {
   id: number;
@@ -64,7 +81,7 @@ export interface UnitPriceLaborTabProps {
 }
 
 export interface UnitPriceLaborTabHandle {
-  handleAdd: () => void;
+  handleAdd: (rect?: DOMRect) => void;
 }
 
 export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLaborTabProps>((props, ref) => {
@@ -82,13 +99,16 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
   const [copySourceYear, setCopySourceYear] = useState<string>("");
   const [copyTargetYear, setCopyTargetYear] = useState<string>("");
   const [isCopying, setIsCopying] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
   const [formData, setFormData] = useState<Partial<UnitPrice>>({
     affiliationGroup: "",
     jobGroup: "",
     jobLevel: "",
     grade: "",
-    year: 2026,
+    year: currentYear,
     proposedStandard: null,
     proposedApplied: null,
     proposedDiscountRate: null,
@@ -113,7 +133,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
   }, []);
 
   useImperativeHandle(ref, () => ({
-    handleAdd
+    handleAdd: (rect?: DOMRect) => handleAdd(rect)
   }));
 
   const availableYears = Array.from(
@@ -165,6 +185,17 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
     setFilteredPrices(filtered);
   }, [unitPrices, searchQuery, filterYear, filterAffiliation]);
 
+  const paginatedPrices = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredPrices.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredPrices, currentPage]);
+
+  const totalPages = Math.ceil(filteredPrices.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterYear, filterAffiliation]);
+
   const calculateGroupAverages = (prices: UnitPrice[], allPrices: UnitPrice[] = unitPrices) => {
     const groups = new Map<string, UnitPrice[]>();
 
@@ -178,17 +209,23 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
     const averages: Array<{
       affiliationGroup: string;
-      averageProposedApplied: number | null;
+      proposedStandardAverage: number;
+      proposedAppliedAverage: number;
       averageDiscountRate: number | null;
-      averageInternalApplied: number | null;
+      internalAppliedAverage: number;
       averageIncreaseRate: number | null;
     }> = [];
 
     groups.forEach((groupPrices, affiliationGroup) => {
+      const validProposedStandard = groupPrices.filter((p) => p.proposedStandard !== null && p.proposedStandard !== undefined);
+      const proposedStandardAverage = validProposedStandard.length > 0
+        ? Math.round(validProposedStandard.reduce((acc, p) => acc + (p.proposedStandard || 0), 0) / validProposedStandard.length)
+        : 0;
+
       const validProposedApplied = groupPrices.filter((p) => p.proposedApplied !== null && p.proposedApplied !== undefined);
-      const avgProposedApplied = validProposedApplied.length > 0
+      const proposedAppliedAverage = validProposedApplied.length > 0
         ? Math.round(validProposedApplied.reduce((acc, p) => acc + (p.proposedApplied || 0), 0) / validProposedApplied.length)
-        : null;
+        : 0;
 
       const validDiscountRates = groupPrices
         .map((p) => calculateDiscountRate(p.proposedStandard, p.proposedApplied))
@@ -198,9 +235,9 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
         : null;
 
       const validInternalApplied = groupPrices.filter((p) => p.internalApplied !== null && p.internalApplied !== undefined);
-      const avgInternalApplied = validInternalApplied.length > 0
+      const internalAppliedAverage = validInternalApplied.length > 0
         ? Math.round(validInternalApplied.reduce((acc, p) => acc + (p.internalApplied || 0), 0) / validInternalApplied.length)
-        : null;
+        : 0;
 
       const validIncreaseRates = groupPrices
         .map((p) => {
@@ -224,9 +261,10 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
       averages.push({
         affiliationGroup,
-        averageProposedApplied: avgProposedApplied,
+        proposedStandardAverage,
+        proposedAppliedAverage,
         averageDiscountRate: avgDiscountRate,
-        averageInternalApplied: avgInternalApplied,
+        internalAppliedAverage,
         averageIncreaseRate: avgIncreaseRate,
       });
     });
@@ -277,7 +315,8 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = (rect?: DOMRect) => {
+    if (rect) setTriggerRect(rect);
     setIsAdding(true);
     setEditingId(null);
     setFormData({
@@ -301,7 +340,8 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
     });
   };
 
-  const handleEdit = (price: UnitPrice) => {
+  const handleEdit = (price: UnitPrice, e: React.MouseEvent) => {
+    setTriggerRect(e.currentTarget.getBoundingClientRect());
     setEditingId(price.id);
     setIsAdding(false);
     setFormData({
@@ -493,529 +533,263 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-gray-500">로딩 중...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm font-medium text-muted-foreground">데이터를 불러오고 있습니다...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 p-1">
-      {/* 필터 및 검색 - Neo Modern Style */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 px-1">
-        <div className="relative group flex-1">
-          <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-          <input
-            type="text"
-            placeholder="소속, 직군, 직급, 등급으로 고정밀 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-[1.25rem] border border-border/40 bg-white py-4 pl-12 pr-6 text-sm font-semibold shadow-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 focus:outline-none transition-all duration-300"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <select
+    <div className="space-y-8">
+      {/* 필터 및 검색 - Standard Style */}
+      <div className="flex items-center gap-x-4 mx-1">
+        <SearchInput
+          placeholder="소속, 직군, 직급, 등급으로 검색..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="flex items-center gap-3 shrink-0">
+          <Dropdown
             value={filterYear}
-            onChange={(e) => setFilterYear(e.target.value)}
-            className="rounded-2xl border border-border/40 bg-white px-5 py-4 text-sm font-bold text-foreground/70 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all cursor-pointer min-w-[130px]"
-          >
-            <option value="">전체 연도</option>
-            {availableYears.length > 0
-              ? availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}년
-                </option>
-              ))
-              : YEARS.map((year) => (
-                <option key={year} value={year}>
-                  {year}년
-                </option>
-              ))}
-          </select>
-          <select
+            onChange={(val) => setFilterYear(val as string)}
+            options={[
+              { value: "", label: "전체 연도" },
+              ...(availableYears.length > 0
+                ? availableYears.map((year) => ({ value: year.toString(), label: `${year}년` }))
+                : YEARS.map((year) => ({ value: year.toString(), label: `${year}년` })))
+            ]}
+            className="w-40"
+          />
+          <Dropdown
             value={filterAffiliation}
-            onChange={(e) => setFilterAffiliation(e.target.value)}
-            className="rounded-2xl border border-border/40 bg-white px-5 py-4 text-sm font-bold text-foreground/70 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all cursor-pointer min-w-[160px]"
+            onChange={(val) => setFilterAffiliation(val as string)}
+            options={[
+              { value: "", label: "전체 소속" },
+              ...AFFILIATION_GROUPS.map((group) => ({ value: group, label: group }))
+            ]}
+            className="w-44"
+          />
+          <Button
+            onClick={(e) => {
+              setTriggerRect(e.currentTarget.getBoundingClientRect());
+              setCopyYearModal(true);
+            }}
+            variant="primary"
+            className="h-11 px-6"
           >
-            <option value="">전체 소속</option>
-            {AFFILIATION_GROUPS.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setCopyYearModal(true)}
-            className="inline-flex items-center gap-2.5 rounded-2xl border border-border/40 bg-white px-6 py-4 text-sm font-bold text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all active:scale-95 shadow-sm"
-          >
-            <Copy className="h-4 w-4" />
+            <Copy className="h-4 w-4 mr-2" />
             연도 복사
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* 추가/수정 모달 - Neo Integrated */}
-      {(isAdding || editingId !== null) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={handleCancel} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[2rem] border border-white shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
-            <div className="border-b border-border/40 px-8 py-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">
-                    {isAdding ? "신규 인력 단가 등록" : "인력 단가 속성 수정"}
-                  </h2>
-                </div>
-              </div>
-              <button onClick={handleCancel} className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground transition-all">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {/* 테이블 영역 */}
+      <div className="neo-light-card overflow-hidden border border-border/40">
+        <div className="overflow-x-auto custom-scrollbar-main">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">소속</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">직군</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">직급</TableHead>
+                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">등급</TableHead>
+                <TableHead className="px-8 py-3 text-center text-sm text-slate-900">연도</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제시 표준</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제시 적용</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">할인율</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm font-black text-primary bg-primary/5">내부 적용</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">인상률</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/10">
+              {filteredPrices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="px-8 py-24 text-center border-none">
+                    <div className="flex flex-col items-center justify-center gap-4 opacity-40">
+                      <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">기준단가 데이터가 없습니다</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                (() => {
+                  const averages = calculateGroupAverages(paginatedPrices, unitPrices);
+                  const groupedPrices = new Map<string, UnitPrice[]>();
 
-            <div className="p-8">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    소속 그룹 <span className="text-primary">*</span>
-                  </label>
-                  <select
-                    value={formData.affiliationGroup || ""}
-                    onChange={(e) => setFormData({ ...formData, affiliationGroup: e.target.value })}
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                    required
-                  >
-                    <option value="">소속 선택</option>
-                    {AFFILIATION_GROUPS.map((group) => (
-                      <option key={group} value={group}>{group}</option>
-                    ))}
-                  </select>
-                </div>
+                  paginatedPrices.forEach((price) => {
+                    const key = price.affiliationGroup;
+                    if (!groupedPrices.has(key)) {
+                      groupedPrices.set(key, []);
+                    }
+                    groupedPrices.get(key)!.push(price);
+                  });
 
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    직군 <span className="text-primary">*</span>
-                  </label>
-                  <select
-                    value={formData.jobGroup || ""}
-                    onChange={(e) => setFormData({ ...formData, jobGroup: e.target.value })}
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                    required
-                  >
-                    <option value="">직군 선택</option>
-                    {JOB_GROUPS.map((group) => (
-                      <option key={group} value={group}>{group}</option>
-                    ))}
-                  </select>
-                </div>
+                  const rows: React.ReactElement[] = [];
 
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    직급 <span className="text-primary">*</span>
-                  </label>
-                  <select
-                    value={formData.jobLevel || ""}
-                    onChange={(e) => setFormData({ ...formData, jobLevel: e.target.value })}
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                    required
-                  >
-                    <option value="">직급 선택</option>
-                    {JOB_LEVELS.map((level) => (
-                      <option key={level} value={level}>{level}</option>
-                    ))}
-                  </select>
-                </div>
+                  const sections = [
+                    { name: "당사", groups: ["위엠비_컨설팅", "위엠비_개발"] },
+                    { name: "타사", groups: ["외주_컨설팅", "외주_개발"] },
+                  ];
 
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    등급 <span className="text-primary">*</span>
-                  </label>
-                  <select
-                    value={formData.grade || ""}
-                    onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                    required
-                  >
-                    <option value="">등급 선택</option>
-                    {GRADES.map((grade) => (
-                      <option key={grade} value={grade}>{grade}</option>
-                    ))}
-                  </select>
-                </div>
+                  sections.forEach((section) => {
+                    const sectionPrices: UnitPrice[] = [];
+                    let hasGroups = false;
 
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    기준 연도 <span className="text-primary">*</span>
-                  </label>
-                  <select
-                    value={formData.year || currentYear}
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value, 10) })}
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                    required
-                  >
-                    {YEARS.map((year) => (
-                      <option key={year} value={year}>{year}년</option>
-                    ))}
-                  </select>
-                </div>
+                    section.groups.forEach((affiliationGroup) => {
+                      const groupPrices = groupedPrices.get(affiliationGroup) || [];
+                      if (groupPrices.length === 0) return;
+                      hasGroups = true;
+                      sectionPrices.push(...groupPrices);
 
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    제시 표준 단가 (천원)
-                  </label>
-                  <input
-                    type="text"
-                    value={numberInputValues.proposedStandard}
-                    onChange={(e) => {
-                      const formattedValue = formatNumberWithCommas(e.target.value);
-                      setNumberInputValues({ ...numberInputValues, proposedStandard: formattedValue });
-                      const numValue = parseNumberFromString(e.target.value);
-                      const cleanedValue = e.target.value.replace(/,/g, "").trim();
-                      setFormData({
-                        ...formData,
-                        proposedStandard: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
-                      });
-                    }}
-                    placeholder="30,000"
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                  />
-                </div>
-
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    제시 적용 단가 (천원)
-                  </label>
-                  <input
-                    type="text"
-                    value={numberInputValues.proposedApplied}
-                    onChange={(e) => {
-                      const formattedValue = formatNumberWithCommas(e.target.value);
-                      setNumberInputValues({ ...numberInputValues, proposedApplied: formattedValue });
-                      const numValue = parseNumberFromString(e.target.value);
-                      const cleanedValue = e.target.value.replace(/,/g, "").trim();
-                      setFormData({
-                        ...formData,
-                        proposedApplied: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
-                      });
-                    }}
-                    placeholder="11,500"
-                    className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                  />
-                </div>
-
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    할인율 (%)
-                  </label>
-                  <div className="w-full rounded-[1.25rem] bg-muted/10 border border-border/10 py-4 px-5 text-sm font-black text-primary/60">
-                    {formData.proposedStandard && (formData.proposedApplied !== null && formData.proposedApplied !== undefined)
-                      ? (() => {
-                        const discountRate = calculateDiscountRate(formData.proposedStandard, formData.proposedApplied);
-                        return discountRate !== null ? `${discountRate.toFixed(2)}%` : "-";
-                      })()
-                      : "-"}
-                  </div>
-                </div>
-
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    내부 단가 (천원)
-                  </label>
-                  <input
-                    type="text"
-                    value={numberInputValues.internalApplied}
-                    onChange={(e) => {
-                      const formattedValue = formatNumberWithCommas(e.target.value);
-                      setNumberInputValues({ ...numberInputValues, internalApplied: formattedValue });
-                      const numValue = parseNumberFromString(e.target.value);
-                      const cleanedValue = e.target.value.replace(/,/g, "").trim();
-                      setFormData({
-                        ...formData,
-                        internalApplied: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
-                      });
-                    }}
-                    placeholder="14,516"
-                    className="w-full rounded-[1.25rem] bg-yellow-50/50 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                  />
-                </div>
-
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold text-slate-700 ml-1">
-                    인상률 (%)
-                  </label>
-                  <div className="w-full rounded-[1.25rem] bg-muted/10 border border-border/10 py-4 px-5 text-sm font-black text-muted-foreground/60">
-                    {formData.year && formData.internalApplied
-                      ? (() => {
-                        const previousYear = formData.year - 1;
+                      groupPrices.forEach((price) => {
+                        const previousYear = price.year - 1;
                         const previousYearPrice = unitPrices.find(
                           (p) =>
-                            p.affiliationGroup === formData.affiliationGroup &&
-                            p.jobGroup === formData.jobGroup &&
-                            p.jobLevel === formData.jobLevel &&
-                            p.grade === formData.grade &&
+                            p.affiliationGroup === price.affiliationGroup &&
+                            p.jobGroup === price.jobGroup &&
+                            p.jobLevel === price.jobLevel &&
+                            p.grade === price.grade &&
                             p.year === previousYear
                         );
-                        if (previousYearPrice && previousYearPrice.internalApplied) {
-                          const increaseRate = ((formData.internalApplied - previousYearPrice.internalApplied) / previousYearPrice.internalApplied) * 100;
-                          return `${increaseRate.toFixed(2)}%`;
-                        }
-                        return "-";
-                      })()
-                      : "-"}
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-end gap-3 pt-10 mt-4">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="rounded-2xl border border-border/40 bg-white px-8 py-3 text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-all active:scale-95"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-10 py-3 text-sm font-black text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:translate-y-[-2px] active:scale-95 transition-all duration-300 disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSaving ? "저장 중..." : "저장"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                        const increaseRate = previousYearPrice && previousYearPrice.internalApplied && price.internalApplied
+                          ? ((price.internalApplied - previousYearPrice.internalApplied) / previousYearPrice.internalApplied) * 100
+                          : null;
 
-      {/* 기준단가표 목록 - Neo Modern Table */}
-      <div className="overflow-x-auto custom-scrollbar-main border border-border/20 rounded-2xl mx-1">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-muted/30 border-b border-border/40">
-              <th className="px-5 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                소속
-              </th>
-              <th className="px-4 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                직군
-              </th>
-              <th className="px-4 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                직급
-              </th>
-              <th className="px-4 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                등급
-              </th>
-              <th className="px-4 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                연도
-              </th>
-              <th className="px-4 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                제시 표준
-              </th>
-              <th className="px-4 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                제시 적용
-              </th>
-              <th className="px-4 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                할인율
-              </th>
-              <th className="px-4 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-primary/70 bg-primary/5">
-                내부 적용
-              </th>
-              <th className="px-4 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                인상률
-              </th>
-              <th className="relative px-6 py-5">
-                <span className="sr-only">작업</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {filteredPrices.length === 0 ? (
-              <tr>
-                <td colSpan={11} className="px-4 py-12 text-center text-sm text-gray-500">
-                  기준단가 데이터가 없습니다.
-                </td>
-              </tr>
-            ) : (
-              (() => {
-                const averages = calculateGroupAverages(filteredPrices, unitPrices);
-                const groupedPrices = new Map<string, UnitPrice[]>();
+                        const discountRate = calculateDiscountRate(price.proposedStandard, price.proposedApplied);
 
-                filteredPrices.forEach((price) => {
-                  const key = price.affiliationGroup;
-                  if (!groupedPrices.has(key)) {
-                    groupedPrices.set(key, []);
-                  }
-                  groupedPrices.get(key)!.push(price);
-                });
-
-                const rows: React.ReactElement[] = [];
-
-                const sections = [
-                  { name: "당사", groups: ["위엠비_컨설팅", "위엠비_개발"] },
-                  { name: "타사", groups: ["외주_컨설팅", "외주_개발"] },
-                ];
-
-                sections.forEach((section) => {
-                  const sectionPrices: UnitPrice[] = [];
-                  let hasGroups = false;
-
-                  section.groups.forEach((affiliationGroup) => {
-                    const groupPrices = groupedPrices.get(affiliationGroup) || [];
-                    if (groupPrices.length === 0) return;
-                    hasGroups = true;
-                    sectionPrices.push(...groupPrices);
-
-                    groupPrices.forEach((price) => {
-                      const previousYear = price.year - 1;
-                      const previousYearPrice = unitPrices.find(
-                        (p) =>
-                          p.affiliationGroup === price.affiliationGroup &&
-                          p.jobGroup === price.jobGroup &&
-                          p.jobLevel === price.jobLevel &&
-                          p.grade === price.grade &&
-                          p.year === previousYear
-                      );
-
-                      const increaseRate = previousYearPrice && previousYearPrice.internalApplied && price.internalApplied
-                        ? ((price.internalApplied - previousYearPrice.internalApplied) / previousYearPrice.internalApplied) * 100
-                        : null;
-
-                      const discountRate = calculateDiscountRate(price.proposedStandard, price.proposedApplied);
-
-                      rows.push(
-                        <tr key={price.id} className="hover:bg-primary/[0.02] transition-colors group">
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-bold text-foreground/80">
-                            {price.affiliationGroup}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-xs font-bold text-foreground/80">
-                            {price.jobGroup}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-xs font-bold text-foreground/80">
-                            {price.jobLevel}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-xs font-bold text-foreground/80">
-                            <span className="px-2 py-0.5 rounded-md bg-muted/50 text-[10px] font-black uppercase tracking-tighter">
-                              {price.grade}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-xs font-bold text-muted-foreground/60">
-                            {price.year}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-mono font-bold text-foreground/70">
-                            {price.proposedStandard !== null ? price.proposedStandard.toLocaleString() : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-mono font-bold text-foreground/70">
-                            {price.proposedApplied !== null ? price.proposedApplied.toLocaleString() : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-bold text-muted-foreground">
-                            {discountRate !== null ? `${discountRate.toFixed(2)}%` : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-mono font-black text-primary bg-primary/[0.03]">
-                            {price.internalApplied !== null ? price.internalApplied.toLocaleString() : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-bold">
-                            {increaseRate !== null ? (
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${increaseRate >= 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                                {increaseRate >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                                {increaseRate.toFixed(2)}%
+                        rows.push(
+                          <TableRow key={price.id} className="hover:bg-primary/[0.02] transition-colors group">
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                              {price.affiliationGroup}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                              {price.jobGroup}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                              {price.jobLevel}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                              <span className="px-2 py-0.5 rounded-md bg-muted/50 text-xs">
+                                {price.grade}
+                              </span>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-center text-sm text-slate-600">
+                              {price.year}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-slate-700">
+                              {price.proposedStandard !== null ? price.proposedStandard.toLocaleString() : "-"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-slate-700">
+                              {price.proposedApplied !== null ? price.proposedApplied.toLocaleString() : "-"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500">
+                              {discountRate !== null ? `${discountRate.toFixed(2)}%` : "-"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-primary bg-primary/[0.03]">
+                              {price.internalApplied !== null ? price.internalApplied.toLocaleString() : "-"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm">
+                              {increaseRate !== null ? (
+                                <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${increaseRate >= 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                  {increaseRate >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                                  {increaseRate.toFixed(2)}%
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground/30">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap px-8 py-3 text-right">
+                              <div className="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => handleEdit(price, e)}
+                                  className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(price.id)}
+                                  className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground/30">-</span>
-                            )}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => handleEdit(price)}
-                                className="p-1.5 rounded-lg bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(price.id)}
-                                className="p-1.5 rounded-lg bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    });
+                            </TableCell>
+                          </TableRow>
+                        );
+                      });
 
-                    const groupAverage = averages.find(a => a.affiliationGroup === affiliationGroup);
-                    if (groupAverage) {
-                      rows.push(
-                        <tr key={`sum-${affiliationGroup}`} className="bg-gray-50 font-semibold border-y border-gray-100">
-                          <td colSpan={5} className="px-4 py-3 text-sm text-gray-900 text-center bg-gray-50">
+                      const groupAverage = averages.find(a => a.affiliationGroup === affiliationGroup);
+                      groupAverage && rows.push(
+                        <TableRow key={`sum-${affiliationGroup}`} className="bg-muted/30 border-y border-border/10">
+                          <TableCell colSpan={5} className="px-8 py-3 text-sm text-slate-900 text-center">
                             {affiliationGroup} 소계
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900">
-                            -
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900">
-                            {groupAverage.averageProposedApplied !== null
-                              ? groupAverage.averageProposedApplied.toLocaleString()
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
+                            {groupAverage.proposedStandardAverage > 0 ? groupAverage.proposedStandardAverage.toLocaleString() : "-"}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
+                            {groupAverage.proposedAppliedAverage > 0
+                              ? groupAverage.proposedAppliedAverage.toLocaleString()
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500">
                             {groupAverage.averageDiscountRate !== null
                               ? `${groupAverage.averageDiscountRate.toFixed(2)}%`
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900 font-bold bg-yellow-100">
-                            {groupAverage.averageInternalApplied !== null
-                              ? groupAverage.averageInternalApplied.toLocaleString()
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-primary bg-primary/5">
+                            {groupAverage.internalAppliedAverage > 0
+                              ? groupAverage.internalAppliedAverage.toLocaleString()
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-foreground">
                             {groupAverage.averageIncreaseRate !== null ? (
                               <span className={`inline-flex items-center gap-1 ${groupAverage.averageIncreaseRate >= 0 ? 'text-red-600' : 'text-blue-600'}`}>
                                 {groupAverage.averageIncreaseRate >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                 {groupAverage.averageIncreaseRate.toFixed(2)}%
                               </span>
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-muted-foreground/30">-</span>
                             )}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-900">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-center text-sm text-foreground">
                             -
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
-                    }
-                  });
+                    });
 
-                  if (hasGroups && sectionPrices.length > 0) {
-                    const sectionAverages = calculateGroupAverages(sectionPrices, unitPrices)[0];
-                    if (sectionAverages) {
-                      rows.push(
-                        <tr key={`section-sum-${section.name}`} className="bg-muted/30 border-t-2 border-border/20">
-                          <td colSpan={5} className="px-5 py-4 text-xs font-bold text-slate-800 text-center">
+                    if (hasGroups && sectionPrices.length > 0) {
+                      const sectionAverages = calculateGroupAverages(sectionPrices, unitPrices)[0];
+                      sectionAverages && rows.push(
+                        <TableRow key={`section-sum-${section.name}`} className="bg-muted/30 border-t-2 border-border/20">
+                          <TableCell colSpan={5} className="px-8 py-3 text-sm text-slate-800 text-center">
                             {section.name} 평균
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs text-muted-foreground/40 font-mono">
-                            -
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-black text-foreground/80 font-mono">
-                            {sectionAverages.averageProposedApplied !== null
-                              ? sectionAverages.averageProposedApplied.toLocaleString()
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500 font-mono">
+                            {sectionAverages.proposedStandardAverage > 0 ? sectionAverages.proposedStandardAverage.toLocaleString() : "-"}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700 font-mono">
+                            {sectionAverages.proposedAppliedAverage > 0
+                              ? sectionAverages.proposedAppliedAverage.toLocaleString()
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-black text-foreground/80">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
                             {sectionAverages.averageDiscountRate !== null
                               ? `${sectionAverages.averageDiscountRate.toFixed(2)}%`
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-black text-primary bg-primary/10 font-mono">
-                            {sectionAverages.averageInternalApplied !== null
-                              ? sectionAverages.averageInternalApplied.toLocaleString()
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-primary bg-primary/10 font-mono">
+                            {sectionAverages.internalAppliedAverage > 0
+                              ? sectionAverages.internalAppliedAverage.toLocaleString()
                               : "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-right text-xs font-black">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-8 py-5 text-right text-sm">
                             {sectionAverages.averageIncreaseRate !== null ? (
                               <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${sectionAverages.averageIncreaseRate >= 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
                                 {sectionAverages.averageIncreaseRate >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
@@ -1024,101 +798,320 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                             ) : (
                               <span className="text-muted-foreground/30">-</span>
                             )}
-                          </td>
-                          <td className="px-6 py-4"></td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="px-8 py-5"></TableCell>
+                        </TableRow>
                       );
                     }
-                  }
-                });
+                  });
 
-                return rows;
-              })()
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* 연도 복사 모달 - Neo Integrated */}
-      {copyYearModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setCopyYearModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-[2rem] border border-white shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
-            <div className="border-b border-border/40 px-8 py-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-                  <Copy className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">연도 데이터 복제</h2>
-                </div>
+                  return rows;
+                })()
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* 푸터 - 페이지네이션 및 요약 */}
+        <div className="bg-muted/30 px-8 py-5 border-t border-border/20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-xs text-slate-500">TOTAL : <span className="text-primary ml-1">{filteredPrices.length}</span></div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-normal"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={cn(
+                      "w-8 h-8 rounded-lg text-xs transition-all",
+                      currentPage === page
+                        ? "bg-primary text-white shadow-md shadow-primary/20"
+                        : "text-muted-foreground hover:bg-white hover:text-foreground"
+                    )}
+                  >
+                    {page}
+                  </button>
+                ))}
               </div>
-              <button onClick={() => setCopyYearModal(false)} className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground transition-all">
-                <X className="h-5 w-5" />
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+          )}
+        </div>
+      </div>
 
-            <div className="p-8 space-y-6">
-              <div className="space-y-2 group">
-                <label className="text-xs font-bold text-slate-700 ml-1">
-                  원본 연도 <span className="text-primary">*</span>
-                </label>
-                <select
-                  value={copySourceYear}
-                  onChange={(e) => setCopySourceYear(e.target.value)}
-                  className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                >
-                  <option value="">원본 연도 선택</option>
-                  {availableYears.map((year) => (
-                    <option key={year} value={year}>{year}년</option>
-                  ))}
-                </select>
+      {/* 등록/수정 패널 */}
+      <DraggablePanel
+        open={isAdding || editingId !== null}
+        onOpenChange={(open) => {
+          if (!open) handleCancel();
+        }}
+        triggerRect={triggerRect}
+        title={isAdding ? "신규 인력 단가 등록" : "인력 단가 속성 수정"}
+        description="기관별, 직군별 기준 인력 단가를 설정하고 관리합니다."
+        className="max-w-3xl"
+      >
+        <div className="space-y-8">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                소속 그룹 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={formData.affiliationGroup || ""}
+                onChange={(val) => setFormData({ ...formData, affiliationGroup: val as string })}
+                options={AFFILIATION_GROUPS.map(group => ({ value: group, label: group }))}
+                placeholder="소속 선택"
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                직군 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={formData.jobGroup || ""}
+                onChange={(val) => setFormData({ ...formData, jobGroup: val as string })}
+                options={JOB_GROUPS.map(group => ({ value: group, label: group }))}
+                placeholder="직군 선택"
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                직급 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={formData.jobLevel || ""}
+                onChange={(val) => setFormData({ ...formData, jobLevel: val as string })}
+                options={JOB_LEVELS.map(level => ({ value: level, label: level }))}
+                placeholder="직급 선택"
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                등급 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={formData.grade || ""}
+                onChange={(val) => setFormData({ ...formData, grade: val as string })}
+                options={GRADES.map(grade => ({ value: grade, label: grade }))}
+                placeholder="등급 선택"
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                기준 연도 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={formData.year || currentYear}
+                onChange={(val) => setFormData({ ...formData, year: Number(val) })}
+                options={YEARS.map(year => ({ value: year, label: `${year}년` }))}
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                제시 표준 단가 (천원)
+              </label>
+              <input
+                type="text"
+                value={numberInputValues.proposedStandard}
+                onChange={(e) => {
+                  const formattedValue = formatNumberWithCommas(e.target.value);
+                  setNumberInputValues({ ...numberInputValues, proposedStandard: formattedValue });
+                  const numValue = parseNumberFromString(e.target.value);
+                  const cleanedValue = e.target.value.replace(/,/g, "").trim();
+                  setFormData({
+                    ...formData,
+                    proposedStandard: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
+                  });
+                }}
+                placeholder="30,000"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                제시 적용 단가 (천원)
+              </label>
+              <input
+                type="text"
+                value={numberInputValues.proposedApplied}
+                onChange={(e) => {
+                  const formattedValue = formatNumberWithCommas(e.target.value);
+                  setNumberInputValues({ ...numberInputValues, proposedApplied: formattedValue });
+                  const numValue = parseNumberFromString(e.target.value);
+                  const cleanedValue = e.target.value.replace(/,/g, "").trim();
+                  setFormData({
+                    ...formData,
+                    proposedApplied: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
+                  });
+                }}
+                placeholder="11,500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                할인율 (%)
+              </label>
+              <div className="w-full rounded-md bg-gray-50 border border-gray-300 px-3 py-2 text-sm font-bold text-primary/60">
+                {formData.proposedStandard && (formData.proposedApplied !== null && formData.proposedApplied !== undefined)
+                  ? (() => {
+                    const discountRate = calculateDiscountRate(formData.proposedStandard, formData.proposedApplied);
+                    return discountRate !== null ? `${discountRate.toFixed(2)}%` : "-";
+                  })()
+                  : "-"}
               </div>
+            </div>
 
-              <div className="space-y-2 group">
-                <label className="text-xs font-bold text-slate-700 ml-1">
-                  대상 연도 <span className="text-primary">*</span>
-                </label>
-                <select
-                  value={copyTargetYear}
-                  onChange={(e) => setCopyTargetYear(e.target.value)}
-                  className="w-full rounded-[1.25rem] bg-muted/20 border-transparent py-4 px-5 text-sm font-bold text-foreground focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all outline-none"
-                >
-                  <option value="">대상 연도 선택</option>
-                  {YEARS.map((year) => (
-                    <option key={year} value={year}>{year}년{year === currentYear + 1 ? ' (내년)' : ''}</option>
-                  ))}
-                </select>
-              </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                내부 적용 단가 (천원)
+              </label>
+              <input
+                type="text"
+                value={numberInputValues.internalApplied}
+                onChange={(e) => {
+                  const formattedValue = formatNumberWithCommas(e.target.value);
+                  setNumberInputValues({ ...numberInputValues, internalApplied: formattedValue });
+                  const numValue = parseNumberFromString(e.target.value);
+                  const cleanedValue = e.target.value.replace(/,/g, "").trim();
+                  setFormData({
+                    ...formData,
+                    internalApplied: cleanedValue === "" ? null : (numValue >= 0 ? numValue : null),
+                  });
+                }}
+                placeholder="14,516"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+              />
+            </div>
 
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-xs font-bold text-primary/70 leading-relaxed">
-                  주의: 대상 연도에 이미 데이터가 존재하는 경우, 현재 작업으로 인해 정보가 영구적으로 덮어씌워질 수 있습니다.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4">
-                <button
-                  onClick={() => setCopyYearModal(false)}
-                  className="rounded-2xl border border-border/40 bg-white px-8 py-3 text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-all active:scale-95"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleCopyYear}
-                  disabled={isCopying}
-                  className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:translate-y-[-2px] active:scale-95 transition-all duration-300 disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none"
-                >
-                  <Copy className="h-4 w-4" />
-                  {isCopying ? "복사 중..." : "데이터 복사 실행"}
-                </button>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                인상률 (%)
+              </label>
+              <div className="w-full rounded-md bg-gray-50 border border-gray-300 px-3 py-2 text-sm font-bold text-muted-foreground/60">
+                {formData.year && formData.internalApplied
+                  ? (() => {
+                    const previousYear = formData.year - 1;
+                    const previousYearPrice = unitPrices.find(
+                      (p) =>
+                        p.affiliationGroup === formData.affiliationGroup &&
+                        p.jobGroup === formData.jobGroup &&
+                        p.jobLevel === formData.jobLevel &&
+                        p.grade === formData.grade &&
+                        p.year === previousYear
+                    );
+                    if (previousYearPrice && previousYearPrice.internalApplied) {
+                      const increaseRate = ((formData.internalApplied - previousYearPrice.internalApplied) / previousYearPrice.internalApplied) * 100;
+                      return `${increaseRate.toFixed(2)}%`;
+                    }
+                    return "-";
+                  })()
+                  : "-"}
               </div>
             </div>
           </div>
+
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button variant="ghost" type="button" onClick={handleCancel}>
+              취소
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={isSaving} className="px-8 min-w-[120px]">
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? "저장 중..." : (editingId !== null ? "변경사항 저장" : "인력단가 등록")}
+            </Button>
+          </div>
         </div>
-      )}
+      </DraggablePanel>
+
+      {/* 연도 복사 패널 */}
+      <DraggablePanel
+        open={copyYearModal}
+        onOpenChange={setCopyYearModal}
+        triggerRect={triggerRect}
+        title="연도 데이터 복제"
+        description="기준 연도의 모든 데이터를 다른 연도로 대량 복사합니다."
+        className="max-w-xl"
+      >
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                원본 연도 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={copySourceYear}
+                onChange={(val) => setCopySourceYear(val as string)}
+                options={availableYears.map(year => ({ value: year, label: `${year}년` }))}
+                placeholder="원본 연도 선택"
+                variant="standard"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">
+                대상 연도 <span className="text-primary">*</span>
+              </label>
+              <Dropdown
+                value={copyTargetYear}
+                onChange={(val) => setCopyTargetYear(val as string)}
+                options={YEARS.map(year => ({ value: year, label: `${year}년${year === currentYear + 1 ? ' (내년)' : ''}` }))}
+                placeholder="대상 연도 선택"
+                variant="standard"
+              />
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-orange-50 border border-orange-100">
+            <p className="text-xs font-bold text-orange-700 leading-relaxed">
+              ⚠️ 주의: 대상 연도에 이미 데이터가 존재하는 경우, 현재 데이터가 덮어씌워질 수 있습니다. 복사 작업을 실행하시겠습니까?
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button variant="ghost" onClick={() => setCopyYearModal(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleCopyYear}
+              disabled={isCopying}
+              className="px-8 min-w-[120px]"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {isCopying ? "복사 중..." : "데이터 복사 실행"}
+            </Button>
+          </div>
+        </div>
+      </DraggablePanel>
     </div>
   );
-}
-);
+});
 
 UnitPriceLaborTab.displayName = "UnitPriceLaborTab";

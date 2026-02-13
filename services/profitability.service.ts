@@ -10,16 +10,23 @@ export class ProfitabilityService {
   /**
    * 수지분석서 헤더 생성 또는 조회
    */
-  static async ensureHeader(projectId: number): Promise<ProfitabilityHeader | null> {
+  static async ensureHeader(projectId: number, versionComment: string = ""): Promise<ProfitabilityHeader | null> {
     try {
       const response = await fetch("/api/profitability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_id: projectId }),
+        body: JSON.stringify({ project_id: projectId, version_comment: versionComment }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to ensure profitability header");
+        const text = await response.text();
+        console.error("Server Response (Non-JSON):", text);
+        let errData = {};
+        try {
+          errData = JSON.parse(text);
+        } catch (e) { }
+        console.error("Server Error Detail:", errData);
+        throw new Error((errData as any).message || "Failed to ensure profitability header");
       }
 
       const data = await response.json();
@@ -33,10 +40,11 @@ export class ProfitabilityService {
   /**
    * 수지분석서 목록 조회
    */
-  static async fetchList(projectId?: number) {
+  static async fetchList(projectId?: number, latestOnly: boolean = false) {
     try {
       const params = new URLSearchParams();
       if (projectId) params.append("projectId", projectId.toString());
+      if (latestOnly) params.append("latestOnly", "true");
 
       const response = await fetch(`/api/profitability?${params}`);
       if (!response.ok) {
@@ -162,9 +170,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 제품계획 조회
    */
-  static async fetchProductPlan(projectId: number) {
+  static async fetchProductPlan(projectId: number, profitabilityId?: number) {
     try {
-      const response = await fetch(`/api/projects/${projectId}/product-plan`);
+      const url = new URL(`/api/projects/${projectId}/product-plan`, window.location.origin);
+      if (profitabilityId) url.searchParams.append("profitabilityId", profitabilityId.toString());
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error("Failed to fetch product plan");
       }
@@ -179,12 +190,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 제품계획 저장
    */
-  static async saveProductPlan(projectId: number, items: any[]) {
+  static async saveProductPlan(projectId: number, items: any[], profitabilityId?: number) {
     try {
       const response = await fetch(`/api/projects/${projectId}/product-plan`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, profitabilityId }),
       });
 
       if (!response.ok) {
@@ -199,9 +210,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 인력계획 조회
    */
-  static async fetchManpowerPlan(projectId: number) {
+  static async fetchManpowerPlan(projectId: number, profitabilityId?: number) {
     try {
-      const response = await fetch(`/api/projects/${projectId}/manpower-plan`);
+      const url = new URL(`/api/projects/${projectId}/manpower-plan`, window.location.origin);
+      if (profitabilityId) url.searchParams.append("profitabilityId", profitabilityId.toString());
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error("Failed to fetch manpower plan");
       }
@@ -220,13 +234,14 @@ export class ProfitabilityService {
     projectId: number,
     items: any[],
     startMonth?: string,
-    endMonth?: string
+    endMonth?: string,
+    profitabilityId?: number
   ) {
     try {
       const response = await fetch(`/api/projects/${projectId}/manpower-plan`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, startMonth, endMonth }),
+        body: JSON.stringify({ items, startMonth, endMonth, profitabilityId }),
       });
 
       if (!response.ok) {
@@ -241,9 +256,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 경비계획 조회
    */
-  static async fetchProjectExpensePlan(projectId: number) {
+  static async fetchProjectExpensePlan(projectId: number, profitabilityId?: number) {
     try {
-      const response = await fetch(`/api/projects/${projectId}/expense-plan`);
+      const url = new URL(`/api/projects/${projectId}/expense-plan`, window.location.origin);
+      if (profitabilityId) url.searchParams.append("profitabilityId", profitabilityId.toString());
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error("Failed to fetch project expense plan");
       }
@@ -262,13 +280,14 @@ export class ProfitabilityService {
     projectId: number,
     items: any[],
     startMonth?: string,
-    endMonth?: string
+    endMonth?: string,
+    profitabilityId?: number
   ) {
     try {
       const response = await fetch(`/api/projects/${projectId}/expense-plan`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, startMonth, endMonth }),
+        body: JSON.stringify({ items, startMonth, endMonth, profitabilityId }),
       });
 
       if (!response.ok) {
@@ -283,11 +302,16 @@ export class ProfitabilityService {
   /**
    * 프로젝트 수지차 부가수익 조회
    */
-  static async fetchProfitabilityDiff(projectId: number) {
+  static async fetchProfitabilityDiff(projectId: number, profitabilityId?: number) {
     try {
-      const response = await fetch(`/api/projects/${projectId}/profitability-diff`);
+      const url = new URL(`/api/projects/${projectId}/profitability-diff`, window.location.origin);
+      if (profitabilityId) url.searchParams.append("profitabilityId", profitabilityId.toString());
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
-        throw new Error("Failed to fetch profitability diff");
+        const errorText = await response.text();
+        console.error("Server Error Response:", errorText);
+        throw new Error(`Failed to fetch profitability diff: ${response.status} ${errorText}`);
       }
       return await response.json();
     } catch (error) {
@@ -299,12 +323,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 수지차 부가수익 저장
    */
-  static async saveProfitabilityDiff(projectId: number, data: any) {
+  static async saveProfitabilityDiff(projectId: number, data: any, profitabilityId?: number) {
     try {
       const response = await fetch(`/api/projects/${projectId}/profitability-diff`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, profitabilityId }),
       });
 
       if (!response.ok) {
@@ -320,9 +344,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 수주품의 조회
    */
-  static async fetchOrderProposal(projectId: number) {
+  static async fetchOrderProposal(projectId: number, profitabilityId?: number) {
     try {
-      const response = await fetch(`/api/projects/${projectId}/order-proposal`);
+      const url = new URL(`/api/projects/${projectId}/order-proposal`, window.location.origin);
+      if (profitabilityId) url.searchParams.append("profitabilityId", profitabilityId.toString());
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error("Failed to fetch order proposal");
       }
@@ -336,12 +363,12 @@ export class ProfitabilityService {
   /**
    * 프로젝트 수주품의 저장
    */
-  static async saveOrderProposal(projectId: number, data: any) {
+  static async saveOrderProposal(projectId: number, data: any, profitabilityId?: number) {
     try {
       const response = await fetch(`/api/projects/${projectId}/order-proposal`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, profitabilityId }),
       });
 
       if (!response.ok) {

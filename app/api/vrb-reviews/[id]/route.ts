@@ -318,18 +318,16 @@ export async function PUT(
     });
 
     if (updateFields.length > 0) {
-      updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
       updateValues.push(id);
-
-      const updateSql = `UPDATE we_project_vrb_reviews SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
+      const updateSql = `UPDATE we_project_vrb_reviews SET ${updateFields.join(', ')}, status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
       console.log('[API PUT] 업데이트 SQL:', updateSql);
       console.log('[API PUT] 업데이트 값:', updateValues);
 
       await query(updateSql, updateValues);
       console.log('[API PUT] 업데이트 성공');
 
-      // VRB 상태가 approved 또는 rejected로 변경되면 프로젝트 상태도 업데이트
-      if (body.status === 'approved' || body.status === 'rejected') {
+      // VRB 상태가 COMPLETED로 변경되면 프로젝트 상태도 업데이트
+      if (body.status === 'COMPLETED') {
         try {
           // 프로젝트 ID 가져오기 (VRB에서 직접 조회)
           const vrbResult = await query(
@@ -343,9 +341,9 @@ export async function PUT(
           }
 
           const projectId = parseInt(String(vrbResult.rows[0].project_id), 10);
-          const projectStatus = body.status === 'approved' ? 'vrb_approved' : 'vrb_rejected';
+          const projectStatus = 'vrb_completed';
 
-          console.log(`[API PUT] VRB Review ${body.status}. Updating project ${projectId} phase to profitability`);
+          console.log(`[API PUT] VRB Review COMPLETED. Updating project ${projectId} phase to profitability`);
           const updateResult = await query(
             `UPDATE we_projects 
              SET status = $1, current_phase = $2, updated_at = CURRENT_TIMESTAMP 

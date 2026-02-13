@@ -28,7 +28,7 @@ export interface TableHeaderProps extends HTMLAttributes<HTMLTableSectionElement
 export const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <thead ref={ref} className={cn("bg-gray-50", className)} {...props}>
+      <thead ref={ref} className={cn("bg-slate-50/50 border-b border-slate-200", className)} {...props}>
         {children}
       </thead>
     );
@@ -85,7 +85,7 @@ export const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(
         ref={ref}
         scope="col"
         className={cn(
-          "px-3 py-3.5 text-sm font-semibold text-gray-900",
+          "px-6 py-4 text-sm font-normal text-slate-500 tracking-tight",
           alignStyles[align],
           className
         )}

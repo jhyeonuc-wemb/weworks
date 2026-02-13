@@ -9,6 +9,17 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || '';
 
     let sql = `
+      WITH RECURSIVE dept_tree AS (
+        SELECT id, name, parent_department_id, display_order, 
+               CAST(LPAD(COALESCE(display_order, 0)::text, 5, '0') || '_' || name AS text) as path
+        FROM we_departments
+        WHERE parent_department_id IS NULL
+        UNION ALL
+        SELECT d.id, d.name, d.parent_department_id, d.display_order,
+               dt.path || ' > ' || LPAD(COALESCE(d.display_order, 0)::text, 5, '0') || '_' || d.name
+        FROM we_departments d
+        JOIN dept_tree dt ON d.parent_department_id = dt.id
+      )
       SELECT 
         u.id,
         u.username,
@@ -19,15 +30,23 @@ export async function GET(request: NextRequest) {
         u.title,
         u.grade,
         u.department_id,
-        d.name as department_name,
+        dt.name as department_name,
+        dt.path as dept_path,
         u.role_id,
-        (SELECT r.name FROM we_roles r WHERE r.id = u.role_id) as role_name,
+        (SELECT r.name FROM we_codes r WHERE r.id = u.role_id) as role_name,
         u.rank_id,
         rk.name as rank_name,
         rk.code as rank_code,
         rk.display_order as rank_order,
         u.status,
         u.phone,
+        u.address,
+        u.address_detail,
+        u.postcode,
+        u.user_state,
+        u.contract_type,
+        u.joined_date,
+        u.resignation_date,
         u.must_change_password,
         COALESCE(
           json_agg(
@@ -40,10 +59,10 @@ export async function GET(request: NextRequest) {
           '[]'::json
         ) as roles
       FROM we_users u
-      LEFT JOIN we_departments d ON u.department_id = d.id
+      LEFT JOIN dept_tree dt ON u.department_id = dt.id
       LEFT JOIN we_user_roles ur ON u.id = ur.user_id
-      LEFT JOIN we_roles r2 ON ur.role_id = r2.id
-      LEFT JOIN we_ranks rk ON u.rank_id = rk.id
+      LEFT JOIN we_codes r2 ON ur.role_id = r2.id
+      LEFT JOIN we_codes rk ON u.rank_id = rk.id
       WHERE 1=1
     `;
     const params: any[] = [];
@@ -56,14 +75,19 @@ export async function GET(request: NextRequest) {
     if (role) {
       sql += ` AND EXISTS (
         SELECT 1 FROM we_user_roles ur2
-        JOIN we_roles r3 ON ur2.role_id = r3.id
+        JOIN we_codes r3 ON ur2.role_id = r3.id
         WHERE ur2.user_id = u.id AND r3.name = $${params.length + 1}
       )`;
       params.push(role);
     }
 
-    sql += ` GROUP BY u.id, d.name, rk.name, rk.code, rk.display_order
-      ORDER BY u.name`;
+    sql += ` GROUP BY u.id, dt.name, dt.path, rk.name, rk.code, rk.display_order
+      ORDER BY 
+        COALESCE(dt.path, 'ZZZZZ') ASC, 
+        (CASE WHEN u.title IS NOT NULL AND u.title <> '' THEN 0 ELSE 1 END) ASC,
+        COALESCE(rk.display_order, 999) ASC, 
+        u.title ASC,
+        u.name ASC`;
 
     const result = await query(sql, params);
 
@@ -99,6 +123,13 @@ export async function POST(request: NextRequest) {
       rank_id,
       title,
       status,
+      address,
+      address_detail,
+      postcode,
+      user_state,
+      contract_type,
+      joined_date,
+      resignation_date,
       must_change_password,
     } = body;
 
@@ -139,10 +170,11 @@ export async function POST(request: NextRequest) {
     const sql = `
       INSERT INTO we_users (
         username, name, email, password_hash, employee_number, phone,
-        department_id, role_id, rank_id, grade, title, status, must_change_password
+        department_id, role_id, rank_id, grade, title, status, joined_date, 
+        resignation_date, address, address_detail, postcode, user_state, contract_type, must_change_password
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING id, username, name, email, employee_number, phone, department_id, role_id, rank_id, grade, title, status, must_change_password
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+      RETURNING id, username, name, email, employee_number, phone, department_id, role_id, rank_id, grade, title, status, joined_date, resignation_date, address, address_detail, postcode, user_state, contract_type, must_change_password
     `;
 
     const result = await query(sql, [
@@ -158,6 +190,13 @@ export async function POST(request: NextRequest) {
       body.grade || null,
       title || null,
       status || 'active',
+      joined_date || null,
+      resignation_date || null,
+      address || null,
+      address_detail || null,
+      postcode || null,
+      user_state || null,
+      contract_type || null,
       must_change_password !== undefined ? must_change_password : true,
     ]);
 

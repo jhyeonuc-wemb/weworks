@@ -2,6 +2,8 @@
 
 import { Currency, CURRENCIES } from "@/lib/utils/currency";
 
+import { Dropdown } from "@/components/ui";
+
 interface CurrencySelectorProps {
   value: Currency;
   onChange: (currency: Currency) => void;
@@ -14,16 +16,15 @@ export function CurrencySelector({
   className = "",
 }: CurrencySelectorProps) {
   return (
-    <select
+    <Dropdown
       value={value}
-      onChange={(e) => onChange(e.target.value as Currency)}
-      className={`rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 ${className}`}
-    >
-      {Object.entries(CURRENCIES).map(([code, info]) => (
-        <option key={code} value={code}>
-          {info.name} ({info.symbol})
-        </option>
-      ))}
-    </select>
+      onChange={(val) => onChange(val as Currency)}
+      options={Object.entries(CURRENCIES).map(([code, info]) => ({
+        value: code,
+        label: `${info.name} (${info.symbol})`,
+      }))}
+      variant="standard"
+      className={className}
+    />
   );
 }

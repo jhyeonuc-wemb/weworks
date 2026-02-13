@@ -23,9 +23,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           className={cn(
-            "block w-full h-9 rounded border-0 pl-3 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm",
+            "block w-full h-10 rounded-xl border border-gray-300 pl-3 pr-10 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 transition-all duration-200",
             "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500",
-            error && "ring-red-300 focus:ring-red-500",
+            error && "border-red-500 focus:border-red-500 focus:ring-red-500",
             className
           )}
           {...props}

@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
     const sql = `
       INSERT INTO we_project_vrb_reviews (
         project_id, version, status, created_by, md_estimation_id
-      ) VALUES ($1, $2, 'draft', $3, $4)
+      ) VALUES ($1, $2, 'STANDBY', $3, $4)
       RETURNING id
     `;
 

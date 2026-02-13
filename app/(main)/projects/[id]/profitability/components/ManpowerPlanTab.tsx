@@ -6,7 +6,8 @@ import { format } from "date-fns";
 import { useManpowerPlan } from "@/hooks/useManpowerPlan";
 import type { Project, ProjectUnitPrice } from "@/types/profitability";
 import { formatCurrency, Currency } from "@/lib/utils/currency";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DatePicker, MonthPicker, Button, Input, Select, Badge } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface ManpowerPlanTabProps {
@@ -16,6 +17,7 @@ interface ManpowerPlanTabProps {
   currency: Currency;
   status: string;
   onSave?: () => void;
+  profitabilityId?: number;
 }
 
 const distinctAffiliationGroups = [
@@ -119,7 +121,7 @@ function MonthlyInput({ value, onChange, disabled }: MonthlyInputProps) {
       onBlur={handleBlur}
       onFocus={handleFocus}
       disabled={disabled}
-      className="w-full rounded border border-gray-200 px-1 py-1 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      className="w-full h-8 rounded-lg border border-slate-200 px-1 py-1 text-center text-xs font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
     />
   );
 }
@@ -132,8 +134,9 @@ export function ManpowerPlanTab({
   currency,
   status,
   onSave,
+  profitabilityId,
 }: ManpowerPlanTabProps) {
-  const isReadOnly = status === "completed";
+  const isReadOnly = status === "completed" || status === "approved" || status === "review";
   const {
     items,
     users,
@@ -148,7 +151,7 @@ export function ManpowerPlanTab({
     deleteRow,
     selectUser,
     saveManpowerPlan,
-  } = useManpowerPlan(projectId, projectUnitPrices, project);
+  } = useManpowerPlan(projectId, projectUnitPrices, project, profitabilityId);
 
   const handleSave = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -246,21 +249,29 @@ export function ManpowerPlanTab({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <DatePicker
-            label="시작월"
-            date={startMonth ? new Date(startMonth + "-01") : undefined}
-            setDate={(date) => setStartMonth(date ? format(date, "yyyy-MM") : "")}
-            disabled={isReadOnly}
-            className="w-36"
-          />
-          <span className="text-gray-400 mt-6">~</span>
-          <DatePicker
-            label="종료월"
-            date={endMonth ? new Date(endMonth + "-01") : undefined}
-            setDate={(date) => setEndMonth(date ? format(date, "yyyy-MM") : "")}
-            disabled={isReadOnly}
-            className="w-36"
-          />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">시작월</span>
+              <MonthPicker
+                date={startMonth ? new Date(startMonth + "-01") : undefined}
+                setDate={(date) => setStartMonth(date ? format(date, "yyyy-MM") : "")}
+                disabled={isReadOnly}
+                className="w-28"
+                placeholder="시작월 선택"
+              />
+            </div>
+            <span className="text-gray-400 mx-1">~</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">종료월</span>
+              <MonthPicker
+                date={endMonth ? new Date(endMonth + "-01") : undefined}
+                setDate={(date) => setEndMonth(date ? format(date, "yyyy-MM") : "")}
+                disabled={isReadOnly}
+                className="w-28"
+                placeholder="종료월 선택"
+              />
+            </div>
+          </div>
           <div className="flex flex-col justify-end pb-1.5 h-full">
             <span className="text-sm text-gray-500">(단위:천원)</span>
           </div>
@@ -269,7 +280,7 @@ export function ManpowerPlanTab({
               type="button"
               onClick={(e) => handleSave(e)}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Save className="h-4 w-4" />
               {saving ? "저장 중..." : "저장"}
@@ -386,7 +397,7 @@ export function ManpowerPlanTab({
                         value={item.role || ""}
                         onChange={(e) => updateItem(item.id, "role", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-8 rounded-lg border border-slate-200 px-2 py-1 text-xs text-center font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                       />
                     </td>
                     <td className="border border-gray-300 px-1 py-1">
@@ -395,7 +406,7 @@ export function ManpowerPlanTab({
                         value={item.detailedTask || ""}
                         onChange={(e) => updateItem(item.id, "detailedTask", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-8 rounded-lg border border-slate-200 px-2 py-1 text-xs font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
                       />
                     </td>
                     <td className="border border-gray-300 px-1 py-1">
@@ -593,14 +604,15 @@ export function ManpowerPlanTab({
                 <tr>
                   <td className="border border-gray-300 bg-white" colSpan={6}></td>
                   <td className="border border-gray-300 px-2 py-2 bg-white">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => addRow()}
-                      className="flex items-center gap-1.5 rounded bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                      className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 rounded-xl"
                     >
                       <Plus className="h-4 w-4" />
                       인력 추가
-                    </button>
+                    </Button>
                   </td>
                   <td colSpan={months.length + sortedYears.length + 1 + 4} className="border border-gray-300 bg-white"></td>
                 </tr>
@@ -773,8 +785,11 @@ export function ManpowerPlanTab({
 
         {/* 2. 분석 섹션 테이블 (업체별-등급별 매출 및 원가) */}
         <div className="mt-8 space-y-4">
-          <div className="bg-blue-900 text-white px-4 py-3 text-sm font-bold rounded-t-md shadow-sm">
-            [ 분석 : 업체별-등급별 매출 및 원가 ]
+          <div className="px-4 py-3 rounded-xl shadow-sm bg-slate-900 border border-slate-800">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 italic flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+              Analysis: Revenue & Cost by Company/Grade
+            </h3>
           </div>
           <div
             ref={analysisTableRef}

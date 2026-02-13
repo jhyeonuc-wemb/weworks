@@ -10,12 +10,25 @@ export async function GET(
     const { id } = await params;
     const projectId = parseInt(id);
 
-    console.log("Fetching product plan for project:", projectId);
+    const searchParams = request.nextUrl.searchParams;
+    const profitabilityId = searchParams.get("profitabilityId");
 
-    const result = await query(
-      `SELECT * FROM we_project_product_plan WHERE project_id = $1 ORDER BY id`,
-      [projectId]
-    );
+    console.log("Fetching product plan for project:", projectId, "profitabilityId:", profitabilityId);
+
+    let sql = `SELECT * FROM we_project_product_plan`;
+    const dbParams: any[] = [];
+
+    if (profitabilityId) {
+      sql += ` WHERE profitability_id = $1`;
+      dbParams.push(parseInt(profitabilityId));
+    } else {
+      sql += ` WHERE project_id = $1 AND profitability_id = (SELECT id FROM we_project_profitability WHERE project_id = $1 ORDER BY version DESC LIMIT 1)`;
+      dbParams.push(projectId);
+    }
+
+    sql += ` ORDER BY id`;
+
+    const result = await query(sql, dbParams);
 
     const rows = result.rows || [];
     console.log("Product plan rows fetched:", rows.length);
@@ -56,12 +69,32 @@ export async function PUT(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
-    const { items } = await request.json();
+    const { items, profitabilityId: bodyProfitabilityId } = await request.json();
+    const searchParams = request.nextUrl.searchParams;
+    let profitabilityId = bodyProfitabilityId || searchParams.get("profitabilityId");
+
+    // profitabilityId 가 없으면 최신 draft/not_started 찾기
+    if (!profitabilityId) {
+      const draftRes = await query(
+        `SELECT id FROM we_project_profitability WHERE project_id = $1 AND status IN ('STANDBY', 'IN_PROGRESS') ORDER BY version DESC LIMIT 1`,
+        [projectId]
+      );
+      if (draftRes.rows.length > 0) {
+        profitabilityId = draftRes.rows[0].id;
+      }
+    }
+
+    if (!profitabilityId) {
+      const versionCheck = await query(`SELECT COALESCE(MAX(version), 0) as max_v FROM we_project_profitability WHERE project_id = $1`, [projectId]);
+      const newV = versionCheck.rows[0].max_v + 1;
+      const insRes = await query(`INSERT INTO we_project_profitability (project_id, version, status, created_by) VALUES ($1, $2, 'STANDBY', 1) RETURNING id`, [projectId, newV]);
+      profitabilityId = insRes.rows[0].id;
+    }
 
     // 기존 데이터 삭제
     await query(
-      `DELETE FROM we_project_product_plan WHERE project_id = $1`,
-      [projectId]
+      `DELETE FROM we_project_product_plan WHERE profitability_id = $1`,
+      [profitabilityId]
     );
 
     // 새 데이터 삽입
@@ -69,11 +102,12 @@ export async function PUT(
       for (const item of items) {
         await query(
           `INSERT INTO we_project_product_plan 
-          (project_id, type, product_id, company_name, product_name, quantity, unit_price, 
+          (project_id, profitability_id, type, product_id, company_name, product_name, quantity, unit_price, 
            base_price, proposal_price, discount_rate, cost_price, request_date, request_type)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
           [
             projectId,
+            profitabilityId,
             item.type,
             item.productId || null,
             item.companyName || "",
@@ -91,32 +125,13 @@ export async function PUT(
       }
     }
 
-    // 수지분석서 상태 업데이트 ('not_started' -> 'in_progress') 또는 신규 생성
-    const checkRes = await query(
-      `SELECT id FROM we_project_profitability WHERE project_id = $1 AND status IN ('not_started', 'in_progress')`,
-      [projectId]
-    );
-
-    if (checkRes.rows.length > 0) {
+    if (profitabilityId) {
       await query(
         `UPDATE we_project_profitability 
-         SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP 
-         WHERE project_id = $1 AND status = 'not_started'`,
-        [projectId]
-      );
-    } else {
-      // 진행 중인 건이 없으면 새로 생성
-      const versionCheck = await query(
-        `SELECT MAX(version) AS max_version FROM we_project_profitability WHERE project_id = $1 AND status = 'completed'`,
-        [projectId]
-      );
-      const newVersion = Number(versionCheck.rows[0]?.max_version || 0) + 1;
-
-      await query(
-        `INSERT INTO we_project_profitability (
-          project_id, version, status, created_by
-        ) VALUES ($1, $2, 'in_progress', 1)`,
-        [projectId, newVersion]
+         SET status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END,
+             updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $1`,
+        [profitabilityId]
       );
     }
 

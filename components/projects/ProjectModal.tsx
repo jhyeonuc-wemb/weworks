@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DraggablePanel, Button, DatePicker } from "@/components/ui";
+import { DraggablePanel, Button, DatePicker, Dropdown } from "@/components/ui";
 import { Save, Search, X } from "lucide-react";
 import { format } from "date-fns";
 import { Currency } from "@/lib/utils/currency";
@@ -38,6 +38,9 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     const [users, setUsers] = useState<User[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
+    const [phases, setPhases] = useState<any[]>([]);
+    const [categoryCodes, setCategoryCodes] = useState<any[]>([]); // CD_002_02 (분야/EESD)
+    const [fieldCodes, setFieldCodes] = useState<any[]>([]); // CD_002_01 (영역/분야)
     const [loading, setLoading] = useState(false);
 
     // 폼 데이터 (new/page.tsx와 동일하게 구성)
@@ -45,6 +48,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
         projectCode: "",
         name: "",
         category: "",
+        field: "", // 분야 추가
         customerId: "",
         ordererId: "",
         description: "",
@@ -70,6 +74,20 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [showOrdererDropdown, setShowOrdererDropdown] = useState(false);
 
+    const parseLocalDate = (dateStr: string | null) => {
+        if (!dateStr) return undefined;
+
+        // YYYY-MM-DD 형식 (10자)일 경우 직접 숫자로 분리하여 로컬 시간으로 생성
+        if (dateStr.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        // 그 외 ISO 형식 (T 포함) 등은 기본 생성자 사용 (타임존 변환 처리됨)
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? undefined : date;
+    };
+
     useEffect(() => {
         if (open) {
             fetchReferenceData();
@@ -79,10 +97,13 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     const fetchReferenceData = async () => {
         try {
             setLoading(true);
-            const [usersRes, clientsRes, categoriesRes] = await Promise.all([
+            const [usersRes, clientsRes, categoriesRes, phasesRes, categoryCodesRes, fieldCodesRes] = await Promise.all([
                 fetch("/api/users"),
                 fetch("/api/clients"),
                 fetch("/api/project-categories"),
+                fetch("/api/settings/phases", { cache: "no-store" }),
+                fetch("/api/codes?parentCode=CD_002_02"), // 분야(EESD)
+                fetch("/api/codes?parentCode=CD_002_01"), // 영역
             ]);
 
             let loadedUsers: User[] = [];
@@ -102,6 +123,18 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                 const data = await categoriesRes.json();
                 setProjectCategories(data.categories || []);
             }
+            if (phasesRes.ok) {
+                const data = await phasesRes.json();
+                setPhases(data.phases?.filter((p: any) => p.is_active) || []);
+            }
+            if (categoryCodesRes.ok) {
+                const data = await categoryCodesRes.json();
+                setCategoryCodes(data.codes || []);
+            }
+            if (fieldCodesRes.ok) {
+                const data = await fieldCodesRes.json();
+                setFieldCodes(data.codes || []);
+            }
 
             // 수정 모드일 때 초기 바인딩
             if (project) {
@@ -109,15 +142,16 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     projectCode: project.project_code || "",
                     name: project.name || "",
                     category: project.category_id?.toString() || "",
+                    field: project.field_id?.toString() || "", // field -> field_id로 매핑 변경
                     customerId: project.customer_id?.toString() || "",
                     ordererId: project.orderer_id?.toString() || "",
                     description: project.description || "",
                     managerId: project.manager_id?.toString() || "",
                     salesRepresentativeId: project.sales_representative_id?.toString() || "",
-                    contractStartDate: project.contract_start_date ? project.contract_start_date.split('T')[0] : "",
-                    contractEndDate: project.contract_end_date ? project.contract_end_date.split('T')[0] : "",
-                    actualStartDate: project.actual_start_date ? project.actual_start_date.split('T')[0] : "",
-                    actualEndDate: project.actual_end_date ? project.actual_end_date.split('T')[0] : "",
+                    contractStartDate: project.contract_start_date || "",
+                    contractEndDate: project.contract_end_date || "",
+                    actualStartDate: project.actual_start_date || "",
+                    actualEndDate: project.actual_end_date || "",
                     currency: (project.currency || "KRW") as Currency,
                     expectedAmount: project.expected_amount?.toString() || "",
                     processStatus: project.process_status || "",
@@ -140,6 +174,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     projectCode: "",
                     name: "",
                     category: "",
+                    field: "",
                     customerId: "",
                     ordererId: "",
                     description: "",
@@ -178,6 +213,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             name: formData.name,
             project_code: formData.projectCode || null,
             category_id: formData.category ? parseInt(formData.category) : null,
+            field_id: formData.field ? parseInt(formData.field) : null, // field_id 추가
             customer_id: formData.customerId ? parseInt(formData.customerId) : null,
             orderer_id: formData.ordererId ? parseInt(formData.ordererId) : null,
             description: formData.description,
@@ -216,9 +252,9 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             className="max-w-4xl"
         >
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                <div className="grid grid-cols-4 gap-x-6 gap-y-4">
                     {/* 프로젝트 코드 */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 col-span-1">
                         <label className="text-xs font-bold text-gray-500">프로젝트 코드</label>
                         <input
                             type="text"
@@ -226,12 +262,12 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                             value={formData.projectCode}
                             onChange={handleChange}
                             placeholder="예: P24-039"
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                         />
                     </div>
 
                     {/* 프로젝트명 */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 col-span-3">
                         <label className="text-xs font-bold text-gray-500">프로젝트명 <span className="text-red-500">*</span></label>
                         <input
                             type="text"
@@ -240,28 +276,36 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="프로젝트명을 입력하세요"
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                         />
                     </div>
 
-                    {/* 카테고리 */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500">카테고리</label>
-                        <select
-                            name="category"
+                    {/* 분야(EESD) - CD_002_02 */}
+                    <div className="space-y-1 col-span-2">
+                        <label className="text-xs font-bold text-gray-500">분야(EESD)</label>
+                        <Dropdown
                             value={formData.category}
-                            onChange={handleChange}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                        >
-                            <option value="">선택하세요</option>
-                            {projectCategories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </select>
+                            onChange={(val) => setFormData(prev => ({ ...prev, category: val as string }))}
+                            options={categoryCodes.map(code => ({ value: code.id.toString(), label: code.name }))}
+                            placeholder="선택하세요"
+                            variant="standard"
+                        />
+                    </div>
+
+                    {/* 영역 - CD_002_01 */}
+                    <div className="space-y-1 col-span-2">
+                        <label className="text-xs font-bold text-gray-500">영역</label>
+                        <Dropdown
+                            value={formData.field}
+                            onChange={(val) => setFormData(prev => ({ ...prev, field: val as string }))}
+                            options={fieldCodes.map(code => ({ value: code.id.toString(), label: code.name }))}
+                            placeholder="선택하세요"
+                            variant="standard"
+                        />
                     </div>
 
                     {/* 고객사 검색 */}
-                    <div className="relative space-y-1">
+                    <div className="relative space-y-1 col-span-2">
                         <label className="text-xs font-bold text-gray-500">고객사</label>
                         <div className="relative">
                             <input
@@ -273,7 +317,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                 }}
                                 onFocus={() => setShowCustomerDropdown(true)}
                                 placeholder="고객사 검색..."
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                                className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                             />
                             {showCustomerDropdown && filteredCustomers.length > 0 && (
                                 <div className="absolute z-50 mt-1 max-h-40 w-full overflow-auto rounded-md border bg-white shadow-lg">
@@ -297,7 +341,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     </div>
 
                     {/* 발주처 검색 */}
-                    <div className="relative space-y-1">
+                    <div className="relative space-y-1 col-span-2">
                         <label className="text-xs font-bold text-gray-500">발주처</label>
                         <div className="relative">
                             <input
@@ -309,7 +353,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                 }}
                                 onFocus={() => setShowOrdererDropdown(true)}
                                 placeholder="발주처 검색..."
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                                className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                             />
                             {showOrdererDropdown && filteredOrderers.length > 0 && (
                                 <div className="absolute z-50 mt-1 max-h-40 w-full overflow-auto rounded-md border bg-white shadow-lg">
@@ -333,7 +377,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     </div>
 
                     {/* PM 검색 */}
-                    <div className="relative space-y-1">
+                    <div className="relative space-y-1 col-span-1">
                         <label className="text-xs font-bold text-gray-500">프로젝트 매니저</label>
                         <div className="relative">
                             <input
@@ -345,7 +389,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                 }}
                                 onFocus={() => setShowPmDropdown(true)}
                                 placeholder="PM 검색..."
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                                className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                             />
                             {showPmDropdown && filteredPms.length > 0 && (
                                 <div className="absolute z-50 mt-1 max-h-40 w-full overflow-auto rounded-md border bg-white shadow-lg">
@@ -360,7 +404,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                                 setShowPmDropdown(false);
                                             }}
                                         >
-                                            {u.name} ({u.email})
+                                            {u.name}
                                         </button>
                                     ))}
                                 </div>
@@ -369,7 +413,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     </div>
 
                     {/* 영업대표 검색 */}
-                    <div className="relative space-y-1">
+                    <div className="relative space-y-1 col-span-1">
                         <label className="text-xs font-bold text-gray-500">영업대표 <span className="text-red-500">*</span></label>
                         <div className="relative">
                             <input
@@ -382,7 +426,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                 }}
                                 onFocus={() => setShowSalesDropdown(true)}
                                 placeholder="영업대표 검색..."
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                                className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                             />
                             {showSalesDropdown && filteredSales.length > 0 && (
                                 <div className="absolute z-50 mt-1 max-h-40 w-full overflow-auto rounded-md border bg-white shadow-lg">
@@ -397,7 +441,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                                 setShowSalesDropdown(false);
                                             }}
                                         >
-                                            {u.name} ({u.email})
+                                            {u.name}
                                         </button>
                                     ))}
                                 </div>
@@ -405,95 +449,126 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                         </div>
                     </div>
 
-                    {/* 예상금액 및 통화 */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500">통화</label>
-                            <CurrencySelector
-                                value={formData.currency}
-                                onChange={(curr) => setFormData(prev => ({ ...prev, currency: curr }))}
-                                className="w-full"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500">예상 금액</label>
-                            <input
-                                type="text"
-                                value={formData.expectedAmount}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^\d]/g, "");
-                                    setFormData(prev => ({ ...prev, expectedAmount: val }));
-                                }}
-                                placeholder="0"
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                            />
-                        </div>
+                    {/* 계약금액 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">계약 금액</label>
+                        <input
+                            type="text"
+                            value={formData.expectedAmount ? Number(formData.expectedAmount).toLocaleString() : ""}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^\d]/g, "");
+                                setFormData(prev => ({ ...prev, expectedAmount: val }));
+                            }}
+                            placeholder="0"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+                        />
                     </div>
 
-                    {/* 계약 시작/종료일 */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* 통화 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">통화</label>
+                        <CurrencySelector
+                            value={formData.currency}
+                            onChange={(curr) => setFormData(prev => ({ ...prev, currency: curr }))}
+                            className="w-full"
+                        />
+                    </div>
+
+                    {/* 계약 시작일 */}
+                    <div className="col-span-1">
                         <DatePicker
                             label="계약 시작일"
-                            date={formData.contractStartDate ? new Date(formData.contractStartDate) : undefined}
-                            setDate={(date) => setFormData(prev => ({ ...prev, contractStartDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                            date={parseLocalDate(formData.contractStartDate)}
+                            setDate={(date) => {
+                                if (!date) {
+                                    setFormData(prev => ({ ...prev, contractStartDate: "" }));
+                                    return;
+                                }
+                                const y = date.getFullYear();
+                                const m = String(date.getMonth() + 1).padStart(2, '0');
+                                const d = String(date.getDate()).padStart(2, '0');
+                                setFormData(prev => ({ ...prev, contractStartDate: `${y}-${m}-${d}` }));
+                            }}
                         />
+                    </div>
+                    {/* 계약 종료일 */}
+                    <div className="col-span-1">
                         <DatePicker
                             label="계약 종료일"
-                            date={formData.contractEndDate ? new Date(formData.contractEndDate) : undefined}
-                            setDate={(date) => setFormData(prev => ({ ...prev, contractEndDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                            date={parseLocalDate(formData.contractEndDate)}
+                            setDate={(date) => {
+                                if (!date) {
+                                    setFormData(prev => ({ ...prev, contractEndDate: "" }));
+                                    return;
+                                }
+                                const y = date.getFullYear();
+                                const m = String(date.getMonth() + 1).padStart(2, '0');
+                                const d = String(date.getDate()).padStart(2, '0');
+                                setFormData(prev => ({ ...prev, contractEndDate: `${y}-${m}-${d}` }));
+                            }}
                         />
                     </div>
 
-                    {/* 실제 시작/종료일 */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* 실제 시작일 */}
+                    <div className="col-span-1">
                         <DatePicker
                             label="실제 시작일"
-                            date={formData.actualStartDate ? new Date(formData.actualStartDate) : undefined}
-                            setDate={(date) => setFormData(prev => ({ ...prev, actualStartDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                            date={parseLocalDate(formData.actualStartDate)}
+                            setDate={(date) => {
+                                if (!date) {
+                                    setFormData(prev => ({ ...prev, actualStartDate: "" }));
+                                    return;
+                                }
+                                const y = date.getFullYear();
+                                const m = String(date.getMonth() + 1).padStart(2, '0');
+                                const d = String(date.getDate()).padStart(2, '0');
+                                setFormData(prev => ({ ...prev, actualStartDate: `${y}-${m}-${d}` }));
+                            }}
                         />
+                    </div>
+                    {/* 실제 종료일 */}
+                    <div className="col-span-1">
                         <DatePicker
                             label="실제 종료일"
-                            date={formData.actualEndDate ? new Date(formData.actualEndDate) : undefined}
-                            setDate={(date) => setFormData(prev => ({ ...prev, actualEndDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                            date={parseLocalDate(formData.actualEndDate)}
+                            setDate={(date) => {
+                                if (!date) {
+                                    setFormData(prev => ({ ...prev, actualEndDate: "" }));
+                                    return;
+                                }
+                                const y = date.getFullYear();
+                                const m = String(date.getMonth() + 1).padStart(2, '0');
+                                const d = String(date.getDate()).padStart(2, '0');
+                                setFormData(prev => ({ ...prev, actualEndDate: `${y}-${m}-${d}` }));
+                            }}
                         />
                     </div>
 
-                    {/* 단계 및 위험도 */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500">단계</label>
-                            <select
-                                name="processStatus"
-                                value={formData.processStatus}
-                                onChange={handleChange}
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                            >
-                                <option value="">선택하세요</option>
-                                <option value="sales">영업/PS</option>
-                                <option value="md_estimation">M/D 산정</option>
-                                <option value="vrb">VRB</option>
-                                <option value="confirmation">컨펌</option>
-                                <option value="team_allocation">인력 배치</option>
-                                <option value="profitability">수지분석서</option>
-                                <option value="in_progress">프로젝트 진행</option>
-                                <option value="settlement">수지정산서</option>
-                                <option value="warranty">하자보증</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500">위험도</label>
-                            <select
-                                name="riskLevel"
-                                value={formData.riskLevel}
-                                onChange={handleChange}
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                            >
-                                <option value="">선택하세요</option>
-                                <option value="high">상</option>
-                                <option value="medium">중</option>
-                                <option value="low">하</option>
-                            </select>
-                        </div>
+                    {/* 단계 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">단계</label>
+                        <Dropdown
+                            value={formData.processStatus}
+                            onChange={(val) => setFormData(prev => ({ ...prev, processStatus: val as string }))}
+                            options={phases.map(phase => ({ value: phase.code, label: phase.name }))}
+                            placeholder="단계를 선택하세요"
+                            variant="standard"
+                        />
+                    </div>
+                    {/* 위험도 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">위험도</label>
+                        <Dropdown
+                            value={formData.riskLevel}
+                            onChange={(val) => setFormData(prev => ({ ...prev, riskLevel: val as string }))}
+                            options={[
+                                { value: "high", label: "상" },
+                                { value: "medium", label: "중" },
+                                { value: "low", label: "하" },
+                            ]}
+                            placeholder="선택하세요"
+                            variant="standard"
+                        />
                     </div>
                 </div>
 
@@ -506,7 +581,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                         value={formData.description}
                         onChange={handleChange}
                         placeholder="상세 내용을 입력하세요"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                     />
                 </div>
 

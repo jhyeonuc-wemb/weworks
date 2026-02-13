@@ -84,7 +84,8 @@ CREATE TABLE IF NOT EXISTS we_clients (
     contact_phone VARCHAR(20),
     address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(name)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_clients_name ON we_clients(name);
@@ -135,7 +136,8 @@ CREATE TABLE IF NOT EXISTS we_md_difficulty_items (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(category, content)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_difficulty_items_category ON we_md_difficulty_items(category);
@@ -151,7 +153,8 @@ CREATE TABLE IF NOT EXISTS we_md_field_difficulty_items (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(field_category, content)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_field_difficulty_items_field_category ON we_md_field_difficulty_items(field_category);
@@ -167,7 +170,8 @@ CREATE TABLE IF NOT EXISTS we_md_development_items (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(classification, content)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_development_items_classification ON we_md_development_items(classification);
@@ -184,7 +188,8 @@ CREATE TABLE IF NOT EXISTS we_md_modeling_3d_items (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(category, difficulty)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_modeling_3d_items_category ON we_md_modeling_3d_items(category);
@@ -199,7 +204,8 @@ CREATE TABLE IF NOT EXISTS we_md_modeling_3d_weights (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(content)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_modeling_3d_weights_is_active ON we_md_modeling_3d_weights(is_active);
@@ -214,7 +220,8 @@ CREATE TABLE IF NOT EXISTS we_md_pid_items (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(category)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_pid_items_category ON we_md_pid_items(category);
@@ -229,7 +236,8 @@ CREATE TABLE IF NOT EXISTS we_md_pid_weights (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(content)
 );
 
 CREATE INDEX IF NOT EXISTS idx_we_md_pid_weights_is_active ON we_md_pid_weights(is_active);

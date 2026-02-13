@@ -11,7 +11,8 @@ export async function GET(
     const sql = `
       SELECT 
         p.*,
-        pc.name as category_name,
+        COALESCE(cat_code.name, pc.name) as category_name,
+        fc.name as field_name,
         c.name as customer_name,
         o.name as orderer_name,
         u1.name as manager_name,
@@ -20,6 +21,8 @@ export async function GET(
         u2.id as sales_representative_id
       FROM we_projects p
       LEFT JOIN we_project_categories pc ON p.category_id = pc.id
+      LEFT JOIN we_codes cat_code ON p.category_id = cat_code.id
+      LEFT JOIN we_codes fc ON p.field_id = fc.id
       LEFT JOIN we_clients c ON p.customer_id = c.id
       LEFT JOIN we_clients o ON p.orderer_id = o.id
       LEFT JOIN we_users u1 ON p.manager_id = u1.id
@@ -57,7 +60,7 @@ export async function PUT(
     let paramIndex = 1;
 
     const allowedFields = [
-      'name', 'project_code', 'category_id', 'customer_id', 'orderer_id', 'description',
+      'name', 'project_code', 'category_id', 'field_id', 'customer_id', 'orderer_id', 'description',
       'contract_start_date', 'contract_end_date', 'actual_start_date', 'actual_end_date',
       'expected_amount', 'currency', 'manager_id', 'sales_representative_id',
       'process_status', 'risk_level', 'status', 'current_phase'
@@ -109,7 +112,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     // 프로젝트 삭제
     const sql = `DELETE FROM we_projects WHERE id = $1 RETURNING id`;
     const result = await query(sql, [id]);

@@ -4,8 +4,9 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Save, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency, type Currency } from "@/lib/utils/currency";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DatePicker, Button, Input, Textarea, Badge } from "@/components/ui";
 import { calculateProfitabilitySummary } from "@/lib/utils/calculations";
+import { cn } from "@/lib/utils";
 import type {
   ManpowerPlanItem,
   ProductPlanItem,
@@ -21,6 +22,7 @@ interface OrderProposalTabProps {
   currency: Currency;
   isReadOnly?: boolean;
   onSave?: () => void;
+  profitabilityId?: number;
 }
 
 export function OrderProposalTab({
@@ -31,6 +33,7 @@ export function OrderProposalTab({
   currency,
   isReadOnly = false,
   onSave,
+  profitabilityId,
 }: OrderProposalTabProps) {
   // --- 수주품의 수동 입력 상태 ---
   const [contractType, setContractType] = useState("");
@@ -75,7 +78,7 @@ export function OrderProposalTab({
     const loadData = async () => {
       if (!project?.id) return;
       try {
-        const data = await ProfitabilityService.fetchOrderProposal(project.id);
+        const data = await ProfitabilityService.fetchOrderProposal(project.id, profitabilityId);
         setContractType(data.contractType || "");
         setContractCategory(data.contractCategory || "");
         setMainContract(data.mainContract || "");
@@ -99,7 +102,7 @@ export function OrderProposalTab({
 
         // 수지차 데이터도 불러와서 손익 계산에 반영
         try {
-          const diffData = await ProfitabilityService.fetchProfitabilityDiff(project.id);
+          const diffData = await ProfitabilityService.fetchProfitabilityDiff(project.id, profitabilityId);
           setExtraData({
             extraRevenue: diffData.extraRevenue || 0,
             extraExpense: diffData.extraExpense || 0
@@ -112,7 +115,7 @@ export function OrderProposalTab({
       }
     };
     loadData();
-  }, [project?.id]);
+  }, [project?.id, profitabilityId]);
 
   // --- 수지표 요약 계산 (Profitability Summary) ---
   const summary = useMemo(() => {
@@ -150,7 +153,7 @@ export function OrderProposalTab({
         totalCost: summary.totalCost,
         netProfit: summary.netProfit,
         profitRate: summary.profitRate
-      });
+      }, profitabilityId);
       alert("수주품의 데이터가 저장되었습니다.");
       if (onSave) onSave();
     } catch (error) {
@@ -188,26 +191,33 @@ export function OrderProposalTab({
           <p className="mt-1 text-sm text-gray-500">프로젝트 수주를 위한 최종 내부 품의 정보를 관리합니다.</p>
         </div>
         <div className="flex items-center gap-4">
+        </div>
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <DatePicker
-              label="작성일"
-              date={writtenDate ? new Date(writtenDate) : undefined}
-              setDate={(date) => setWrittenDate(date ? format(date, "yyyy-MM-dd") : "")}
-              disabled={isReadOnly}
-              className="w-44"
-            />
-            <DatePicker
-              label="승인일"
-              date={approvedDate ? new Date(approvedDate) : undefined}
-              setDate={(date) => setApprovedDate(date ? format(date, "yyyy-MM-dd") : "")}
-              disabled={isReadOnly}
-              className="w-44"
-            />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">작성일</span>
+              <DatePicker
+                date={writtenDate ? new Date(writtenDate) : undefined}
+                setDate={(date) => setWrittenDate(date ? format(date, "yyyy-MM-dd") : "")}
+                disabled={isReadOnly}
+                className="w-36"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 leading-normal whitespace-nowrap">승인일</span>
+              <DatePicker
+                date={approvedDate ? new Date(approvedDate) : undefined}
+                setDate={(date) => setApprovedDate(date ? format(date, "yyyy-MM-dd") : "")}
+                disabled={isReadOnly}
+                className="w-36"
+              />
+            </div>
           </div>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Save className="h-4 w-4" />
             {saving ? "저장 중..." : "저장"}
@@ -217,9 +227,9 @@ export function OrderProposalTab({
 
       {/* 1. 프로젝트 개요 */}
       <section className="space-y-3">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
-          [ 프로젝트 개요 ]
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 italic flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+          Project Overview
         </h3>
         <div className="border border-gray-300">
           <table className="w-full border-collapse text-sm table-fixed">
@@ -240,11 +250,11 @@ export function OrderProposalTab({
                 <td colSpan={3} className="px-3 border-r border-gray-300 text-left bg-white">{project?.customerName}</td>
                 <th className="bg-gray-50 border-r border-gray-300 px-2 text-center font-bold text-gray-700 text-sm">계약형태</th>
                 <td className="border-r border-gray-300 px-2 text-left bg-white">
-                  <input type="text" value={contractType} onChange={e => setContractType(e.target.value)} disabled={isReadOnly} className="w-full bg-transparent outline-none focus:bg-blue-50/50 text-left text-sm" />
+                  <input type="text" value={contractType} onChange={e => setContractType(e.target.value)} disabled={isReadOnly} className="w-full h-full bg-transparent outline-none focus:bg-primary/5 px-2 text-left text-sm font-bold transition-all duration-300" />
                 </td>
                 <th className="bg-gray-50 border-r border-gray-300 px-2 text-center font-bold text-gray-700 text-sm">주사업자</th>
                 <td className="px-2 text-left bg-white">
-                  <input type="text" value={mainOperator} onChange={e => setMainOperator(e.target.value)} disabled={isReadOnly} className="w-full bg-transparent outline-none focus:bg-blue-50/50 text-left text-sm" />
+                  <input type="text" value={mainOperator} onChange={e => setMainOperator(e.target.value)} disabled={isReadOnly} className="w-full h-full bg-transparent outline-none focus:bg-primary/5 px-2 text-left text-sm font-bold transition-all duration-300" />
                 </td>
               </tr>
               {/* 2행: 프로젝트명(1-T) | Value(2-4 D) | 계약유형(5-T) | [Input(6-D)] | 기타(7-T) | [Input(8-D)] */}
@@ -275,19 +285,19 @@ export function OrderProposalTab({
               <tr className="border-b border-gray-300">
                 <th className="bg-gray-50 border-r border-gray-300 px-2 py-3 text-center font-bold text-gray-700">개요</th>
                 <td colSpan={7} className="px-3 py-1">
-                  <textarea value={overview} onChange={e => setOverview(e.target.value)} disabled={isReadOnly} rows={5} className="w-full bg-transparent outline-none resize-none focus:bg-blue-50/50 py-1" />
+                  <textarea value={overview} onChange={e => setOverview(e.target.value)} disabled={isReadOnly} rows={5} className="w-full h-full bg-transparent outline-none resize-none focus:bg-primary/5 p-3 text-sm font-medium transition-all duration-300" />
                 </td>
               </tr>
               <tr className="border-b border-gray-300">
                 <th className="bg-gray-50 border-r border-gray-300 px-2 py-3 text-center font-bold text-gray-700">특이사항</th>
                 <td colSpan={7} className="px-3 py-1">
-                  <textarea value={specialNotes} onChange={e => setSpecialNotes(e.target.value)} disabled={isReadOnly} rows={4} className="w-full bg-transparent outline-none resize-none focus:bg-blue-50/50 py-1" />
+                  <textarea value={specialNotes} onChange={e => setSpecialNotes(e.target.value)} disabled={isReadOnly} rows={4} className="w-full h-full bg-transparent outline-none resize-none focus:bg-primary/5 p-3 text-sm font-medium transition-all duration-300" />
                 </td>
               </tr>
               <tr>
                 <th className="bg-gray-50 border-r border-gray-300 px-2 py-3 text-center font-bold text-gray-700">Risk</th>
                 <td colSpan={7} className="px-3 py-1">
-                  <textarea value={risk} onChange={e => setRisk(e.target.value)} disabled={isReadOnly} rows={4} className="w-full bg-transparent outline-none resize-none focus:bg-blue-50/50 py-1" />
+                  <textarea value={risk} onChange={e => setRisk(e.target.value)} disabled={isReadOnly} rows={4} className="w-full h-full bg-transparent outline-none resize-none focus:bg-primary/5 p-3 text-sm font-medium transition-all duration-300" />
                 </td>
               </tr>
             </tbody>
@@ -442,9 +452,9 @@ export function OrderProposalTab({
 
       {/* 3. 대금 조건 */}
       <section className="space-y-3">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
-          [ 대금 조건 ]
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 italic flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+          Payment Terms
         </h3>
         <div className="border border-gray-300">
           <table className="w-full border-collapse text-sm">
@@ -468,7 +478,7 @@ export function OrderProposalTab({
                       if (!newTerms.labor[0]) newTerms.labor[0] = { rate: "", timing: "" };
                       newTerms.labor[0].rate = e.target.value;
                       setPaymentTerms(newTerms);
-                    }} disabled={isReadOnly} placeholder="" className="w-full text-center bg-transparent outline-none focus:bg-blue-50/50" />
+                    }} disabled={isReadOnly} placeholder="" className="w-full h-11 text-center bg-transparent outline-none focus:bg-primary/5 transition-all duration-300 font-bold" />
                   </div>
                 </td>
                 <td className="border-r border-gray-300 px-2 align-middle">

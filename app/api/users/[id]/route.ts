@@ -21,13 +21,20 @@ export async function GET(
         u.grade,
         u.department_id,
         d.name as department_name,
+        u.must_change_password,
         u.role_id,
-        (SELECT r.name FROM we_roles r WHERE r.id = u.role_id) as role_name,
+        (SELECT r.name FROM we_codes r WHERE r.id = u.role_id) as role_name,
         u.rank_id,
         rk.name as rank_name,
         u.status,
         u.phone,
-        u.must_change_password,
+        u.address,
+        u.address_detail,
+        u.postcode,
+        u.user_state,
+        u.contract_type,
+        u.joined_date,
+        u.resignation_date,
         COALESCE(
           json_agg(
             json_build_object(
@@ -41,10 +48,10 @@ export async function GET(
       FROM we_users u
       LEFT JOIN we_departments d ON u.department_id = d.id
       LEFT JOIN we_user_roles ur ON u.id = ur.user_id
-      LEFT JOIN we_roles r2 ON ur.role_id = r2.id
-      LEFT JOIN we_ranks rk ON u.rank_id = rk.id
+      LEFT JOIN we_codes r2 ON ur.role_id = r2.id
+      LEFT JOIN we_codes rk ON u.rank_id = rk.id
       WHERE u.id = $1
-      GROUP BY u.id, d.name, rk.name
+      GROUP BY u.id, d.name, rk.id, rk.name
     `;
 
     const result = await query(sql, [id]);
@@ -53,7 +60,7 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       user: {
         ...result.rows[0],
         roles: result.rows[0].roles || []
@@ -88,6 +95,13 @@ export async function PUT(
       rank_id,
       title,
       status,
+      address,
+      address_detail,
+      postcode,
+      user_state,
+      contract_type,
+      joined_date,
+      resignation_date,
       must_change_password,
     } = body;
 
@@ -111,10 +125,17 @@ export async function PUT(
         grade = $8,
         title = $9,
         status = $10,
-        must_change_password = $11,
+        address = $11,
+        address_detail = $12,
+        postcode = $13,
+        user_state = $14,
+        contract_type = $15,
+        joined_date = $16,
+        resignation_date = $17,
+        must_change_password = $18,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $12
-      RETURNING id, username, name, email, employee_number, phone, department_id, role_id, rank_id, grade, title, status, must_change_password
+      WHERE id = $19
+      RETURNING id, username, name, email, employee_number, phone, department_id, role_id, rank_id, grade, title, status, address, address_detail, postcode, user_state, contract_type, joined_date, resignation_date, must_change_password
     `;
 
     const result = await query(sql, [
@@ -128,6 +149,13 @@ export async function PUT(
       body.grade || null,
       title || null,
       status || 'active',
+      address || null,
+      address_detail || null,
+      postcode || null,
+      user_state || null,
+      contract_type || null,
+      joined_date || null,
+      resignation_date || null,
       must_change_password !== undefined ? must_change_password : false,
       id,
     ]);
@@ -141,7 +169,7 @@ export async function PUT(
     if (rolesToSave.length > 0) {
       // 기존 역할 삭제
       await query('DELETE FROM we_user_roles WHERE user_id = $1', [id]);
-      
+
       // 새 역할 추가
       for (let i = 0; i < rolesToSave.length; i++) {
         const rid = rolesToSave[i];
@@ -151,7 +179,7 @@ export async function PUT(
           [id, rid, isPrimary]
         );
       }
-      
+
       // 주요 역할을 we_users.role_id에도 저장 (호환성)
       await query('UPDATE we_users SET role_id = $1 WHERE id = $2', [rolesToSave[0], id]);
     } else {
@@ -173,13 +201,17 @@ export async function PUT(
         u.grade,
         u.department_id,
         d.name as department_name,
+        u.must_change_password,
         u.role_id,
-        (SELECT r.name FROM we_roles r WHERE r.id = u.role_id) as role_name,
+        (SELECT r.name FROM we_codes r WHERE r.id = u.role_id) as role_name,
         u.rank_id,
         rk.name as rank_name,
         u.status,
         u.phone,
-        u.must_change_password,
+        u.address,
+        u.address_detail,
+        u.joined_date,
+        u.resignation_date,
         COALESCE(
           json_agg(
             json_build_object(
@@ -193,13 +225,13 @@ export async function PUT(
       FROM we_users u
       LEFT JOIN we_departments d ON u.department_id = d.id
       LEFT JOIN we_user_roles ur ON u.id = ur.user_id
-      LEFT JOIN we_roles r2 ON ur.role_id = r2.id
-      LEFT JOIN we_ranks rk ON u.rank_id = rk.id
+      LEFT JOIN we_codes r2 ON ur.role_id = r2.id
+      LEFT JOIN we_codes rk ON u.rank_id = rk.id
       WHERE u.id = $1
-      GROUP BY u.id, d.name, rk.name
+      GROUP BY u.id, d.name, rk.id, rk.name
     `, [id]);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       user: {
         ...updatedResult.rows[0],
         roles: updatedResult.rows[0].roles || []

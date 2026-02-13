@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, Download, Plus, Trash2, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DatePicker, StatusDropdown, Button } from "@/components/ui";
 import {
   mapRankToJobLevel,
   getDefaultGradeByRank,
@@ -201,7 +201,7 @@ export default function ProjectSettlementPage() {
     planned_svc_mm_own: 0,
     planned_svc_mm_ext: 0,
     notes: "",
-    status: "draft",
+    status: "STANDBY",
   });
 
   const [laborItems, setLaborItems] = useState<LaborItem[]>([]);
@@ -641,40 +641,48 @@ export default function ProjectSettlementPage() {
     }
   };
 
-  const handleComplete = async () => {
+  const handleStatusChange = async (newStatus: string) => {
     if (!settlement.id) {
       toast.error("먼저 저장을 해주세요.");
       return;
     }
 
-    if (window.confirm("정산서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.")) {
-      try {
-        setSaving(true);
-        const res = await fetch(`/api/projects/${projectId}/settlement/status`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "completed" }),
-        });
-        if (res.ok) {
-          toast.success("정산 작성이 완료되었습니다.");
-          setSettlement(prev => ({ ...prev, status: "completed" }));
-        } else {
-          toast.error("상태 변경 실패");
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("오류 발생");
-      } finally {
-        setSaving(false);
+    // 완료 상태로 변경 시 확인
+    if (newStatus === 'COMPLETED') {
+      if (!window.confirm("정산서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.")) {
+        return;
       }
+    }
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/settlement/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setSettlement(prev => ({ ...prev, status: newStatus }));
+        if (newStatus === 'COMPLETED') {
+          toast.success("정산 작성이 완료되었습니다.");
+        } else {
+          toast.success("상태가 변경되었습니다.");
+        }
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "상태 변경 실패");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("오류 발생");
     }
   };
 
   const getStatusDisplay = (s: string) => {
     switch (s) {
-      case "draft": return { label: "작성중", color: "bg-blue-50 text-blue-700 border-blue-200" };
-      case "completed": return { label: "작성완료", color: "bg-green-50 text-green-700 border-green-200" };
-      default: return { label: s || "작성중", color: "bg-gray-100 text-gray-700 border-gray-200" };
+      case "STANDBY": return { label: "대기", color: "bg-gray-100 text-gray-700 border-gray-200" };
+      case "IN_PROGRESS": return { label: "작성중", color: "bg-blue-50 text-blue-700 border-blue-200" };
+      case "COMPLETED": return { label: "작성완료", color: "bg-green-50 text-green-700 border-green-200" };
+      default: return { label: s || "대기", color: "bg-gray-100 text-gray-700 border-gray-200" };
     }
   };
 
@@ -724,6 +732,7 @@ export default function ProjectSettlementPage() {
         body: JSON.stringify({
           settlement: {
             ...settlement,
+            status: settlement.status === "STANDBY" ? "IN_PROGRESS" : settlement.status,
             // Calculated Actuals
             actual_revenue: totalActualRevenue,
             actual_cost: totalActualCost,
@@ -1199,53 +1208,51 @@ export default function ProjectSettlementPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              수지정산서 - {projectName}
-            </h1>
-            <p className="text-[14px] text-gray-600">
-              {customerName} | {projectCode}
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">수지정산서 - {projectName}</h1>
+            <p className="text-sm text-gray-600">
+              {projectCode} | {customerName}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className={`rounded-md border px-3 py-2 text-[14px] font-medium ${getStatusDisplay(settlement.status).color}`}>
-            상태: {getStatusDisplay(settlement.status).label}
-          </div>
-          {settlement.status !== "completed" && (
-            <>
-              {settlement.id && (
-                <button
-                  onClick={handleDelete}
-                  className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-white px-4 py-2 text-[14px] font-medium text-red-600 hover:bg-red-50 shadow-sm"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  삭제
-                </button>
-              )}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-[14px] font-medium text-white hover:bg-gray-800 disabled:bg-gray-400 shadow-sm"
-              >
-                <Save className="h-4 w-4" />
-                {saving ? "저장 중..." : "저장"}
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-[14px] font-medium text-white hover:bg-blue-700 shadow-sm disabled:bg-gray-400"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                작성 완료
-              </button>
-            </>
+        <div className="flex items-center gap-3">
+          {(settlement.id && settlement.status !== "completed" && settlement.status !== "COMPLETED") && (
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              삭제
+            </Button>
           )}
-          <button
-            className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-[14px] font-medium text-white hover:bg-green-700 shadow-sm"
+
+          <StatusDropdown
+            status={settlement.status || 'STANDBY'}
+            onStatusChange={handleStatusChange}
+            disabled={settlement.status === 'COMPLETED' || settlement.status === 'completed'}
+            phase="SETTLEMENT"
+          />
+
+          <Button
+            variant="secondary"
+            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm"
           >
             <Download className="h-4 w-4" />
-            EXCEL
-          </button>
+            엑셀
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={async () => {
+              await handleSave();
+              await handleStatusChange('COMPLETED');
+            }}
+            disabled={saving || settlement.status === 'COMPLETED' || settlement.status === 'completed'}
+            className="flex items-center gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            작성완료
+          </Button>
         </div>
       </div>
 

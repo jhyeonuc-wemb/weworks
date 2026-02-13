@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
         p.contract_end_date,
         p.currency,
         p.expected_amount,
-        pc.name as category_name,
+        COALESCE(cat_code.name, pc.name) as category_name,
+        fc.name as field_name,
         c.name as customer_name,
         o.name as orderer_name,
         u1.name as manager_name,
@@ -32,12 +33,18 @@ export async function GET(request: NextRequest) {
         prof.profit_rate,
         -- 동적으로 current_phase 계산
         CASE
-          WHEN prof.status IN ('draft', 'review', 'in_progress') THEN 'profitability'
-          WHEN prof.status = 'approved' THEN 'completed'
+          WHEN p.status = 'completed' THEN 'completed'
+          WHEN p.status = 'profitability_completed' THEN 'settlement'
+          WHEN p.status = 'vrb_completed' THEN 'profitability'
+          WHEN p.status = 'md_estimation_completed' THEN 'vrb'
+          WHEN prof.status IN ('STANDBY', 'IN_PROGRESS') THEN 'profitability'
+          WHEN prof.status = 'COMPLETED' THEN 'settlement'
           ELSE COALESCE(p.current_phase, 'sales')
         END as computed_phase
       FROM we_projects p
       LEFT JOIN we_project_categories pc ON p.category_id = pc.id
+      LEFT JOIN we_codes cat_code ON p.category_id = cat_code.id
+      LEFT JOIN we_codes fc ON p.field_id = fc.id
       LEFT JOIN we_clients c ON p.customer_id = c.id
       LEFT JOIN we_clients o ON p.orderer_id = o.id
       LEFT JOIN we_users u1 ON p.manager_id = u1.id
@@ -129,9 +136,11 @@ export async function POST(request: NextRequest) {
         name, project_code, category_id, customer_id, orderer_id, description,
         contract_start_date, contract_end_date, actual_start_date, actual_end_date,
         expected_amount, currency, manager_id, sales_representative_id,
-        process_status, current_phase, risk_level, created_by, status
+        process_status, current_phase, risk_level, field_id, created_by, status
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 'sales_opportunity'
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
+        COALESCE((SELECT id FROM we_users WHERE id = 10), (SELECT id FROM we_users ORDER BY id LIMIT 1)), 
+        'sales_opportunity'
       ) RETURNING id
     `;
 
@@ -153,7 +162,7 @@ export async function POST(request: NextRequest) {
       process_status || null,
       current_phase,
       risk_level || null,
-      created_by,
+      body.field_id || null,
     ]);
 
     return NextResponse.json({ id: result.rows[0].id });
