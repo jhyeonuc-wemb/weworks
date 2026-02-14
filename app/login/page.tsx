@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { Eye, EyeOff, Lock, User, ArrowRight, ShieldCheck, HelpCircle } from "lucide-react";
@@ -12,8 +12,18 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // 페이지 마운트 시 저장된 아이디 불러오기
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("remembered_username");
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
 
   // 비밀번호 변경 모달 상태
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -40,6 +50,13 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // 아이디 저장 로직
+        if (rememberMe) {
+          localStorage.setItem("remembered_username", username);
+        } else {
+          localStorage.removeItem("remembered_username");
+        }
+
         if (data.user.must_change_password) {
           setShowChangePassword(true);
           showToast("보안을 위해 비밀번호를 변경해주세요.", "info");
@@ -185,6 +202,32 @@ export default function LoginPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between px-1">
+              <label className="flex items-center gap-2.5 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="h-5 w-5 bg-gray-100 border-2 border-gray-200 rounded-md transition-all peer-checked:bg-blue-600 peer-checked:border-blue-600 group-hover:border-blue-400" />
+                  <svg
+                    className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-[15px] font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">
+                  아이디 저장
+                </span>
+              </label>
             </div>
 
             <button
