@@ -121,7 +121,7 @@ function MonthlyInput({ value, onChange, disabled }: MonthlyInputProps) {
       onBlur={handleBlur}
       onFocus={handleFocus}
       disabled={disabled}
-      className="w-full h-8 rounded-lg border border-slate-200 px-1 py-1 text-center text-xs font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      className="w-full h-full text-center text-sm bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
     />
   );
 }
@@ -202,15 +202,16 @@ export function ManpowerPlanTab({
       const year = current.getFullYear();
       if (!groups[year]) {
         const yearIndex = year - startY;
+        const shortYear = String(year).slice(-2);
         let label = '';
         if (yearIndex === 0) {
-          label = `당년(${year}년)`;
+          label = `당년(${shortYear}년)`;
         } else if (yearIndex === 1) {
-          label = `차년(${year}년)`;
+          label = `차년(${shortYear}년)`;
         } else if (yearIndex === 2) {
-          label = `차차년(${year}년)`;
+          label = `차차년(${shortYear}년)`;
         } else {
-          label = `${year}년`;
+          label = `${shortYear}년`;
         }
         groups[year] = { label, count: 0 };
       }
@@ -308,64 +309,64 @@ export function ManpowerPlanTab({
         <div
           ref={mainTableRef}
           onScroll={() => handleScroll('main')}
-          className="overflow-x-auto border border-gray-200 bg-white rounded-lg shadow-sm"
+          className="overflow-x-auto bg-white"
         >
-          <table className="min-w-full divide-y divide-gray-200" style={{ borderCollapse: 'collapse' }}>
+          <table className="min-w-full border border-gray-300" style={{ borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="text-gray-900 border-b border-gray-300">
-                <th rowSpan={3} className="min-w-48 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">업무영역</th>
-                <th rowSpan={3} className="min-w-24 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">역할</th>
-                <th rowSpan={3} className="min-w-60 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">세부업무</th>
-                <th rowSpan={3} className="min-w-[106px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">회사명</th>
-                <th rowSpan={3} className="min-w-[139px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">소속 및 직군</th>
-                <th rowSpan={3} className="min-w-[90px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">위엠비<br />직급</th>
-                <th rowSpan={3} className="min-w-[80px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">등급</th>
-                <th rowSpan={3} className="min-w-[130px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">성명</th>
+              <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                <th rowSpan={3} className="min-w-48 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">업무영역</th>
+                <th rowSpan={3} className="min-w-24 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">역할</th>
+                <th rowSpan={3} className="min-w-60 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">세부업무</th>
+                <th rowSpan={3} className="min-w-[106px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">회사명</th>
+                <th rowSpan={3} className="min-w-[139px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">소속 및 직군</th>
+                <th rowSpan={3} className="min-w-[90px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">위엠비<br />직급</th>
+                <th rowSpan={3} className="min-w-[80px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">등급</th>
+                <th rowSpan={3} className="min-w-[130px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">성명</th>
                 {sortedYears.map((year) => (
-                  <th key={year} colSpan={yearGroups[year].count} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                  <th key={year} colSpan={yearGroups[year].count} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                     {yearGroups[year].label}
                   </th>
                 ))}
-                <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                   총투입 M/M
                 </th>
-                <th colSpan={2} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                <th colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                   제안가
                 </th>
-                <th colSpan={2} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                <th colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                   내부단가
                 </th>
               </tr>
-              <tr className="text-gray-900 border-b border-gray-300">
+              <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
                 {months.map((m) => (
-                  <th key={m.key} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[50px] bg-blue-50/50">
+                  <th key={m.key} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[50px] bg-blue-50/50">
                     {m.label}
                   </th>
                 ))}
-                <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
+                <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
                   합계
                 </th>
                 {sortedYears.map((year) => (
-                  <th key={`total-mm-${year}`} rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
-                    {year}년
+                  <th key={`total-mm-${year}`} rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
+                    {String(year).slice(-2)}년
                   </th>
                 ))}
-                <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                   단가
                 </th>
-                <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                   금액
                 </th>
-                <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                   단가
                 </th>
-                <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                   금액
                 </th>
               </tr>
-              <tr className="text-gray-500">
+              <tr className="text-gray-500 h-[35px]">
                 {months.map((m) => (
-                  <th key={`index-${m.key}`} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium bg-blue-50/50">
+                  <th key={`index-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm font-medium bg-blue-50/50">
                     M{m.index}
                   </th>
                 ))}
@@ -375,55 +376,50 @@ export function ManpowerPlanTab({
               {items.map((item, idx) => {
                 const isOutsourcingDev = item.affiliationGroup === "외주_개발";
                 const isOutsourcingConsult = item.affiliationGroup === "외주_컨설팅";
-                const rowClass = isOutsourcingDev
-                  ? "bg-emerald-50 hover:bg-emerald-100 group"
-                  : isOutsourcingConsult
-                    ? "bg-purple-50 hover:bg-purple-100 group"
-                    : "hover:bg-gray-50 group bg-white";
 
                 return (
-                  <tr key={item.id} className={rowClass}>
+                  <tr key={item.id} className="h-[35px] group bg-white">
                     {idx === 0 && (
                       <td
                         rowSpan={items.length + (!isReadOnly ? 1 : 0) + 1}
-                        className="border border-gray-300 px-3 py-2 text-center text-sm font-medium text-gray-900 bg-white min-w-[180px]"
+                        className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white min-w-[180px]"
                       >
                         {project?.name || "프로젝트 미지정"}
                       </td>
                     )}
-                    <td className="border border-gray-300 px-1 py-1 text-center">
+                    <td className="border border-gray-300 p-0">
                       <input
                         type="text"
                         value={item.role || ""}
                         onChange={(e) => updateItem(item.id, "role", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full h-8 rounded-lg border border-slate-200 px-2 py-1 text-xs text-center font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                        className="w-full h-[35px] border-none px-[10px] text-center text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
+                    <td className="border border-gray-300 p-0">
                       <input
                         type="text"
                         value={item.detailedTask || ""}
                         onChange={(e) => updateItem(item.id, "detailedTask", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full h-8 rounded-lg border border-slate-200 px-2 py-1 text-xs font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                        className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
+                    <td className="border border-gray-300 p-0">
                       <input
                         type="text"
                         value={item.companyName || ""}
                         onChange={(e) => updateItem(item.id, "companyName", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-[35px] border-none px-[10px] text-center text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
+                    <td className="border border-gray-300 p-0">
                       <select
                         value={item.affiliationGroup || ""}
                         onChange={(e) => updateItem(item.id, "affiliationGroup", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-1 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       >
                         <option value="">선택</option>
                         {distinctAffiliationGroups.map((g) => (
@@ -431,12 +427,12 @@ export function ManpowerPlanTab({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
+                    <td className="border border-gray-300 p-0">
                       <select
                         value={item.wmbRank || ""}
                         onChange={(e) => updateItem(item.id, "wmbRank", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-1 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       >
                         <option value="">선택</option>
                         {distinctJobLevels.map((l) => (
@@ -444,12 +440,12 @@ export function ManpowerPlanTab({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
+                    <td className="border border-gray-300 p-0">
                       <select
                         value={item.grade || ""}
                         onChange={(e) => updateItem(item.id, "grade", e.target.value)}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 px-1 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                       >
                         <option value="">선택</option>
                         {distinctGrades.map((g) => (
@@ -457,16 +453,16 @@ export function ManpowerPlanTab({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 px-1 py-1">
-                      <div className="flex items-center gap-1">
-                        <div className="relative flex-1">
+                    <td className="border border-gray-300 p-0 relative">
+                      <div className="flex items-center h-[35px]">
+                        <div className="relative flex-1 h-full">
                           <input
                             type="text"
                             value={item.name || ""}
                             onChange={(e) => selectUser(item.id, e.target.value)}
                             disabled={isReadOnly}
                             placeholder="이름 검색"
-                            className="w-full rounded border border-gray-200 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                            className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                             list={`users-${item.id}`}
                           />
                           <datalist id={`users-${item.id}`}>
@@ -479,7 +475,7 @@ export function ManpowerPlanTab({
                           <button
                             type="button"
                             onClick={() => deleteRow(item.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="text-red-500 hover:text-red-700 p-1 mr-1"
                             title="삭제"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -488,7 +484,7 @@ export function ManpowerPlanTab({
                       </div>
                     </td>
                     {months.map((m) => (
-                      <td key={m.key} className="border border-gray-300 px-1 py-1 text-center min-w-[50px]">
+                      <td key={m.key} className="border border-gray-300 px-[10px] text-center min-w-[50px]">
                         <MonthlyInput
                           value={item.monthlyAllocation[m.key]}
                           onChange={(val) => {
@@ -501,7 +497,7 @@ export function ManpowerPlanTab({
                     ))}
 
                     {/* 투입 M/M 계산 (계 + 연도별) */}
-                    <td className="border border-gray-300 px-1 py-1 text-center text-sm text-gray-900 bg-cyan-50/50 font-bold">
+                    <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 bg-white font-normal">
                       {Object.values(item.monthlyAllocation).reduce((sum, val) => sum + (val || 0), 0).toFixed(2)}
                     </td>
                     {sortedYears.map((year) => {
@@ -509,14 +505,14 @@ export function ManpowerPlanTab({
                         .filter((m) => m.key.startsWith(`${year}-`))
                         .reduce((sum, m) => sum + (item.monthlyAllocation[m.key] || 0), 0);
                       return (
-                        <td key={`total-mm-${year}`} className="border border-gray-300 px-1 py-1 text-center text-sm text-gray-900 bg-cyan-50/30 font-medium">
+                        <td key={`total-mm-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 bg-white font-normal">
                           {yearTotal.toFixed(2)}
                         </td>
                       );
                     })}
 
                     {/* 제안가 단가/금액 */}
-                    <td className="border border-gray-300 pl-1 pr-0 py-1 text-right text-sm">
+                    <td className="border border-gray-300 p-0">
                       <input
                         type="text"
                         value={item.proposedUnitPrice?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? ""}
@@ -525,10 +521,10 @@ export function ManpowerPlanTab({
                           updateItem(item.id, "proposedUnitPrice", val);
                         }}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 pl-2 pr-1 py-1 text-right text-sm font-medium text-blue-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-blue-400"
+                        className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-blue-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-blue-400"
                       />
                     </td>
-                    <td className="border border-gray-300 pl-1 pr-0 py-1 text-right text-sm">
+                    <td className="border border-gray-300 p-0">
                       <input
                         type="text"
                         value={(() => {
@@ -545,12 +541,12 @@ export function ManpowerPlanTab({
                           updateItem(item.id, "proposedAmount", isNaN(val) ? null : val);
                         }}
                         disabled={isReadOnly}
-                        className="w-full rounded border border-gray-200 pl-2 pr-1 py-1 text-right text-sm font-medium text-blue-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-blue-400"
+                        className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-blue-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-blue-400"
                       />
                     </td>
 
                     {/* 내부단가 단가/금액 */}
-                    <td className={`border border-gray-300 pl-1 py-1 text-right text-sm ${isOutsourcingDev || isOutsourcingConsult ? "pr-0" : "pr-1 text-gray-500 bg-gray-50/30"}`}>
+                    <td className="border border-gray-300 p-0">
                       {isOutsourcingDev || isOutsourcingConsult ? (
                         <input
                           type="text"
@@ -560,13 +556,15 @@ export function ManpowerPlanTab({
                             updateItem(item.id, "internalUnitPrice", val);
                           }}
                           disabled={isReadOnly}
-                          className="w-full rounded border border-gray-200 pl-2 pr-1 py-1 text-right text-sm font-medium focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-gray-500"
+                          className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500 text-gray-500"
                         />
                       ) : (
-                        item.internalUnitPrice?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? "-"
+                        <div className="w-full h-[35px] px-[10px] flex items-center justify-end text-sm text-gray-500">
+                          {item.internalUnitPrice?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? "-"}
+                        </div>
                       )}
                     </td>
-                    <td className={`border border-gray-300 pl-1 py-1 text-right text-sm ${isOutsourcingDev || isOutsourcingConsult ? "pr-0" : "pr-1 text-gray-600 font-medium bg-gray-50/50"}`}>
+                    <td className="border border-gray-300 p-0">
                       {isOutsourcingDev || isOutsourcingConsult ? (
                         <input
                           type="text"
@@ -584,15 +582,17 @@ export function ManpowerPlanTab({
                             updateItem(item.id, "internalAmount", isNaN(val) ? null : val);
                           }}
                           disabled={isReadOnly}
-                          className="w-full rounded border border-gray-200 pl-2 pr-1 py-1 text-right text-sm font-medium focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-gray-500"
+                          className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500 text-gray-500"
                         />
                       ) : (
-                        (() => {
-                          const totalMM = Object.values(item.monthlyAllocation).reduce((sum, val) => sum + (val || 0), 0);
-                          if (!item.internalUnitPrice || isNaN(item.internalUnitPrice)) return "-";
-                          const amount = Math.round(totalMM * item.internalUnitPrice);
-                          return amount.toLocaleString(undefined, { maximumFractionDigits: 0 });
-                        })()
+                        <div className="w-full h-[35px] px-[10px] flex items-center justify-end text-sm text-gray-600 font-normal">
+                          {(() => {
+                            const totalMM = Object.values(item.monthlyAllocation).reduce((sum, val) => sum + (val || 0), 0);
+                            if (!item.internalUnitPrice || isNaN(item.internalUnitPrice)) return "-";
+                            const amount = Math.round(totalMM * item.internalUnitPrice);
+                            return amount.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                          })()}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -601,37 +601,35 @@ export function ManpowerPlanTab({
 
               {/* 행 추가 버튼 (ProductPlanTab 스타일) */}
               {!isReadOnly && (
-                <tr>
-                  <td className="border border-gray-300 bg-white" colSpan={6}></td>
-                  <td className="border border-gray-300 px-2 py-2 bg-white">
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={7}>
+                    <button
+                      type="button"
                       onClick={() => addRow()}
-                      className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 rounded-xl"
+                      className="w-full h-full flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm font-medium m-0 p-0 rounded-none border-none outline-none focus:outline-none"
                     >
                       <Plus className="h-4 w-4" />
                       인력 추가
-                    </Button>
+                    </button>
                   </td>
-                  <td colSpan={months.length + sortedYears.length + 1 + 4} className="border border-gray-300 bg-white"></td>
+                  <td colSpan={months.length + sortedYears.length + 1 + 6} className="border border-gray-300 bg-white"></td>
                 </tr>
               )}
 
               {/* 소계 행 (Subtotal) */}
-              <tr className="bg-blue-50 font-bold border-t-2 border-blue-200">
-                <td colSpan={7} className="border border-blue-300 px-4 py-2 text-center text-sm text-gray-900">
+              <tr className="bg-gray-50 h-[35px]">
+                <td colSpan={7} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                   소계
                 </td>
                 {months.map((m) => {
                   const monthTotal = items.reduce((sum, item) => sum + (item.monthlyAllocation[m.key] || 0), 0);
                   return (
-                    <td key={`subtotal-m-${m.key}`} className="border border-blue-300 px-1 py-1 text-center text-sm text-gray-900">
+                    <td key={`subtotal-m-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                       {monthTotal > 0 ? monthTotal.toFixed(2) : "-"}
                     </td>
                   );
                 })}
-                <td className="border border-blue-300 px-1 py-1 text-center text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                   {items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0).toFixed(2)}
                 </td>
                 {sortedYears.map((year) => {
@@ -641,12 +639,12 @@ export function ManpowerPlanTab({
                       .reduce((ysum, m) => ysum + (item.monthlyAllocation[m.key] || 0), 0);
                   }, 0);
                   return (
-                    <td key={`subtotal-mm-${year}`} className="border border-blue-300 px-1 py-1 text-center text-sm text-gray-900">
+                    <td key={`subtotal-mm-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                       {yearTotal.toFixed(2)}
                     </td>
                   );
                 })}
-                <td className="border border-blue-300 px-1 py-1 text-right text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalProposed = items.reduce((sum, item) => {
@@ -658,7 +656,7 @@ export function ManpowerPlanTab({
                     return avgProposed > 0 ? avgProposed.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
-                <td className="border border-blue-300 px-2 py-1 text-right text-sm text-blue-700">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700">
                   {items.reduce((sum, item) => {
                     if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
                       return sum + item.proposedAmount;
@@ -667,7 +665,7 @@ export function ManpowerPlanTab({
                     return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
                   }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
-                <td className="border border-blue-300 px-1 py-1 text-right text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalInternal = items.reduce((sum, item) => {
@@ -679,7 +677,7 @@ export function ManpowerPlanTab({
                     return avgInternal > 0 ? avgInternal.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
-                <td className="border border-blue-300 px-2 py-1 text-right text-sm text-gray-600">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
                   {items.reduce((sum, item) => {
                     if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
                     const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
@@ -689,19 +687,19 @@ export function ManpowerPlanTab({
               </tr>
 
               {/* 합계 행 (Grand Total) */}
-              <tr className="bg-orange-100 font-bold border-t-2 border-orange-200">
-                <td colSpan={8} className="border border-orange-300 px-4 py-2 text-center text-sm text-gray-900">
+              <tr className="bg-orange-100 h-[35px]">
+                <td colSpan={8} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                   합 계
                 </td>
                 {months.map((m) => {
                   const monthTotal = items.reduce((sum, item) => sum + (item.monthlyAllocation[m.key] || 0), 0);
                   return (
-                    <td key={`total-m-${m.key}`} className="border border-orange-300 px-2 py-1 text-center text-sm text-gray-900">
+                    <td key={`total-m-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                       {monthTotal > 0 ? monthTotal.toFixed(2) : "-"}
                     </td>
                   );
                 })}
-                <td className="border border-orange-300 px-1 py-1 text-center text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                   {items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0).toFixed(2)}
                 </td>
                 {sortedYears.map((year) => {
@@ -711,12 +709,12 @@ export function ManpowerPlanTab({
                       .reduce((ysum, m) => ysum + (item.monthlyAllocation[m.key] || 0), 0);
                   }, 0);
                   return (
-                    <td key={`grand-total-mm-${year}`} className="border border-orange-300 px-1 py-1 text-center text-sm text-gray-900">
+                    <td key={`grand-total-mm-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                       {yearTotal.toFixed(2)}
                     </td>
                   );
                 })}
-                <td className="border border-orange-300 px-1 py-1 text-right text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalAmount = items.reduce((sum, item) => {
@@ -730,7 +728,7 @@ export function ManpowerPlanTab({
                     return avgUnitPrice > 0 ? avgUnitPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
-                <td className="border border-orange-300 px-2 py-1 text-right text-sm text-blue-700">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700">
                   {items.reduce((sum, item) => {
                     if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
                       return sum + item.proposedAmount;
@@ -739,7 +737,7 @@ export function ManpowerPlanTab({
                     return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
                   }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
-                <td className="border border-orange-300 px-1 py-1 text-right text-sm text-gray-900">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalInternal = items.reduce((sum, item) => {
@@ -751,7 +749,7 @@ export function ManpowerPlanTab({
                     return avgInternalPrice > 0 ? avgInternalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
-                <td className="border border-orange-300 px-2 py-1 text-right text-sm text-gray-600">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
                   {items.reduce((sum, item) => {
                     if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
                     const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
@@ -761,11 +759,11 @@ export function ManpowerPlanTab({
               </tr>
 
               {/* 부가세 포함 행 */}
-              <tr className="bg-red-50 font-bold">
-                <td colSpan={8 + months.length + sortedYears.length + 1 + 1} className="border border-red-300 px-4 py-2 text-right text-sm text-gray-900">
+              <tr className="bg-red-50 h-[35px]">
+                <td colSpan={8 + months.length + sortedYears.length + 1 + 1} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 border-r-0">
                   부가세 포함
                 </td>
-                <td className="border border-red-300 px-2 py-1 text-right text-sm text-red-700 font-bold">
+                <td className="border border-gray-300 px-[10px] text-right text-sm text-red-700 font-bold border-l-0">
                   {(() => {
                     const grandTotal = items.reduce((sum, item) => {
                       if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
@@ -777,7 +775,7 @@ export function ManpowerPlanTab({
                     return Math.round(grandTotal * 1.1).toLocaleString(undefined, { maximumFractionDigits: 0 });
                   })()}
                 </td>
-                <td colSpan={2} className="border border-red-300 bg-red-50"></td>
+                <td colSpan={2} className="border border-gray-300 bg-red-50"></td>
               </tr>
             </tbody>
           </table>
@@ -785,73 +783,70 @@ export function ManpowerPlanTab({
 
         {/* 2. 분석 섹션 테이블 (업체별-등급별 매출 및 원가) */}
         <div className="mt-8 space-y-4">
-          <div className="px-4 py-3 rounded-xl shadow-sm bg-slate-900 border border-slate-800">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 italic flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-              Analysis: Revenue & Cost by Company/Grade
-            </h3>
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-semibold text-gray-900">분석 : 업체별-등급별 매출 및 원가</h2>
           </div>
           <div
             ref={analysisTableRef}
             onScroll={() => handleScroll('analysis')}
-            className="overflow-x-auto border border-gray-200 bg-white rounded-b-md shadow-sm"
+            className="overflow-x-auto bg-white"
           >
-            <table className="min-w-full divide-y divide-gray-200" style={{ borderCollapse: 'collapse' }}>
+            <table className="min-w-full border border-gray-300" style={{ borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="text-gray-900 border-b border-gray-300">
-                  <th rowSpan={3} className="min-w-48 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">업무영역</th>
-                  <th rowSpan={3} className="min-w-24 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">역할</th>
-                  <th rowSpan={3} className="min-w-60 border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">세부업무</th>
-                  <th rowSpan={3} className="min-w-[106px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">회사명</th>
-                  <th rowSpan={3} className="min-w-[139px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">소속 및 직군</th>
-                  <th rowSpan={3} className="min-w-[90px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">위엠비<br />직급</th>
-                  <th rowSpan={3} className="min-w-[80px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">등급</th>
-                  <th rowSpan={3} className="min-w-[130px] border border-gray-300 px-4 py-2 text-center text-sm font-bold bg-blue-50/50">성명</th>
+                <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                  <th rowSpan={3} className="min-w-48 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">업무영역</th>
+                  <th rowSpan={3} className="min-w-24 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">역할</th>
+                  <th rowSpan={3} className="min-w-60 border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">세부업무</th>
+                  <th rowSpan={3} className="min-w-[106px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">회사명</th>
+                  <th rowSpan={3} className="min-w-[139px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">소속 및 직군</th>
+                  <th rowSpan={3} className="min-w-[90px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">위엠비<br />직급</th>
+                  <th rowSpan={3} className="min-w-[80px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">등급</th>
+                  <th rowSpan={3} className="min-w-[130px] border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">성명</th>
                   {sortedYears.map((year) => (
-                    <th key={year} colSpan={yearGroups[year].count} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                    <th key={year} colSpan={yearGroups[year].count} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                       {yearGroups[year].label}
                     </th>
                   ))}
-                  <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                  <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                     총투입 M/M
                   </th>
-                  <th colSpan={2} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                  <th colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                     제안가
                   </th>
-                  <th colSpan={2} className="border border-gray-300 px-4 py-1.5 text-center text-sm font-bold bg-blue-50/50">
+                  <th colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                     내부단가
                   </th>
                 </tr>
-                <tr className="text-gray-900 border-b border-gray-300">
+                <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
                   {months.map((m) => (
-                    <th key={m.key} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[50px] bg-blue-50/50">
+                    <th key={m.key} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[50px] bg-blue-50/50">
                       {m.label}
                     </th>
                   ))}
-                  <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
+                  <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
                     합계
                   </th>
                   {sortedYears.map((year) => (
-                    <th key={`total-mm-${year}`} rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
-                      {year}년
+                    <th key={`total-mm-${year}`} rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[60px] bg-blue-50/50">
+                      {String(year).slice(-2)}년
                     </th>
                   ))}
-                  <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                  <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                     단가
                   </th>
-                  <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                  <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                     금액
                   </th>
-                  <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                  <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                     단가
                   </th>
-                  <th rowSpan={2} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
+                  <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium min-w-[90px] bg-blue-50/50">
                     금액
                   </th>
                 </tr>
-                <tr className="text-gray-500">
+                <tr className="text-gray-500 h-[35px]">
                   {months.map((m) => (
-                    <th key={`index-${m.key}`} className="border border-gray-300 px-2 py-1 text-center text-sm font-medium bg-blue-50/50">
+                    <th key={`index-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm font-medium bg-blue-50/50">
                       M{m.index}
                     </th>
                   ))}
@@ -1033,81 +1028,81 @@ export function ManpowerPlanTab({
                                 sortedYears.forEach(y => affYearTotals[y] += vals.yearData[y]);
 
                                 return (
-                                  <tr key={`${row.affiliation}-${row.rank}`} className="hover:bg-gray-50 border-b border-gray-100">
+                                  <tr key={`${row.affiliation}-${row.rank}`} className="h-[35px] bg-white">
                                     {affIdx === 0 && rowIdx === 0 && (
                                       <>
                                         {isFirstSection && (
                                           <td rowSpan={totalAnalysisRows} colSpan={3} className="border border-gray-300 bg-white"></td>
                                         )}
-                                        <td rowSpan={rows.length + affGroups.length + 1} className="border border-gray-300 px-2 py-2 text-center text-sm font-bold bg-white">
+                                        <td rowSpan={rows.length + affGroups.length + 1} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-white">
                                           {title}
                                         </td>
                                       </>
                                     )}
-                                    <td className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-600 bg-white">
+                                    <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-600 bg-white">
                                       {row.affiliation}
                                     </td>
-                                    <td colSpan={2} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-600 bg-white">
+                                    <td colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm text-gray-600 bg-white">
                                       {row.rank}
                                     </td>
-                                    <td className="border border-gray-300 px-2 py-2 bg-white"></td>
+                                    <td className="border border-gray-300 px-[10px] bg-white"></td>
                                     {months.map(m => (
-                                      <td key={m.key} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-500">
+                                      <td key={m.key} className="border border-gray-300 px-[10px] text-center text-sm text-gray-500 bg-white">
                                         {vals.monthlyData[m.key] > 0 ? vals.monthlyData[m.key].toFixed(2) : ""}
                                       </td>
                                     ))}
-                                    <td className="border border-gray-300 px-2 py-2 text-center text-sm font-bold text-gray-900 bg-gray-50/50">
+                                    <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 bg-white">
                                       {vals.rowTotalMM > 0 ? vals.rowTotalMM.toFixed(2) : ""}
                                     </td>
                                     {sortedYears.map(year => (
-                                      <td key={`an-year-${year}`} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900 bg-gray-50/30">
+                                      <td key={`an-year-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 bg-white">
                                         {vals.yearData[year] > 0 ? vals.yearData[year].toFixed(2) : ""}
                                       </td>
                                     ))}
-                                    <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-600">
+                                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
                                       {vals.avgProposedPrice > 0 ? vals.avgProposedPrice.toLocaleString() : "-"}
                                     </td>
-                                    <td className="border border-gray-300 px-2 py-2 text-right text-sm font-medium text-gray-900">
+                                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                       {fmtNum(vals.rowProposedAmount)}
                                     </td>
-                                    <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-500">
+                                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-500">
                                       {vals.avgInternalPrice > 0 ? vals.avgInternalPrice.toLocaleString() : "-"}
                                     </td>
-                                    <td className="border border-gray-300 px-2 py-2 text-right text-sm font-medium text-gray-800">
+                                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-800">
                                       {fmtNum(vals.rowInternalAmount)}
                                     </td>
                                   </tr>
                                 );
                               })}
                               {/* Affiliation Subtotal */}
-                              <tr className="bg-white font-semibold">
-                                <td colSpan={4} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                              <tr className="h-[35px] bg-gray-50">
+                                <td colSpan={4} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                                   {affiliation} 소계
                                 </td>
                                 {months.map(m => (
-                                  <td key={`aff-sum-${affiliation}-${m.key}`} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                                  <td key={`aff-sum-${affiliation}-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                                     {affMonthlyTotals[m.key] > 0 ? affMonthlyTotals[m.key].toFixed(2) : ""}
                                   </td>
                                 ))}
-                                <td className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                                <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                                   {affTotalMM > 0 ? affTotalMM.toFixed(2) : ""}
                                 </td>
                                 {sortedYears.map(year => (
-                                  <td key={`aff-year-sum-${affiliation}-${year}`} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                                  <td key={`aff-year-sum-${affiliation}-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                                     {affYearTotals[year] > 0 ? affYearTotals[year].toFixed(2) : ""}
                                   </td>
                                 ))}
-                                <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900">
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                   {affTotalMM > 0 ? Math.round(affProposedAmount / affTotalMM).toLocaleString() : "-"}
                                 </td>
-                                <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900 font-bold">
-                                  {fmtNum(affProposedAmount)}
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
+                                  {affProposedAmount.toLocaleString()}
                                 </td>
-                                <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900">
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                   {affTotalMM > 0 ? Math.round(affInternalAmount / affTotalMM).toLocaleString() : "-"}
                                 </td>
-                                <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900 font-bold">
-                                  {fmtNum(affInternalAmount)}
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
+                                  {affInternalAmount.toLocaleString()}
                                 </td>
                               </tr>
                             </React.Fragment>
@@ -1123,33 +1118,33 @@ export function ManpowerPlanTab({
                           sortedYears.forEach(y => analysisYearTotals[y] += sectionYearTotals[y]);
                           return null;
                         })()}
-                        <tr className="bg-gray-100 font-bold border-t border-gray-300">
-                          <td colSpan={4} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900 font-bold bg-gray-100">
+                        <tr className="h-[35px] bg-gray-100">
+                          <td colSpan={4} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                             {title === "당사" ? "당사 합계" : "외주 합계"}
                           </td>
                           {months.map(m => (
-                            <td key={m.key} className="border border-gray-300 px-2 py-2 text-center text-sm">
+                            <td key={m.key} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                               {sectionMonthlyTotals[m.key] > 0 ? sectionMonthlyTotals[m.key].toFixed(2) : ""}
                             </td>
                           ))}
-                          <td className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                          <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                             {sectionTotalMM > 0 ? sectionTotalMM.toFixed(2) : ""}
                           </td>
                           {sortedYears.map(year => (
-                            <td key={`sub-an-year-${year}`} className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-900">
+                            <td key={`sub-an-year-${year}`} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                               {sectionYearTotals[year] > 0 ? sectionYearTotals[year].toFixed(2) : ""}
                             </td>
                           ))}
-                          <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900">
+                          <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                             {sectionTotalMM > 0 ? Math.round(sectionProposedAmount / sectionTotalMM).toLocaleString() : "-"}
                           </td>
-                          <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900 font-bold">
+                          <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                             {fmtNum(sectionProposedAmount)}
                           </td>
-                          <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900">
+                          <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                             {sectionTotalMM > 0 ? Math.round(sectionInternalAmount / sectionTotalMM).toLocaleString() : "-"}
                           </td>
-                          <td className="border border-gray-300 px-2 py-2 text-right text-sm text-gray-900 font-bold">
+                          <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                             {fmtNum(sectionInternalAmount)}
                           </td>
                         </tr>
@@ -1176,173 +1171,97 @@ export function ManpowerPlanTab({
                       {renderSection("당사", wembRows, true)}
                       {renderSection("외주", externalRows, false)}
 
-                      {/* Analysis Grand Total */}
-                      <tr className="bg-orange-100 font-bold border-t-2 border-orange-200">
-                        <td colSpan={5} className="border border-orange-300 px-4 py-2 text-center text-sm text-gray-900">
+                      {/* Grand Total Row */}
+                      <tr className="bg-orange-100 h-[35px]">
+                        <td colSpan={5} className="border border-gray-300 px-[10px] text-center text-sm font-bold text-gray-900">
                           합계
                         </td>
                         {months.map(m => (
-                          <td key={`grand-${m.key}`} className="border border-orange-300 px-2 py-1 text-center text-sm text-gray-900">
+                          <td key={`analysis-grand-m-${m.key}`} className="border border-gray-300 px-[10px] text-center text-sm font-bold text-gray-900">
                             {analysisMonthlyTotals[m.key] > 0 ? analysisMonthlyTotals[m.key].toFixed(2) : ""}
                           </td>
                         ))}
-                        {/* Total M/M */}
-                        <td className="border border-orange-300 px-2 py-1 text-center text-sm text-gray-900">
+                        <td className="border border-gray-300 px-[10px] text-center text-sm font-bold text-gray-900">
                           {analysisGrandTotalMM > 0 ? analysisGrandTotalMM.toFixed(2) : ""}
                         </td>
-                        {/* Year Totals */}
                         {sortedYears.map(year => (
-                          <td key={`grand-an-mm-${year}`} className="border border-orange-300 px-2 py-1 text-center text-sm text-gray-900">
+                          <td key={`analysis-grand-year-${year}`} className="border border-gray-300 px-[10px] text-center text-sm font-bold text-gray-900">
                             {analysisYearTotals[year] > 0 ? analysisYearTotals[year].toFixed(2) : ""}
                           </td>
                         ))}
-                        {/* Proposed */}
-                        <td className="border border-orange-300 px-2 py-1 text-right text-sm text-gray-900">
+                        <td className="border border-gray-300 px-[10px] text-right text-sm font-bold text-gray-900">
                           {analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalProposed / analysisGrandTotalMM).toLocaleString() : "-"}
                         </td>
-                        <td className="border border-orange-300 px-2 py-1 text-right text-sm text-blue-700">
+                        <td className="border border-gray-300 px-[10px] text-right text-sm font-bold text-gray-900">
                           {analysisGrandTotalProposed.toLocaleString()}
                         </td>
-                        {/* Internal */}
-                        <td className="border border-orange-300 px-2 py-1 text-right text-sm text-gray-900">
+                        <td className="border border-gray-300 px-[10px] text-right text-sm font-bold text-gray-900">
                           {analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalInternal / analysisGrandTotalMM).toLocaleString() : "-"}
                         </td>
-                        <td className="border border-orange-300 px-2 py-1 text-right text-sm text-gray-600">
+                        <td className="border border-gray-300 px-[10px] text-right text-sm font-bold text-gray-900">
                           {analysisGrandTotalInternal.toLocaleString()}
                         </td>
                       </tr>
 
-                      {/* Verification Check */}
-                      <tr className="bg-blue-100 font-bold border-t border-blue-200">
-                        <td colSpan={5} className="border border-blue-300 px-4 py-2 text-center text-sm text-blue-900">
+                      {/* Check Row */}
+                      <tr className="h-[35px] bg-blue-50">
+                        <td colSpan={5} className="border border-gray-300 px-[10px] text-center text-sm font-bold text-blue-900">
                           검증
                         </td>
                         {months.map(m => {
-                          // First Grand Total (from main table)
-                          const firstTotal = items.reduce((sum, item) => sum + (item.monthlyAllocation[m.key] || 0), 0);
-                          // Analysis Grand Total (당사/외주 combined)
+                          const mainTotal = items.reduce((sum, item) => sum + (item.monthlyAllocation[m.key] || 0), 0);
                           const analysisTotal = analysisMonthlyTotals[m.key];
-                          const diff = analysisTotal - firstTotal;
-                          const hasError = Math.abs(diff) > 0.001; // Allow for floating point precision
+                          const diff = mainTotal - analysisTotal;
+                          const hasError = Math.abs(diff) > 0.01;
                           return (
-                            <td key={`check-${m.key}`} className={`border border-blue-300 px-2 py-1 text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
-                              {diff.toFixed(2)}
+                            <td key={`check-m-${m.key}`} className={`border border-gray-300 px-[10px] text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
+                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-"}
                             </td>
                           );
                         })}
-                        {/* Check Total M/M */}
-                        <td className={`border border-blue-300 px-2 py-1 text-center text-sm ${(() => {
-                          const firstGrandTotal = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                          const analysisGrandTotal = grandTotalMM;
-                          const diff = analysisGrandTotal - firstGrandTotal;
-                          return Math.abs(diff) > 0.001 ? 'text-red-600 font-bold' : 'text-blue-900';
-                        })()}`}>
+                        <td className={`border border-gray-300 px-[10px] text-center text-sm ${Math.abs(items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0) - analysisGrandTotalMM) > 0.01 ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
                           {(() => {
-                            const firstGrandTotal = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                            const analysisGrandTotal = analysisGrandTotalMM;
-                            return (analysisGrandTotal - firstGrandTotal).toFixed(2);
+                            const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
+                            const diff = mainTotalMM - analysisGrandTotalMM;
+                            return Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-";
                           })()}
                         </td>
-                        {/* Check Year Totals */}
                         {sortedYears.map(year => {
-                          const firstYearTotal = items.reduce((sum, item) => {
+                          const mainYearTotal = items.reduce((sum, item) => {
                             return sum + months
                               .filter((m) => m.key.startsWith(`${year}-`))
                               .reduce((ysum, m) => ysum + (item.monthlyAllocation[m.key] || 0), 0);
                           }, 0);
-                          const analysisYearTotal = analysisYearTotals[year];
-                          const diff = analysisYearTotal - firstYearTotal;
-                          const hasError = Math.abs(diff) > 0.001;
+                          const diff = mainYearTotal - analysisYearTotals[year];
+                          const hasError = Math.abs(diff) > 0.01;
                           return (
-                            <td key={`check-an-year-${year}`} className={`border border-blue-300 px-2 py-1 text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
-                              {diff.toFixed(2)}
+                            <td key={`check-year-${year}`} className={`border border-gray-300 px-[10px] text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
+                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-"}
                             </td>
                           );
                         })}
-                        {/* Check Proposed Price/Amount */}
-                        <td className={`border border-blue-300 px-2 py-1 text-right text-sm ${(() => {
-                          const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                          const mainProposedTotal = items.reduce((sum, item) => {
-                            if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
-                            const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                            return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
-                          }, 0);
-                          const mainAvgPrice = mainTotalMM > 0 ? Math.round(mainProposedTotal / mainTotalMM) : 0;
-                          const analysisAvgPrice = analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalProposed / analysisGrandTotalMM) : 0;
-                          const diff = analysisAvgPrice - mainAvgPrice;
-                          return Math.abs(diff) > 0 ? 'text-red-600 font-bold' : 'text-blue-900';
-                        })()}`}>
+                        <td className="border border-gray-300 px-[10px] bg-blue-50"></td>
+                        <td className={`border border-gray-300 px-[10px] text-right text-sm ${Math.abs(items.reduce((sum, item) => { if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount; const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0); return sum + (item.proposedUnitPrice ? Math.round(itemMM * item.proposedUnitPrice) : 0); }, 0) - analysisGrandTotalProposed) > 1 ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
                           {(() => {
-                            const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                            const mainProposedTotal = items.reduce((sum, item) => {
+                            const mainTotalProp = items.reduce((sum, item) => {
                               if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
-                              const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                              return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
+                              const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                              return sum + (item.proposedUnitPrice ? Math.round(itemMM * item.proposedUnitPrice) : 0);
                             }, 0);
-                            const mainAvgPrice = mainTotalMM > 0 ? Math.round(mainProposedTotal / mainTotalMM) : 0;
-                            const analysisAvgPrice = analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalProposed / analysisGrandTotalMM) : 0;
-                            return (analysisAvgPrice - mainAvgPrice).toLocaleString();
+                            const diff = mainTotalProp - analysisGrandTotalProposed;
+                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "-";
                           })()}
                         </td>
-                        <td className={`border border-blue-300 px-2 py-1 text-right text-sm ${(() => {
-                          const mainProposedTotal = items.reduce((sum, item) => {
-                            if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
-                            const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                            return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
-                          }, 0);
-                          const diff = analysisGrandTotalProposed - mainProposedTotal;
-                          return Math.abs(diff) > 0 ? 'text-red-600 font-bold' : 'text-blue-900';
-                        })()}`}>
+                        <td className="border border-gray-300 px-[10px] bg-blue-50"></td>
+                        <td className={`border border-gray-300 px-[10px] text-right text-sm ${Math.abs(items.reduce((sum, item) => { if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount; const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0); return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0); }, 0) - analysisGrandTotalInternal) > 1 ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
                           {(() => {
-                            const mainProposedTotal = items.reduce((sum, item) => {
-                              if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
-                              const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                              return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
-                            }, 0);
-                            return (analysisGrandTotalProposed - mainProposedTotal).toLocaleString();
-                          })()}
-                        </td>
-                        {/* Check Internal Price/Amount */}
-                        <td className={`border border-blue-300 px-2 py-1 text-right text-sm ${(() => {
-                          const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                          const mainInternalTotal = items.reduce((sum, item) => {
-                            if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                            const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                            return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
-                          }, 0);
-                          const mainAvgPrice = mainTotalMM > 0 ? Math.round(mainInternalTotal / mainTotalMM) : 0;
-                          const analysisAvgPrice = analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalInternal / analysisGrandTotalMM) : 0;
-                          const diff = analysisAvgPrice - mainAvgPrice;
-                          return Math.abs(diff) > 0 ? 'text-red-600 font-bold' : 'text-blue-900';
-                        })()}`}>
-                          {(() => {
-                            const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
-                            const mainInternalTotal = items.reduce((sum, item) => {
+                            const mainTotalInt = items.reduce((sum, item) => {
                               if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                              const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                              return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
+                              const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                              return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
                             }, 0);
-                            const mainAvgPrice = mainTotalMM > 0 ? Math.round(mainInternalTotal / mainTotalMM) : 0;
-                            const analysisAvgPrice = analysisGrandTotalMM > 0 ? Math.round(analysisGrandTotalInternal / analysisGrandTotalMM) : 0;
-                            return (analysisAvgPrice - mainAvgPrice).toLocaleString();
-                          })()}
-                        </td>
-                        <td className={`border border-blue-300 px-2 py-1 text-right text-sm ${(() => {
-                          const mainInternalTotal = items.reduce((sum, item) => {
-                            if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                            const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                            return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
-                          }, 0);
-                          const diff = analysisGrandTotalInternal - mainInternalTotal;
-                          return Math.abs(diff) > 0 ? 'text-red-600 font-bold' : 'text-blue-900';
-                        })()}`}>
-                          {(() => {
-                            const mainInternalTotal = items.reduce((sum, item) => {
-                              if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                              const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                              return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
-                            }, 0);
-                            return (analysisGrandTotalInternal - mainInternalTotal).toLocaleString();
+                            const diff = mainTotalInt - analysisGrandTotalInternal;
+                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "-";
                           })()}
                         </td>
                       </tr>

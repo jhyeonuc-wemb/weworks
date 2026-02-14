@@ -158,7 +158,9 @@ export class ProfitabilityService {
         year: p.year,
         proposedStandard: p.proposedStandard ?? p.proposed_standard ?? null,
         proposedApplied: p.proposedApplied ?? p.proposed_applied ?? null,
+        proposedDiscountRate: p.proposedDiscountRate ?? p.proposed_discount_rate ?? null,
         internalApplied: p.internalApplied ?? p.internal_applied ?? null,
+        internalIncreaseRate: p.internalIncreaseRate ?? p.internal_increase_rate ?? null,
       }));
     } catch (error) {
       console.error("Error fetching project unit prices:", error);

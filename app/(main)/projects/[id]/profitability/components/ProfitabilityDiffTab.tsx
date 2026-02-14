@@ -182,213 +182,213 @@ export function ProfitabilityDiffTab({
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-gray-200 bg-white">
-        <table className="min-w-full border-collapse" style={{ borderCollapse: 'collapse' }}>
+      <div className="overflow-x-auto bg-white">
+        <table className="min-w-full border-collapse border border-gray-300" style={{ borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="text-gray-900 border-b-2 border-gray-400 h-[42px]">
-              <th colSpan={4} className="border border-gray-300 px-4 text-center text-sm font-bold bg-blue-50/50">구 분</th>
+            <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+              <th colSpan={4} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">구 분</th>
               <th className="border border-gray-300 px-2 text-center text-sm font-bold bg-blue-50/50 min-w-[80px]">금액</th>
               <th className="border border-gray-300 px-2 text-center text-sm font-bold bg-blue-50/50 min-w-[120px]">지표</th>
-              <th className="border border-gray-300 px-4 text-center text-sm font-bold bg-blue-50/50 min-w-[200px]">금액 설명</th>
-              <th className="border border-gray-300 px-4 text-center text-sm font-bold bg-blue-50/50 min-w-[200px]">지표 설명</th>
+              <th className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50 min-w-[200px]">금액 설명</th>
+              <th className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50 min-w-[200px]">지표 설명</th>
             </tr>
           </thead>
           <tbody className="text-sm">
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={23} className="border border-gray-300 px-2 text-center font-bold text-gray-900 w-[100px] bg-gray-50/50">프로젝트</td>
               <td rowSpan={7} className="border border-gray-300 px-2 text-center font-bold text-gray-900 w-[70px]">수주</td>
               <td rowSpan={3} className="border border-gray-300 px-2 text-center text-gray-700 w-[90px]">용역</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-900">당사</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-900">당사</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(revenue.serviceInternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4 text-gray-600">당사계약금액, 부가세 제외</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600">당사 평균 단가</td>
+              <td className="border border-gray-300 px-[10px] text-gray-600">당사계약금액, 부가세 제외</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600">당사 평균 단가</td>
             </tr>
-            <tr className="h-[42px]">
-              <td className="border border-gray-300 px-4 text-left text-gray-900">외주</td>
+            <tr className="h-[35px]">
+              <td className="border border-gray-300 px-[10px] text-left text-gray-900">외주</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(revenue.serviceExternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4 text-gray-600">당사계약금액, 부가세 제외</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600">외주 평균 단가</td>
+              <td className="border border-gray-300 px-[10px] text-gray-600">당사계약금액, 부가세 제외</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600">외주 평균 단가</td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">용역소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">용역소계</td>
               <td className="border border-gray-300 px-2 text-right font-bold text-gray-900">{fmt(revenue.serviceTotal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm font-normal">평균단가</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm font-normal">평균단가</td>
             </tr>
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={3} className="border border-gray-300 px-2 text-center text-gray-700">제품</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-900">당사제품</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-900">당사제품</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(revenue.productInternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4 text-gray-600">당사계약금액, 부가세 제외</td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600">당사계약금액, 부가세 제외</td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px]">
-              <td className="border border-gray-300 px-4 text-left text-gray-900">타사상품</td>
+            <tr className="h-[35px]">
+              <td className="border border-gray-300 px-[10px] text-left text-gray-900">타사상품</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(revenue.productExternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4 text-gray-600">타사계약금액, 부가세 제외</td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600">타사계약금액, 부가세 제외</td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">제품소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">제품소계</td>
               <td className="border border-gray-300 px-2 text-right font-bold text-gray-900">{fmt(revenue.productTotal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px] bg-gray-100 font-bold">
-              <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold text-gray-900">수주 합계</td>
+            <tr className="h-[35px] bg-gray-100 font-bold">
+              <td colSpan={2} className="border border-gray-300 px-[10px] text-left font-bold text-gray-900">수주 합계</td>
               <td className="border border-gray-300 px-2 text-right text-gray-900">{fmt(revenue.grandTotal)}</td>
               <td className="border border-gray-300 px-2 text-right text-blue-600">{fmt(revenue.grandTotal * 1.1)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-blue-600 text-sm italic font-normal">부가가치세 제외된 가격</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-blue-600 text-sm italic font-normal">부가가치세 제외된 가격</td>
             </tr>
 
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={10} className="border border-gray-300 px-1 text-center font-bold text-gray-900 w-[70px] leading-tight text-sm">용역<br />손익</td>
               <td rowSpan={3} className="border border-gray-300 px-2 text-center text-gray-700">당사</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-700">당사 원가 (<span className="text-red-500 font-bold">-</span>)</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">당사 원가 (<span className="text-red-500 font-bold">-</span>)</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.costInternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">당사 평균 원가(내부가격)</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">당사 평균 원가(내부가격)</td>
             </tr>
-            <tr className="h-[42px]">
-              <td className="border border-gray-300 px-4 text-left text-gray-700">지연 비용</td>
+            <tr className="h-[35px]">
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">지연 비용</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.delayCostInternal)}</td>
               <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700 font-bold">0.00%</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">SM 계약인 경우에는 0%, 기타는 10% 적용</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">SM 계약인 경우에는 0%, 기타는 10% 적용</td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">손익 소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">손익 소계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.profitInternal)}`}>{fmt(servicePL.profitInternal)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.profitInternal)}`}>{calcRate(servicePL.profitInternal, revenue.serviceInternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={3} className="border border-gray-300 px-2 text-center text-gray-700">외주</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-700">외주 원가 (<span className="text-red-500 font-bold">-</span>)</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">외주 원가 (<span className="text-red-500 font-bold">-</span>)</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.costExternal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">외주 평균 조달 원가</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">외주 평균 조달 원가</td>
             </tr>
-            <tr className="h-[42px]">
-              <td className="border border-gray-300 px-4 text-left text-gray-700">지연 비용</td>
+            <tr className="h-[35px]">
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">지연 비용</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.delayCostExternal)}</td>
               <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700 font-bold">0.00%</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">SM 계약인 경우에는 0%, 기타는 10% 적용</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">SM 계약인 경우에는 0%, 기타는 10% 적용</td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">손익 소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">손익 소계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.profitExternal)}`}>{fmt(servicePL.profitExternal)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.profitExternal)}`}>{calcRate(servicePL.profitExternal, revenue.serviceExternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={3} className="border border-gray-300 px-1 text-center text-gray-700 leading-tight text-sm">
                 <span>Project<br />경비</span>
               </td>
-              <td className="border border-gray-300 px-4 text-left text-gray-700">일반 경비</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">일반 경비</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.expGeneral)}</td>
               <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(servicePL.expGeneral, revenue.serviceTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px]">
-              <td className="border border-gray-300 px-4 text-left text-gray-700">특별 경비</td>
+            <tr className="h-[35px]">
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">특별 경비</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(servicePL.expSpecial)}</td>
               <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(servicePL.expSpecial, revenue.serviceTotal)}</td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">Wokshop비용, 임차비, 교통비 등</td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">Wokshop비용, 임차비, 교통비 등</td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80 font-bold">
-              <td className="border border-gray-300 px-4 text-left font-bold">경비 소계</td>
+            <tr className="h-[35px] bg-gray-50/80 font-bold">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">경비 소계</td>
               <td className="border border-gray-300 px-2 text-right text-gray-900">{fmt(servicePL.expTotal)}</td>
               <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700">{calcRate(servicePL.expTotal, revenue.grandTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-sm font-normal">경비 소계 / 수주 합계</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-sm font-normal">경비 소계 / 수주 합계</td>
             </tr>
-            <tr className="h-[42px] bg-gray-100 font-bold">
-              <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold">용역 손익 합계</td>
+            <tr className="h-[35px] bg-gray-100 font-bold">
+              <td colSpan={2} className="border border-gray-300 px-[10px] text-left font-bold">용역 손익 합계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.totalProfit)}`}>{fmt(servicePL.totalProfit)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(servicePL.totalProfit)}`}>{calcRate(servicePL.totalProfit, revenue.grandTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-sm font-normal">용역 손익 합계 / 수주 합계</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-sm font-normal">용역 손익 합계 / 수주 합계</td>
             </tr>
 
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={5} className="border border-gray-300 px-1 text-center font-bold text-gray-900 w-[70px] leading-tight text-sm">제품<br />손익</td>
               <td rowSpan={2} className="border border-gray-300 px-2 text-center text-gray-700">당사</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-700">제품 원가</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">제품 원가</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(productPL.costInternal)}</td>
               <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(productPL.costInternal, revenue.productInternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">제품원가 비율</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">제품원가 비율</td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">손익 소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">손익 소계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.profitInternal)}`}>{fmt(productPL.profitInternal)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.profitInternal)}`}>{calcRate(productPL.profitInternal, revenue.productInternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">당사제품 손익 / 당사제품 수주금액</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">당사제품 손익 / 당사제품 수주금액</td>
             </tr>
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={2} className="border border-gray-300 px-2 text-center text-gray-700">타사</td>
-              <td className="border border-gray-300 px-4 text-left text-gray-700">상품 원가</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-700">상품 원가</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(productPL.costExternal)}</td>
               <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(productPL.costExternal, revenue.productExternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">제품원가 비율</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">제품원가 비율</td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80">
-              <td className="border border-gray-300 px-4 text-left font-bold">손익 소계</td>
+            <tr className="h-[35px] bg-gray-50/80">
+              <td className="border border-gray-300 px-[10px] text-left font-bold">손익 소계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.profitExternal)}`}>{fmt(productPL.profitExternal)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.profitExternal)}`}>{calcRate(productPL.profitExternal, revenue.productExternal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-gray-600 text-sm">타사상품 손익 / 타사상품 수주금액</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-gray-600 text-sm">타사상품 손익 / 타사상품 수주금액</td>
             </tr>
-            <tr className="h-[42px] bg-gray-100 font-bold">
-              <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold text-gray-900">제품 손익 합계</td>
+            <tr className="h-[35px] bg-gray-100 font-bold">
+              <td colSpan={2} className="border border-gray-300 px-[10px] text-left font-bold text-gray-900">제품 손익 합계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.totalProfit)}`}>{fmt(productPL.totalProfit)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(productPL.totalProfit)}`}>{calcRate(productPL.totalProfit, revenue.productTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm font-normal">제품손익 / 제품수주금액</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm font-normal">제품손익 / 제품수주금액</td>
             </tr>
 
-            <tr className="h-[42px] bg-gray-200 font-bold border-b-2 border-gray-400">
-              <td colSpan={3} className="border border-gray-300 px-4 text-left text-gray-900 font-bold">프로젝트 손익 합계</td>
+            <tr className="h-[35px] bg-gray-200 font-bold border-b border-gray-300">
+              <td colSpan={3} className="border border-gray-300 px-[10px] text-left text-gray-900 font-bold">프로젝트 손익 합계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(projectProfitTotal)}`}>{fmt(projectProfitTotal)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(projectProfitTotal)}`}>{calcRate(projectProfitTotal, revenue.grandTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm font-normal">수주합계 / 프로젝트 수익</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm font-normal">수주합계 / 프로젝트 수익</td>
             </tr>
 
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={7} className="border border-gray-300 px-2 text-center font-bold text-gray-900 w-[100px] bg-gray-50/50">손익합계</td>
               <td rowSpan={3} className="border border-gray-300 px-1 text-center font-bold text-gray-900 w-[70px] leading-tight text-sm">사업<br />손익</td>
-              <td colSpan={2} className="border border-gray-300 px-4 text-left text-gray-700">당사 제품 원가 (+)</td>
+              <td colSpan={2} className="border border-gray-300 px-[10px] text-left text-gray-700">당사 제품 원가 (+)</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(0)}</td>
               <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(0, revenue.grandTotal)}</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm">제품원가 비율</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm">제품원가 비율</td>
             </tr>
-            <tr className="h-[42px]">
-              <td colSpan={2} className="border border-gray-300 px-4 text-left text-gray-700">경상비용</td>
+            <tr className="h-[35px]">
+              <td colSpan={2} className="border border-gray-300 px-[10px] text-left text-gray-700">경상비용</td>
               <td className="border border-gray-300 px-2 text-right font-medium text-gray-900"></td>
               <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700 font-bold">0.00%</td>
-              <td className="border border-gray-300 px-4"></td>
-              <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm">매출액 18%</td>
+              <td className="border border-gray-300 px-[10px]"></td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm">매출액 18%</td>
             </tr>
-            <tr className="h-[42px] bg-gray-100 font-bold">
+            <tr className="h-[35px] bg-gray-100 font-bold">
               <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold text-gray-900">사업 손익 합계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit)}`}>{fmt(businessPL.totalProfit)}</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit)}`}>{calcRate(businessPL.totalProfit, revenue.grandTotal)}</td>
@@ -396,10 +396,10 @@ export function ProfitabilityDiffTab({
               <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm font-normal">사업손익 / 수주합계</td>
             </tr>
 
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td rowSpan={3} className="border border-gray-300 px-1 text-center font-bold text-gray-900 w-[70px] leading-tight text-sm">부가<br />수익</td>
               <td colSpan={2} className="border border-gray-300 px-4 text-left text-gray-700">부가 예상 수익 (+)</td>
-              <td className="border border-gray-300 px-1 text-right font-medium text-gray-900">
+              <td className="border border-gray-300 p-0 text-right font-medium text-gray-900 h-[35px]">
                 <input
                   type="text"
                   value={extraRevenue === 0 ? "0" : extraRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -408,24 +408,24 @@ export function ProfitabilityDiffTab({
                     setExtraRevenue(val);
                   }}
                   disabled={isReadOnly}
-                  className="w-full bg-transparent px-1 text-right outline-none focus:bg-blue-50/50"
+                  className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-1">
+              <td className="border border-gray-300 p-0 h-[35px]">
                 <input
                   type="text"
                   value={extraRevenueDesc}
                   onChange={(e) => setExtraRevenueDesc(e.target.value)}
                   disabled={isReadOnly}
-                  className="w-full bg-transparent px-2 text-left text-sm outline-none focus:bg-blue-50/50"
+                  className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px]">
+            <tr className="h-[35px]">
               <td colSpan={2} className="border border-gray-300 px-4 text-left text-gray-700">부가 예상 비용 (<span className="text-red-500 font-bold">-</span>)</td>
-              <td className="border border-gray-300 px-1 text-right font-medium text-gray-900">
+              <td className="border border-gray-300 p-0 text-right font-medium text-gray-900 h-[35px]">
                 <input
                   type="text"
                   value={extraExpense === 0 ? "0" : extraExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -434,22 +434,22 @@ export function ProfitabilityDiffTab({
                     setExtraExpense(val);
                   }}
                   disabled={isReadOnly}
-                  className="w-full bg-transparent px-1 text-right outline-none focus:bg-blue-50/50"
+                  className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
-              <td className="border border-gray-300 px-1">
+              <td className="border border-gray-300 p-0 h-[35px]">
                 <input
                   type="text"
                   value={extraExpenseDesc}
                   onChange={(e) => setExtraExpenseDesc(e.target.value)}
                   disabled={isReadOnly}
-                  className="w-full bg-transparent px-2 text-left text-sm outline-none focus:bg-blue-50/50"
+                  className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                 />
               </td>
-              <td className="border border-gray-300 px-4"></td>
+              <td className="border border-gray-300 px-[10px]"></td>
             </tr>
-            <tr className="h-[42px] bg-gray-50/80 font-bold">
+            <tr className="h-[35px] bg-gray-50/80 font-bold">
               <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold text-gray-900 font-bold">부가 수익 합계</td>
               <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(extraProfitTotal)}`}>{fmt(extraProfitTotal)}</td>
               <td className="border border-gray-300 px-2 bg-gray-50/30"></td>
@@ -457,7 +457,7 @@ export function ProfitabilityDiffTab({
               <td className="border border-gray-300 px-4"></td>
             </tr>
 
-            <tr className="h-[52px] bg-slate-800 text-white font-bold text-lg">
+            <tr className="h-[40px] bg-slate-800 text-white font-bold text-lg">
               <td colSpan={3} className="border border-slate-700 px-4 text-left text-white font-bold">회사 손익 합계</td>
               <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal < 0 ? 'text-red-400' : 'text-white'}`}>{fmt(companyProfitTotal)}</td>
               <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal < 0 ? 'text-red-400' : 'text-blue-300'}`}>{calcRate(companyProfitTotal, revenue.grandTotal)}</td>

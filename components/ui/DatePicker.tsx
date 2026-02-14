@@ -29,8 +29,10 @@ export function DatePicker({
     label,
     placeholder = "Select date",
     className,
+    buttonClassName,
     disabled,
-}: DatePickerProps) {
+    dateFormat = "yyyy-MM-dd",
+}: DatePickerProps & { dateFormat?: string; buttonClassName?: string }) {
     const [open, setOpen] = React.useState(false)
 
     return (
@@ -44,11 +46,12 @@ export function DatePicker({
                         className={cn(
                             "w-full justify-start text-left font-normal border border-gray-300 bg-white px-3 h-10 rounded-xl transition-all duration-200 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0",
                             !date && "text-gray-400",
-                            open && "border-gray-900 ring-2 ring-gray-900 ring-offset-0"
+                            open && "border-gray-900 ring-2 ring-gray-900 ring-offset-0",
+                            buttonClassName
                         )}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
-                        {date ? format(date!, "yyyy-MM-dd") : <span className="text-gray-400">{placeholder}</span>}
+                        {date ? format(date!, dateFormat) : <span className="text-gray-400">{placeholder}</span>}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 border border-gray-200 shadow-lg rounded-xl overflow-hidden" align="start">

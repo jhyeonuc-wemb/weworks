@@ -449,10 +449,10 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
       if (response.ok) {
         await fetchUnitPrices();
         handleCancel();
-        alert(isAdding ? "기준단가가 추가되었습니다." : "기준단가가 수정되었습니다.");
+        alert("기준단가가 저장되었습니다.");
       } else {
         const error = await response.json();
-        alert(`오류: ${error.message || "알 수 없는 오류"}`);
+        alert(`오류: ${error.error || error.message || "알 수 없는 오류"}`);
       }
     } catch (error: any) {
       console.error("Error saving unit price:", error);
@@ -595,11 +595,11 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                 <TableHead className="px-8 py-3 text-left text-sm text-slate-900">직급</TableHead>
                 <TableHead className="px-8 py-3 text-left text-sm text-slate-900">등급</TableHead>
                 <TableHead className="px-8 py-3 text-center text-sm text-slate-900">연도</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제시 표준</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제시 적용</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">할인율</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm font-black text-primary bg-primary/5">내부 적용</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">인상률</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 기준</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 적용</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 할인율</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm font-black text-primary bg-primary/5">내부단가 적용</TableHead>
+                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">내부단가 인상률</TableHead>
                 <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
               </TableRow>
             </TableHeader>
@@ -674,9 +674,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                               {price.jobLevel}
                             </TableCell>
                             <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
-                              <span className="px-2 py-0.5 rounded-md bg-muted/50 text-xs">
-                                {price.grade}
-                              </span>
+                              {price.grade}
                             </TableCell>
                             <TableCell className="whitespace-nowrap px-8 py-3 text-center text-sm text-slate-600">
                               {price.year}
@@ -934,7 +932,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500">
-                제시 표준 단가 (천원)
+                제안단가 기준 (천원)
               </label>
               <input
                 type="text"
@@ -956,7 +954,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500">
-                제시 적용 단가 (천원)
+                제안단가 적용 (천원)
               </label>
               <input
                 type="text"
@@ -978,7 +976,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500">
-                할인율 (%)
+                제안단가 할인율 (%)
               </label>
               <div className="w-full rounded-md bg-gray-50 border border-gray-300 px-3 py-2 text-sm font-bold text-primary/60">
                 {formData.proposedStandard && (formData.proposedApplied !== null && formData.proposedApplied !== undefined)
@@ -992,7 +990,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500">
-                내부 적용 단가 (천원)
+                내부단가 적용 (천원)
               </label>
               <input
                 type="text"
@@ -1014,7 +1012,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500">
-                인상률 (%)
+                내부단가 인상률 (%)
               </label>
               <div className="w-full rounded-md bg-gray-50 border border-gray-300 px-3 py-2 text-sm font-bold text-muted-foreground/60">
                 {formData.year && formData.internalApplied

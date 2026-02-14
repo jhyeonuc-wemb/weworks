@@ -54,16 +54,28 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 #### 3.2 상세/입력형 테이블 (Detail/Input Tables)
 기준: **수지분석서 프로젝트 경비 탭**
 - **헤더 및 세션 구분:**
-  - 헤더 배경: `bg-blue-50/50` (또는 `bg-slate-50/50`).
-  - 행 높이: **`h-[42px]`**를 고정 높이로 사용합니다.
-  - 테두리: 모든 셀에 실선 테두리(`border border-gray-300`)를 적용하여 엑셀 스타일의 그리드를 유지합니다.
+  - 헤더 배경: **`bg-blue-50/50`**.
+  - 셀 배경: 
+    - 기본(입력/데이터/구분): **`bg-white`**.
+    - 소계 행: `bg-gray-50`.
+    - 합계 행: `bg-orange-100` (강조).
+  - 행 높이: **`h-[35px]`**를 고정 높이로 사용합니다.
+  - 테두리: 모든 셀(합계 행 포함)에 `border border-gray-300` (1px)을 적용하여 전체 그리드 색상을 통일합니다.
+  - 패딩 및 정렬:
+    - 기본 패딩: **`px-[10px]`** (좌우 10px)로 통일.
+    - 텍스트 정렬: 기본 Left Align. 단, **"소계", "합계" 라벨은 Center Align**.
+    - 숫자 정렬: Right Align.
 - **폰트 및 텍스트:**
   - 기본 텍스트: `text-sm` (Pretendard).
-  - 수치/금액: `text-sm text-right` (천 단위 콤마 필수).
-- **입력 필드 스타일 (Inline Input): [표준화 진행 중]**
-  - 현재 기존 테이블(수지분석 등) 작업을 통해 최적의 스타일을 선정 중입니다.
-  - 선정 전까지는 기존 시스템 코드를 참고하되, 결정 후 이 가이드를 업데이트합니다.
-  - (예정: 테두리 최소화, 호버 시 강조, 포커스 시 배경색 변경 등)
+  - 수치/금액: `text-sm text-right px-[10px]` (천 단위 콤마 필수, 우측 여백 확보).
+- **입력 필드 스타일 (Inline Input): [표준 확정]**
+  - **컨테이너 셀(`td`):** `p-0 h-[35px]`를 적용하여 셀 전체를 입력 영역으로 사용합니다.
+  - **Input 컴포넌트:** 
+    - `w-full h-full border-none bg-transparent` (평소).
+    - `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white` (포커스 시).
+    - `px-[10px]` (텍스트 정렬을 일반 셀과 맞춤).
+    - `text-right` (숫자), `text-left` (텍스트).
+  - **Hover:** `hover:bg-blue-50`을 적용하여 입력 가능함을 시각적으로 힌트 제공.
 
 - **특화 레이아웃:** 
   - 좌측 구분 컬럼은 `bg-gray-50/50 font-bold` 처리하여 시각적 위계를 줍니다.

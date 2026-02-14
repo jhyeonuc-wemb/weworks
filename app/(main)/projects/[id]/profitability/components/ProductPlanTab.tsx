@@ -87,31 +87,31 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                     const margin = calculateMargin(item);
                     const marginRate = calculateMarginRate(item);
                     return (
-                        <tr key={item.id} className="hover:bg-gray-50 group">
+                        <tr key={item.id} className="h-[35px] group bg-white">
                             {idx === 0 && (
-                                <td rowSpan={isReadOnly ? groupItems.length + 1 : groupItems.length + 2} className="border border-gray-300 px-2 py-2 text-center text-[14px] font-medium text-gray-900 bg-white">
-                                    {typeLabel}
+                                <td rowSpan={isReadOnly ? groupItems.length + 1 : groupItems.length + 2} className="border border-gray-300 px-[5px] text-center text-sm font-medium text-gray-900 bg-white whitespace-pre-line">
+                                    {typeLabel.replace("(", "\n(")}
                                 </td>
                             )}
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
                                     type="text"
                                     value={item.companyName}
                                     onChange={(e) => updateItem(item.id, "companyName", e.target.value)}
                                     disabled={isReadOnly}
-                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-sm text-center font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                                    className="w-full h-[35px] border-none px-[10px] text-sm text-center font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
-                                <div className="flex items-center gap-1">
-                                    <div className="relative flex-1">
+                            <td className="border border-gray-300 p-0 h-[35px]">
+                                <div className="flex items-center gap-1 h-[35px]">
+                                    <div className="relative flex-1 h-[35px]">
                                         <input
                                             type="text"
                                             list={`products-${item.id}`}
                                             value={item.productName}
                                             onChange={(e) => selectProduct(item.id, e.target.value)}
                                             disabled={isReadOnly}
-                                            className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                                            className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                             placeholder="제품명"
                                         />
                                         <datalist id={`products-${item.id}`}>
@@ -123,7 +123,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                     {!isReadOnly && (
                                         <button
                                             onClick={() => deleteRow(item.id)}
-                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-gray-100 transition-colors"
+                                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-gray-100 transition-colors mr-1"
                                             title="삭제"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                     )}
                                 </div>
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -143,10 +143,10 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-right text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -158,13 +158,13 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full h-10 rounded-xl border border-slate-200 px-3 py-1 text-right text-sm font-bold transition-all duration-300 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 disabled:bg-slate-50 disabled:text-slate-400"
+                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm h-[35px]">
                                 {formatMoney(item.basePrice)}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -176,13 +176,13 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full h-10 rounded-xl border-2 border-primary/20 px-3 py-1 text-right text-sm font-black text-primary transition-all duration-300 focus:border-primary/40 focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-primary/40"
+                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-600">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600 h-[35px]">
                                 {item.discountRate.toFixed(1)}%
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-sm">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -194,28 +194,33 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-right text-[14px] bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 h-[35px]">
                                 {item.costPrice ? formatMoney(margin) : "-"}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 h-[35px]">
                                 {item.costPrice ? `${marginRate.toFixed(1)}%` : "-"}
                             </td>
-                            <td className="border border-gray-300 px-1 py-1">
-                                <DatePicker
-                                    date={item.requestDate ? new Date(item.requestDate) : undefined}
-                                    setDate={(date) => updateItem(item.id, "requestDate", date ? format(date, "yyyy-MM-dd") : "")}
-                                    className="w-full"
-                                />
+                            <td className="border border-gray-300 p-0 h-[35px]">
+                                <div className="h-[35px] flex items-center">
+                                    <DatePicker
+                                        date={item.requestDate ? new Date(item.requestDate) : undefined}
+                                        setDate={(date) => updateItem(item.id, "requestDate", date ? format(date, "yyyy-MM-dd") : "")}
+                                        className="h-[35px]"
+                                        buttonClassName="w-full h-full border-none rounded-none focus:ring-0 justify-center px-0"
+                                        dateFormat="yy-MM-dd"
+                                        placeholder=""
+                                    />
+                                </div>
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="border border-gray-300 p-0 h-[35px]">
                                 <select
                                     value={item.requestType}
                                     onChange={(e) => updateItem(item.id, "requestType", e.target.value)}
                                     disabled={isReadOnly}
-                                    className="w-full rounded border border-gray-200 px-1 py-1 text-[14px] disabled:bg-gray-50 disabled:text-gray-500"
+                                    className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
                                 >
                                     <option value="">선택</option>
                                     <option value="예정">예정</option>
@@ -224,13 +229,13 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                     <option value="취소">취소</option>
                                 </select>
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm h-[35px]">
                                 {formatMoney(item.contractCostPrice)}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm h-[35px]">
                                 {item.contractCostPrice ? formatMoney((item.proposalPrice || 0) - (item.contractCostPrice || 0)) : "-"}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm h-[35px]">
                                 {item.contractCostPrice && item.proposalPrice
                                     ? `${(((item.proposalPrice - item.contractCostPrice) / item.proposalPrice) * 100).toFixed(1)}%`
                                     : "-"}
@@ -239,23 +244,18 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                     );
                 })}
                 {/* Add Row Button Row */}
-                {/* Add Row Button Row */}
                 {!isReadOnly && (
-                    <tr>
+                    <tr className="h-[35px]">
                         {groupItems.length === 0 && (
-                            <td rowSpan={2} className="border border-gray-300 px-2 py-2 text-center text-[14px] font-medium text-gray-900 bg-white">
+                            <td rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white">
                                 {typeLabel}
                             </td>
                         )}
-                        <td className="border border-gray-300 bg-white"></td>
-                        <td className="border border-gray-300 px-2 py-2 bg-white">
+                        <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={2}>
                             <button
                                 type="button"
                                 onClick={() => addRow(typeLabel.includes("자사") ? "자사" : "타사")}
-                                className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-[14px] font-medium transition-colors ${typeLabel.includes("자사")
-                                    ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                                    }`}
+                                className="w-full h-full flex items-center justify-center gap-1.5 text-sm font-medium transition-colors rounded-none border-none outline-none focus:outline-none bg-blue-50 text-blue-700 hover:bg-blue-100"
                             >
                                 <Plus className="h-4 w-4" />
                                 {typeLabel} 추가
@@ -265,47 +265,47 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                     </tr>
                 )}
                 {/* Group Subtotal */}
-                <tr className="bg-gray-100 font-medium">
+                <tr className="bg-gray-50 h-[35px]">
                     {groupItems.length === 0 && isReadOnly && (
-                        <td className="border border-gray-300 px-2 py-2 text-center text-[14px] font-medium text-gray-900 bg-white">
+                        <td className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white">
                             {typeLabel}
                         </td>
                     )}
-                    <td colSpan={2} className="border border-gray-300 px-2 py-2 text-center text-[14px]">
+                    <td colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm">
                         소계
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").quantity.toLocaleString()}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").unitPrice)}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").base)}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-blue-600">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-600">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").proposal)}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center text-[14px] text-gray-900">
+                    <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").discountRate.toFixed(1)}%
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").cost)}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").cost ? formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").margin) : "-"}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").cost ? `${getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").marginRate.toFixed(1)}%` : "-"}
                     </td>
                     <td colSpan={2} className="border border-gray-300"></td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").contractCost)}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").contractCost ? formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").contractMargin) : "-"}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2 text-right text-[14px]">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").contractCost && getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").proposal
                             ? `${((getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").contractMargin / getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").proposal) * 100).toFixed(1)}%`
                             : "-"}
@@ -363,43 +363,43 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                 </div>
             </div>
 
-            <div className="overflow-x-auto border border-gray-200 bg-white">
-                <table className="min-w-full divide-y divide-gray-200" style={{ borderCollapse: 'collapse' }}>
+            <div className="overflow-x-auto bg-white">
+                <table className="min-w-full border border-gray-300" style={{ borderCollapse: 'collapse' }}>
                     <thead>
                         {/* 최상단 타이틀 헤더 */}
-                        <tr className="text-gray-900 border-b border-gray-300">
-                            <th colSpan={11} className="border border-gray-300 px-4 py-1.5 text-center text-[14px] font-bold bg-blue-50/50">
+                        <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                            <th colSpan={11} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">
                                 [ 제품/상품 계획 ]
                             </th>
-                            <th colSpan={5} className="border border-gray-300 px-4 py-1.5 text-center text-[14px] font-bold bg-green-50/50">
+                            <th colSpan={5} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-green-50/50">
                                 [ 제품/상품 발주 의뢰 ]
                             </th>
                         </tr>
-                        <tr className="text-gray-900">
-                            <th rowSpan={2} className="border border-gray-300 px-4 py-2 text-center text-[14px] font-bold bg-blue-50/50">구분</th>
-                            <th rowSpan={2} className="border border-gray-300 px-4 py-2 text-center text-[14px] font-bold min-w-[120px] bg-blue-50/50">업체명</th>
-                            <th rowSpan={2} className="border border-gray-300 px-4 py-2 text-center text-[14px] font-bold min-w-[200px] bg-blue-50/50">제품명</th>
-                            <th colSpan={5} className="border border-gray-300 px-4 py-1 text-center text-[14px] font-bold bg-blue-50/50">매출</th>
-                            <th colSpan={3} className="border border-gray-300 px-4 py-1 text-center text-[14px] font-bold bg-blue-50/50">매입</th>
-                            <th colSpan={5} className="border border-gray-300 px-4 py-1 text-center text-[14px] font-bold bg-green-50/50">구매 계약</th>
+                        <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                            <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50 min-w-[60px]">구분</th>
+                            <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[120px] bg-blue-50/50">업체명</th>
+                            <th rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[200px] bg-blue-50/50">제품명</th>
+                            <th colSpan={5} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">매출</th>
+                            <th colSpan={3} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-blue-50/50">매입</th>
+                            <th colSpan={5} className="border border-gray-300 px-[10px] text-center text-sm font-bold bg-green-50/50">구매 계약</th>
                         </tr>
-                        <tr className="text-gray-700">
+                        <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
                             {/* 매출 하위 */}
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium w-[60px] bg-blue-50/50">수량</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-blue-50/50">단가</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-blue-50/50">기준가</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-blue-50/50">제안가</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium w-[60px] bg-blue-50/50">할인율</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[60px] bg-blue-50/50">수량</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-blue-50/50">단가</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-blue-50/50">기준가</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-blue-50/50">제안가</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold w-[60px] bg-blue-50/50">할인율</th>
                             {/* 매입 하위 */}
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-blue-50/50">원가</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-blue-50/50">당사마진</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium w-[60px] bg-blue-50/50">마진율</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-blue-50/50">원가</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-blue-50/50">당사마진</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold w-[60px] bg-blue-50/50">마진율</th>
                             {/* 구매 계약 하위 */}
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[100px] bg-green-50/50">요청일</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-green-50/50">요청구분</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-green-50/50">원가</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium min-w-[80px] bg-green-50/50">당사마진</th>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-[14px] font-medium w-[60px] bg-green-50/50">마진율</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[100px] bg-green-50/50">요청일</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-green-50/50">요청구분</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-green-50/50">원가</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold min-w-[80px] bg-green-50/50">당사마진</th>
+                            <th className="border border-gray-300 px-[10px] text-center text-sm font-bold w-[60px] bg-green-50/50">마진율</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white">
@@ -407,60 +407,61 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                         {renderRows(externalItems, "상품(타사)")}
 
                         {/* Grand Total */}
-                        <tr className="bg-orange-100 font-bold border-t-2 border-orange-200">
-                            <td colSpan={3} className="border border-orange-300 px-4 py-3 text-center text-[14px] text-gray-900">
+                        {/* Grand Total */}
+                        <tr className="bg-orange-100 font-bold border-t border-gray-300 h-[35px]">
+                            <td colSpan={3} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 font-bold">
                                 합계
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {grandTotal.quantity.toLocaleString()}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {formatMoney(grandTotal.unitPrice)}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {formatMoney(grandTotal.base)}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-blue-700">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700 font-bold">
                                 {formatMoney(grandTotal.proposal)}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-center text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 font-bold">
                                 {total.discountRate.toFixed(1)}%
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {formatMoney(grandTotal.cost)}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {total.cost ? formatMoney(total.margin) : "-"}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {total.cost ? `${total.marginRate.toFixed(1)}%` : "-"}
                             </td>
-                            <td colSpan={2} className="border border-orange-300 bg-orange-50"></td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td colSpan={2} className="border border-gray-300 bg-orange-100"></td>
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {formatMoney(total.contractCost)}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {total.contractCost ? formatMoney(total.contractMargin) : "-"}
                             </td>
-                            <td className="border border-orange-300 px-2 py-2 text-right text-[14px] text-gray-900">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {total.contractCost && total.proposal
                                     ? `${((total.contractMargin / total.proposal) * 100).toFixed(1)}%`
                                     : "-"}
                             </td>
                         </tr>
                         {/* Difference Row */}
-                        <tr className="bg-blue-100 text-blue-900 font-bold">
-                            <td colSpan={11} className="bg-white border-none"></td>
-                            <td colSpan={2} className="border border-blue-200 px-4 py-2 text-center text-[14px]">
+                        <tr className="bg-blue-50 text-blue-900 font-bold h-[35px]">
+                            <td colSpan={11} className="bg-white border text-center text-sm"></td>
+                            <td colSpan={2} className="border border-gray-300 px-[10px] text-center text-sm">
                                 차액(제안-계약)
                             </td>
-                            <td className="border border-blue-200 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm">
                                 {formatMoney(total.contractCost - total.cost)}
                             </td>
-                            <td className="border border-blue-200 px-2 py-2 text-right text-[14px]">
+                            <td className="border border-gray-300 px-[10px] text-right text-sm">
                                 {formatMoney(total.contractMargin - total.margin)}
                             </td>
-                            <td className="border border-blue-200 px-2 py-2 text-center text-[14px]"></td>
+                            <td className="border border-gray-300 px-[10px] text-center text-sm"></td>
                         </tr>
                     </tbody>
                 </table>

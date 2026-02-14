@@ -35,7 +35,12 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">기준-경비</h2>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">기준-경비</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            프로젝트 수행에 필요한 표준 경비 기준을 관리합니다.
+          </p>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500">(단위:천원)</span>
           {!isReadOnly && (
@@ -52,23 +57,32 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200 border border-gray-300">
-          <thead className="bg-gray-50">
-            <tr>
+      <div className="overflow-x-auto bg-white">
+        <table className="w-full border-collapse border border-gray-300 table-fixed">
+          <colgroup>
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+            <col style={{ width: "14.28%" }} />
+          </colgroup>
+          <thead className="bg-blue-50/50">
+            <tr className="h-[35px] border-b border-gray-300">
               <th
                 colSpan={3}
-                className="px-4 py-3 text-center text-sm font-medium uppercase tracking-wider text-gray-500 border-r border-gray-300"
+                className="px-[10px] text-center text-sm font-bold text-gray-900 border border-gray-300 bg-blue-50/50"
               >
                 구분
               </th>
               <th
                 colSpan={3}
-                className="px-4 py-3 text-center text-sm font-medium uppercase tracking-wider text-gray-500 border-r border-gray-300"
+                className="px-[10px] text-center text-sm font-bold text-gray-900 border border-gray-300 bg-blue-50/50"
               >
                 기준
               </th>
-              <th className="px-4 py-3 text-center text-sm font-medium uppercase tracking-wider text-blue-700 bg-blue-50">
+              <th className="px-[10px] text-center text-sm font-bold text-gray-900 border border-gray-300 bg-blue-50/50">
                 기준액
               </th>
             </tr>
@@ -85,17 +99,17 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
               const isFromLocalRental = [6, 7, 8, 9].includes(expense.id);
 
               // 수정 가능 여부
-              const isCalculatedEditable = [1, 6, 7, 8].includes(expense.id);
-              const isFinalAmountEditable = [4, 5].includes(expense.id);
-              const shouldMergeStandard = [2, 3, 4, 5, 9].includes(expense.id);
+              const isCalculatedEditable = [1, 6, 7, 8].includes(expense.id); // 계산값 수정 가능
+              const isFinalAmountEditable = [4, 5].includes(expense.id); // 최종액 직접 수정 가능
+              const shouldMergeStandard = [2, 3, 4, 5, 9].includes(expense.id); // 기준 병합 여부
 
               return (
-                <tr key={expense.id} className="hover:bg-gray-50">
+                <tr key={expense.id} className="h-[35px]">
                   {/* 구분 영역 */}
                   {isFromLocalRental ? (
                     <td
                       colSpan={3}
-                      className="w-[300px] px-4 py-3 text-sm text-gray-900 border-r border-gray-300"
+                      className="border border-gray-300 px-[10px] text-sm text-gray-900 h-[35px]"
                     >
                       {expense.item}
                     </td>
@@ -103,24 +117,24 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                     <>
                       <td
                         colSpan={2}
-                        className="w-[300px] px-4 py-3 text-sm text-gray-900 border-r border-gray-300"
+                        className="border border-gray-300 px-[10px] text-sm text-gray-900 h-[35px]"
                       >
                         {expense.item}
                       </td>
-                      <td className="w-24 px-4 py-3 text-sm text-gray-600 border-r border-gray-300 text-center">
+                      <td className="border border-gray-300 px-[10px] text-sm text-gray-600 text-center h-[35px]">
                         {expense.standardType || ""}
                       </td>
                     </>
                   ) : (
                     <>
-                      <td className="w-[300px] px-4 py-3 text-sm text-gray-900 border-r border-gray-300"
+                      <td className="border border-gray-300 px-[10px] text-sm text-gray-900 h-[35px]"
                       >
                         {expense.item}
                       </td>
-                      <td className="w-24 px-4 py-3 text-sm text-gray-900 border-r border-gray-300 text-center text-sm">
+                      <td className="border border-gray-300 px-[10px] text-sm text-gray-900 text-center h-[35px]">
                         {expense.category || ""}
                       </td>
-                      <td className="w-24 px-4 py-3 text-sm text-gray-600 border-r border-gray-300 text-center">
+                      <td className="border border-gray-300 px-[10px] text-sm text-gray-600 text-center h-[35px]">
                         {expense.standardType || ""}
                       </td>
                     </>
@@ -130,40 +144,36 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                   {shouldMergeStandard ? (
                     <td
                       colSpan={3}
-                      className="w-[200px] px-4 py-3 text-sm text-gray-900 text-left border-r border-gray-300"
+                      className="border border-gray-300 px-[10px] text-left text-sm text-gray-900 h-[35px]"
                     >
                       {expense.standardDetail}
                     </td>
                   ) : (
                     <>
-                      <td className="w-[200px] px-4 py-3 text-sm text-gray-900 text-left border-r border-gray-300">
+                      <td className="border border-gray-300 px-[10px] text-left text-sm text-gray-900 h-[35px]">
                         {expense.standardDetail}
                       </td>
-                      <td className="w-32 px-4 py-3 text-sm text-gray-900 text-right border-r border-gray-300">
+                      <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 h-[35px]">
                         {expense.inputValue !== null
                           ? expense.inputValue.toLocaleString(undefined, { maximumFractionDigits: 0 })
                           : ""}
                       </td>
-                      <td className="w-32 px-4 py-3 text-right border-r border-gray-300">
+                      <td className={`border border-gray-300 ${isCalculatedEditable ? 'p-0' : 'px-[10px]'} text-right h-[35px]`}>
                         {isCalculatedEditable ? (
                           <input
-                            type="number"
-                            value={expense.calculatedValue === null ? "" : expense.calculatedValue}
+                            type="text"
+                            value={expense.calculatedValue === null ? "" : expense.calculatedValue.toLocaleString()}
                             onChange={(e) => {
                               if (isReadOnly) return;
-                              const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                              const val = parseInt(e.target.value.replace(/,/g, ""));
                               if (!isNaN(val)) {
                                 updateExpense(expense.id, "calculatedValue", val);
-                              }
-                            }}
-                            onBlur={(e) => {
-                              if (isReadOnly) return;
-                              if (e.target.value === "") {
+                              } else if (e.target.value === "") {
                                 updateExpense(expense.id, "calculatedValue", 0);
                               }
                             }}
                             disabled={isReadOnly}
-                            className={`w-full rounded border border-gray-200 px-2 py-1 pr-0 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-not-allowed bg-gray-50" : ""}`}
                           />
                         ) : (
                           <span className="text-sm text-gray-900">
@@ -177,26 +187,22 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                   )}
 
                   {/* 기준액 */}
-                  <td className="w-40 px-4 py-3 text-right text-sm font-bold text-gray-900 bg-blue-50">
+                  <td className={`border border-gray-300 ${isFinalAmountEditable ? 'p-0' : 'px-[10px]'} text-right text-sm font-bold text-gray-900 h-[35px]`}>
                     {isFinalAmountEditable ? (
                       <input
-                        type="number"
-                        value={expense.finalAmount === null ? "" : expense.finalAmount}
+                        type="text"
+                        value={expense.finalAmount === null ? "" : expense.finalAmount.toLocaleString()}
                         onChange={(e) => {
                           if (isReadOnly) return;
-                          const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                          const val = parseInt(e.target.value.replace(/,/g, ""));
                           if (!isNaN(val)) {
                             updateExpense(expense.id, "finalAmount", val);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (isReadOnly) return;
-                          if (e.target.value === "") {
+                          } else if (e.target.value === "") {
                             updateExpense(expense.id, "finalAmount", 0);
                           }
                         }}
                         disabled={isReadOnly}
-                        className={`w-full rounded border border-gray-200 px-2 py-1 pr-0 text-right text-sm font-bold bg-blue-50 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isReadOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-not-allowed bg-gray-50" : ""}`}
                       />
                     ) : expense.id === 9 ? (
                       ""

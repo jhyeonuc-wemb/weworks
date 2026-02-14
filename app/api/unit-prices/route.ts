@@ -200,6 +200,16 @@ export async function POST(request: NextRequest) {
         is_active,
         display_order
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ON CONFLICT (affiliation_group, job_group, job_level, grade, year)
+      DO UPDATE SET
+        proposed_standard = EXCLUDED.proposed_standard,
+        proposed_applied = EXCLUDED.proposed_applied,
+        proposed_discount_rate = EXCLUDED.proposed_discount_rate,
+        internal_applied = EXCLUDED.internal_applied,
+        internal_increase_rate = EXCLUDED.internal_increase_rate,
+        is_active = EXCLUDED.is_active,
+        display_order = EXCLUDED.display_order,
+        updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
 

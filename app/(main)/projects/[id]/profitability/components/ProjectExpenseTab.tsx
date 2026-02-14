@@ -82,11 +82,12 @@ export function ProjectExpenseTab({
             const year = current.getFullYear();
             if (!groups[year]) {
                 const yearIndex = year - startY;
+                const shortYear = String(year).slice(-2);
                 let label = '';
-                if (yearIndex === 0) label = `당년(${year}년)`;
-                else if (yearIndex === 1) label = `차년(${year}년)`;
-                else if (yearIndex === 2) label = `차차년(${year}년)`;
-                else label = `${year}년`;
+                if (yearIndex === 0) label = `당년(${shortYear}년)`;
+                else if (yearIndex === 1) label = `차년(${shortYear}년)`;
+                else if (yearIndex === 2) label = `차차년(${shortYear}년)`;
+                else label = `${shortYear}년`;
                 groups[year] = { label, count: 0 };
             }
             groups[year].count++;
@@ -113,9 +114,11 @@ export function ProjectExpenseTab({
         // 일반경비 또는 읽기 전용 상태인 경우 텍스트로 표시
         if (isGeneralExpense || isReadOnly) {
             return (
-                <span className={`text-sm py-2 px-1 block text-right text-gray-900`}>
-                    {Math.round(value).toLocaleString()}
-                </span>
+                <div className="w-full h-full flex items-center justify-end px-[10px]">
+                    <span className="text-sm text-gray-900">
+                        {Math.round(value).toLocaleString()}
+                    </span>
+                </div>
             );
         }
 
@@ -136,7 +139,7 @@ export function ProjectExpenseTab({
                         updateItemValue(item.id, monthKey, val);
                     }
                 }}
-                className={`w-full rounded border border-transparent px-1 py-1 text-right text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:border-gray-200 transition-colors bg-transparent`}
+                className={`w-full h-full border-none rounded-none px-[10px] text-right text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400`}
             />
         );
     };
@@ -221,8 +224,8 @@ export function ProjectExpenseTab({
                     )}
                 </div>
             </div>
-            <div className="overflow-x-auto border border-gray-200 bg-white">
-                <table className="min-w-full divide-y divide-gray-200" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <div className="overflow-x-auto bg-white">
+                <table className="min-w-full border border-gray-300" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                     <colgroup>
                         <col className="w-[80px]" />
                         <col className="w-[180px]" />
@@ -232,60 +235,60 @@ export function ProjectExpenseTab({
                         ))}
                     </colgroup>
                     <thead>
-                        <tr className="text-gray-900 border-b border-gray-300 h-[42px]">
-                            <th rowSpan={2} colSpan={2} className="border border-gray-300 px-4 text-sm font-bold bg-blue-50/50 w-[260px]">구분</th>
-                            <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-4 text-sm font-bold bg-blue-50/50">총투입 M/M</th>
+                        <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                            <th rowSpan={2} colSpan={2} className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50 w-[260px]">구분</th>
+                            <th colSpan={1 + sortedYears.length} className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50">총투입 M/M</th>
                             {sortedYears.map(year => (
-                                <th key={`year-header-${year}`} colSpan={yearGroups[year].count} className="border border-gray-300 px-4 text-sm font-bold bg-blue-50/50 text-center">
+                                <th key={`year-header-${year}`} colSpan={yearGroups[year].count} className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50 text-center">
                                     {yearGroups[year].label}
                                 </th>
                             ))}
                         </tr>
-                        <tr className="text-gray-900 border-b border-gray-300 h-[42px]">
-                            <th className="border border-gray-300 px-2 text-sm font-bold bg-blue-50/50 w-[90px]">합계</th>
+                        <tr className="text-gray-900 border-b border-gray-300 h-[35px]">
+                            <th className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50 w-[90px]">합계</th>
                             {sortedYears.map(year => (
-                                <th key={`year-sum-header-${year}`} className="border border-gray-300 px-2 text-sm font-bold bg-blue-50/50 w-[90px]">{year}년</th>
+                                <th key={`year-sum-header-${year}`} className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50 w-[90px]">{String(year).slice(-2)}년</th>
                             ))}
                             {months.map(m => (
-                                <th key={m.key} className="border border-gray-300 px-2 text-sm font-bold bg-blue-50/50 w-[90px] text-center">{m.label}</th>
+                                <th key={m.key} className="border border-gray-300 px-[10px] text-sm font-bold bg-blue-50/50 w-[90px] text-center">{m.label}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {/* 투여공수 섹션 */}
-                        <tr className="bg-gray-50/50 h-[42px]">
-                            <td rowSpan={2} className="border border-gray-300 px-4 text-sm font-bold text-gray-900 text-center w-[80px] whitespace-nowrap">투여공수</td>
-                            <td className="border border-gray-300 px-4 text-sm text-gray-700 w-[180px] whitespace-nowrap">당사</td>
-                            <td className="border border-gray-300 px-2 pr-2 text-right text-sm font-bold text-gray-900">
+                        <tr className="h-[35px]">
+                            <td rowSpan={2} className="border border-gray-300 border-b-[3px] border-double px-[10px] text-sm text-gray-900 text-center w-[80px] whitespace-nowrap">투여공수</td>
+                            <td className="border border-gray-300 px-[10px] text-sm text-gray-700 w-[180px] whitespace-nowrap">당사</td>
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                 {Math.round(Object.values(mmSummary).reduce((s, v) => s + v.wemb, 0))}
                             </td>
                             {sortedYears.map(year => (
-                                <td key={`mm-wemb-year-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm font-medium text-gray-900">
+                                <td key={`mm-wemb-year-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {Math.round(Object.entries(mmSummary)
                                         .filter(([m]) => m.startsWith(`${year}-`))
                                         .reduce((s, [, v]) => s + v.wemb, 0))}
                                 </td>
                             ))}
                             {months.map(m => (
-                                <td key={`mm-wemb-${m.key}`} className="border border-gray-300 px-1 pr-2 text-right text-sm text-gray-900">
+                                <td key={`mm-wemb-${m.key}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {Math.round(mmSummary[m.key]?.wemb || 0)}
                                 </td>
                             ))}
                         </tr>
-                        <tr className="bg-gray-50/50 h-[42px]">
-                            <td className="border border-gray-300 px-4 text-sm text-gray-700 whitespace-nowrap">외주</td>
-                            <td className="border border-gray-300 px-2 pr-2 text-right text-sm font-bold text-gray-900">
+                        <tr className="h-[35px]">
+                            <td className="border border-gray-300 border-b-[3px] border-double px-[10px] text-sm text-gray-700 whitespace-nowrap">외주</td>
+                            <td className="border border-gray-300 border-b-[3px] border-double px-[10px] text-right text-sm text-gray-900">
                                 {Math.round(Object.values(mmSummary).reduce((s, v) => s + v.external, 0))}
                             </td>
                             {sortedYears.map(year => (
-                                <td key={`mm-ext-year-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm font-medium text-gray-900">
+                                <td key={`mm-ext-year-${year}`} className="border border-gray-300 border-b-[3px] border-double px-[10px] text-right text-sm text-gray-900">
                                     {Math.round(Object.entries(mmSummary)
                                         .filter(([m]) => m.startsWith(`${year}-`))
                                         .reduce((s, [, v]) => s + v.external, 0))}
                                 </td>
                             ))}
                             {months.map(m => (
-                                <td key={`mm-ext-${m.key}`} className="border border-gray-300 px-1 pr-2 text-right text-sm text-gray-900">
+                                <td key={`mm-ext-${m.key}`} className="border border-gray-300 border-b-[3px] border-double px-[10px] text-right text-sm text-gray-900">
                                     {Math.round(mmSummary[m.key]?.external || 0)}
                                 </td>
                             ))}
@@ -293,45 +296,44 @@ export function ProjectExpenseTab({
 
                         {/* 일반경비 섹션 */}
                         {generalExpenses.map((item, idx) => (
-                            <tr key={item.id} className="h-[42px]">
+                            <tr key={item.id} className="h-[35px]">
                                 {idx === 0 && (
-                                    <td rowSpan={generalExpenses.length + 1} className="border border-gray-300 px-2 py-4 text-sm font-bold text-gray-900 text-center whitespace-nowrap bg-gray-50/50">
+                                    <td rowSpan={generalExpenses.length + 1} className="border border-gray-300 px-[10px] py-4 text-sm text-gray-900 text-center whitespace-nowrap">
                                         <div className="flex flex-col items-center gap-2">
                                             <span>일반경비</span>
-
                                         </div>
                                     </td>
                                 )}
-                                <td className="border border-gray-300 px-4 text-sm text-gray-700 whitespace-nowrap">
+                                <td className="border border-gray-300 px-[10px] text-sm text-gray-700 whitespace-nowrap">
                                     {item.item}
                                 </td>
-                                <td className="border border-gray-300 px-2 pr-2 text-right text-sm font-bold text-gray-900">
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(calculateRowTotal(item))}
                                 </td>
                                 {sortedYears.map(year => (
-                                    <td key={`gen-year-${item.id}-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm font-medium text-gray-800">
+                                    <td key={`gen-year-${item.id}-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-800">
                                         {fmtNum(calculateRowYearTotal(item, year))}
                                     </td>
                                 ))}
                                 {months.map(m => (
-                                    <td key={`gen-${item.id}-${m.key}`} className={`border border-gray-300 px-1 pr-1 text-right ${item.isAutoCalculated ? 'bg-blue-50/30' : ''}`}>
+                                    <td key={`gen-${item.id}-${m.key}`} className="border border-gray-300 p-0 h-[35px]">
                                         {renderMonthValue(item, m.key)}
                                     </td>
                                 ))}
                             </tr>
                         ))}
-                        <tr className="bg-gray-50/80 font-bold h-[42px]">
-                            <td className="border border-gray-300 px-4 text-sm text-center">소계</td>
-                            <td className="border border-gray-300 px-2 pr-2 text-right text-sm text-gray-900 bg-gray-50">
+                        <tr className="bg-gray-50 h-[35px]">
+                            <td className="border border-gray-300 px-[10px] text-sm text-center">소계</td>
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 bg-gray-50">
                                 {fmtNum(generalExpenses.reduce((sum, item) => sum + calculateRowTotal(item), 0))}
                             </td>
                             {sortedYears.map(year => (
-                                <td key={`gen-sub-year-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm text-gray-900">
+                                <td key={`gen-sub-year-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(generalExpenses.reduce((sum, item) => sum + calculateRowYearTotal(item, year), 0))}
                                 </td>
                             ))}
                             {months.map(m => (
-                                <td key={`gen-sub-${m.key}`} className="border border-gray-300 px-1 pr-2 text-right text-sm text-gray-900">
+                                <td key={`gen-sub-${m.key}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(getSectionTotal(generalExpenses, m.key))}
                                 </td>
                             ))}
@@ -339,73 +341,72 @@ export function ProjectExpenseTab({
 
                         {/* 특별경비 섹션 */}
                         {specialExpenses.map((item, idx) => (
-                            <tr key={item.id} className="h-[42px]">
+                            <tr key={item.id} className="h-[35px]">
                                 {idx === 0 && (
-                                    <td rowSpan={specialExpenses.length + 1} className="border border-gray-300 px-2 py-4 text-sm font-bold text-gray-900 text-center whitespace-nowrap bg-gray-50/50">
+                                    <td rowSpan={specialExpenses.length + 1} className="border border-gray-300 px-[10px] py-4 text-sm text-gray-900 text-center whitespace-nowrap">
                                         <div className="flex flex-col items-center gap-2">
                                             <span>특별경비</span>
-
                                         </div>
                                     </td>
                                 )}
-                                <td className="border border-gray-300 px-2 text-sm text-gray-700">
+                                <td className={`border border-gray-300 text-sm text-gray-700 h-[35px] ${item.id === 9 ? 'p-0' : 'px-[10px]'}`}>
                                     {item.id === 9 ? (
                                         <input
                                             type="text"
                                             value={item.item}
                                             onChange={(e) => updateItemName(item.id, e.target.value)}
                                             disabled={isReadOnly}
-                                            className="w-full bg-transparent border-none focus:ring-0 px-2 py-1 outline-none hover:bg-gray-50 focus:bg-white transition-colors"
+                                            className="w-full h-full bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors px-[10px] py-0 text-sm text-gray-700 placeholder:text-gray-400"
                                         />
                                     ) : (
-                                        <span className="px-2">{item.item}</span>
+                                        item.item
                                     )}
                                 </td>
-                                <td className="border border-gray-300 px-2 pr-2 text-right text-sm font-bold text-gray-900">
+                                <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(calculateRowTotal(item))}
                                 </td>
                                 {sortedYears.map(year => (
-                                    <td key={`spec-year-${item.id}-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm font-medium text-gray-800">
+                                    <td key={`spec-year-${item.id}-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-800">
                                         {fmtNum(calculateRowYearTotal(item, year))}
                                     </td>
                                 ))}
                                 {months.map(m => (
-                                    <td key={`spec-${item.id}-${m.key}`} className="border border-gray-300 px-1 pr-1 text-right">
+                                    <td key={`spec-${item.id}-${m.key}`} className="border border-gray-300 p-0 h-[35px]">
                                         {renderMonthValue(item, m.key)}
                                     </td>
                                 ))}
                             </tr>
                         ))}
-                        <tr className="bg-gray-50/80 font-bold h-[42px]">
-                            <td className="border border-gray-300 px-4 text-sm text-center">소계</td>
-                            <td className="border border-gray-300 px-2 pr-2 text-right text-sm text-gray-900 bg-gray-50">
+                        <tr className="bg-gray-50 h-[35px]">
+                            <td className="border border-gray-300 px-[10px] text-sm text-center">소계</td>
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 bg-gray-50">
                                 {fmtNum(specialExpenses.reduce((sum, item) => sum + calculateRowTotal(item), 0))}
                             </td>
                             {sortedYears.map(year => (
-                                <td key={`spec-sub-year-${year}`} className="border border-gray-300 px-2 pr-2 text-right text-sm text-gray-900">
+                                <td key={`spec-sub-year-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(specialExpenses.reduce((sum, item) => sum + calculateRowYearTotal(item, year), 0))}
                                 </td>
                             ))}
                             {months.map(m => (
-                                <td key={`spec-sub-${m.key}`} className="border border-gray-300 px-1 pr-2 text-right text-sm text-gray-900">
+                                <td key={`spec-sub-${m.key}`} className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                                     {fmtNum(getSectionTotal(specialExpenses, m.key))}
                                 </td>
                             ))}
                         </tr>
 
                         {/* 전체 합계 행 */}
-                        <tr className="bg-orange-100 font-bold border-t-2 border-orange-200 h-[42px]">
-                            <td colSpan={2} className="border border-orange-300 px-4 text-sm text-center text-orange-900">합계</td>
-                            <td className="border border-orange-300 px-2 pr-2 text-right text-sm text-orange-900">
+                        <tr className="bg-orange-100 font-bold border-t border-gray-300 h-[35px]">
+                            <td colSpan={2} className="border border-gray-300 px-[10px] text-sm text-center text-orange-900">합계</td>
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-orange-900">
                                 {fmtNum(items.reduce((sum, item) => sum + calculateRowTotal(item), 0))}
                             </td>
                             {sortedYears.map(year => (
-                                <td key={`grand-sum-year-${year}`} className="border border-orange-300 px-2 pr-2 text-right text-sm text-orange-900">
+                                <td key={`grand-sum-year-${year}`} className="border border-gray-300 px-[10px] text-right text-sm text-orange-900">
                                     {fmtNum(items.reduce((sum, item) => sum + calculateRowYearTotal(item, year), 0))}
                                 </td>
                             ))}
                             {months.map(m => (
-                                <td key={`grand-sum-${m.key}`} className="border border-orange-300 px-1 pr-2 text-right text-sm text-orange-900">
+                                <td key={`grand-sum-${m.key}`} className="border border-gray-300 px-[10px] text-right text-sm text-orange-900">
                                     {fmtNum(getGrandTotal(m.key))}
                                 </td>
                             ))}
@@ -414,7 +415,7 @@ export function ProjectExpenseTab({
                 </table>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm space-y-2">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm space-y-2">
                 <p className="text-red-600 font-medium">* 인당 계산되는 소모품비 및 음료대는 당사가 "을"로 계약시에는 당사 및 외주 인력을 합하여 승하고 당사가 "병"이하로 계약시에는 당사 인력만 승하시기 바랍니다.</p>
                 <p className="text-gray-500">* 일반경비 항목(야근식대, 프로젝트부서비)은 기준-경비 탭에서 설정된 기준액을 투여공수(M/M)와 곱하여 자동 산출됩니다.</p>
             </div>

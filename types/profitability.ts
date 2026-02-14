@@ -20,7 +20,9 @@ export interface ProjectUnitPrice {
   year: number;
   proposedStandard: number | null;
   proposedApplied: number | null;
+  proposedDiscountRate: number | null;
   internalApplied: number | null;
+  internalIncreaseRate: number | null;
 }
 
 export type ProductType = "자사" | "타사";
