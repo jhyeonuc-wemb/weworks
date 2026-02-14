@@ -1,0 +1,19 @@
+
+  // 렌더링을 위한 정렬된 항목 (Category 기준으로 정렬하여 rowSpan 오동작 방지)
+  const sortedCommonDifficultyItems = useMemo(() => {
+    return [...commonDifficultyItems].sort((a, b) => {
+      // 카테고리 정렬
+      const catDiff = a.category.localeCompare(b.category);
+      if (catDiff !== 0) return catDiff;
+      // 카테고리 내에서는 ID 정렬 (안정성을 위해)
+      return a.id - b.id;
+    });
+  }, [commonDifficultyItems]);
+
+  const sortedFieldDifficultyItems = useMemo(() => {
+    return [...fieldDifficultyItems].sort((a, b) => {
+      const catDiff = a.category.localeCompare(b.category);
+      if (catDiff !== 0) return catDiff;
+      return a.id - b.id;
+    });
+  }, [fieldDifficultyItems]);
