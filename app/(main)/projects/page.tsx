@@ -71,10 +71,8 @@ const phaseLabels: Record<string, string> = {
 
 const sortOptions = [
   { value: "project_code_desc", label: "프로젝트 코드순 (최신)" },
-  { value: "profit_high", label: "예상손익 높은 순" },
-  { value: "profit_low", label: "예상손익 낮은 순" },
-  { value: "rate_high", label: "예상수익률 높은 순" },
-  { value: "rate_low", label: "예상수익률 낮은 순" },
+  { value: "amount_high", label: "계약금액 높은 순" },
+  { value: "amount_low", label: "계약금액 낮은 순" },
 ];
 
 export default function ProjectsPage() {
@@ -120,14 +118,10 @@ export default function ProjectsPage() {
 
     return [...filtered].sort((a, b) => {
       switch (sortOption) {
-        case "profit_high":
-          return (b.net_profit || 0) - (a.net_profit || 0);
-        case "profit_low":
-          return (a.net_profit || 0) - (b.net_profit || 0);
-        case "rate_high":
-          return (b.profit_rate || 0) - (a.profit_rate || 0);
-        case "rate_low":
-          return (a.profit_rate || 0) - (b.profit_rate || 0);
+        case "amount_high":
+          return (b.expected_amount || 0) - (a.expected_amount || 0);
+        case "amount_low":
+          return (a.expected_amount || 0) - (b.expected_amount || 0);
         case "project_code_desc":
         default:
           if (!a.project_code) return 1;
@@ -193,13 +187,24 @@ export default function ProjectsPage() {
     }
   };
 
-  const getPhaseVariant = (phase: string | null): "success" | "warning" | "info" | "default" => {
-    if (!phase) return "default";
-    if (["completed", "warranty", "settlement", "in_progress", "profitability"].includes(phase)) return "success";
-    if (["vrb", "confirmation", "team_allocation"].includes(phase)) return "warning";
-    if (["md_estimation", "sales"].includes(phase)) return "info";
-    return "default";
+  // 단계별 고유 색상 스타일 (BG + TEXT)
+  const getPhaseStyle = (phase: string | null): string => {
+    switch (phase) {
+      case 'lead': return 'bg-slate-100 text-slate-600';           // 리드 - 중립
+      case 'opportunity': return 'bg-sky-50 text-sky-700';                // 영업기회 - 스카이블루
+      case 'md_estimation': return 'bg-blue-100 text-blue-700';             // M/D 산정 - 파랑
+      case 'vrb': return 'bg-amber-100 text-amber-700';           // VRB 심의 - 주황
+      case 'contract': return 'bg-teal-100 text-teal-700';             // 계약 - 청록
+      case 'profitability': return 'bg-violet-100 text-violet-700';         // 수지분석 - 보라
+      case 'in_progress': return 'bg-green-100 text-green-700';           // 프로젝트 진행 - 초록
+      case 'settlement': return 'bg-indigo-100 text-indigo-700';         // 수지정산 - 인디고
+      case 'warranty': return 'bg-orange-100 text-orange-700';         // 하자보증 - 오렌지
+      case 'paid_maintenance': return 'bg-rose-100 text-rose-700';             // 유상유지보수 - 로즈
+      case 'completed': return 'bg-zinc-100 text-zinc-500';             // 프로젝트 종료 - 회색
+      default: return 'bg-slate-100 text-slate-500';
+    }
   };
+
 
   return (
     <div className="space-y-8">
@@ -246,13 +251,13 @@ export default function ProjectsPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">코드</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">분야</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계약금액(원)</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계약기간</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">단계/상태</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">단계 / 상태</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">PM</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">영업대표</TableHead>
               </TableRow>
@@ -285,7 +290,7 @@ export default function ProjectsPage() {
                 paginatedProjects.map((project) => {
                   const phase = project.current_phase || "md_estimation";
                   const phaseLabel = phaseLabels[phase] || phase || "-";
-                  const phaseVariant = getPhaseVariant(phase);
+                  const phaseStyle = getPhaseStyle(phase);
 
                   return (
                     <TableRow
@@ -327,9 +332,9 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell align="center" className="px-8 py-3">
                         <div className="flex items-center justify-center gap-2">
-                          <Badge variant={phaseVariant} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
+                          <span className={`inline-flex items-center h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm ${phaseStyle}`}>
                             {phaseLabel}
-                          </Badge>
+                          </span>
                           <StatusBadge status={project.status} />
                         </div>
                       </TableCell>

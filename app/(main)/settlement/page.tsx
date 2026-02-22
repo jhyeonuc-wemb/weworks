@@ -240,7 +240,7 @@ export default function SettlementListPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">코드</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계획 매출</TableHead>

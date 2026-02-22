@@ -180,7 +180,7 @@ export default function ContractListPage() {
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">프로젝트 코드</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-left whitespace-nowrap">프로젝트명</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계약 금액</TableHead>

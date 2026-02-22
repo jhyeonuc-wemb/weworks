@@ -34,20 +34,28 @@ export async function GET(request: NextRequest) {
         prof.profit_rate,
         -- 동적으로 current_phase 계산
         CASE
-          WHEN p.status = 'completed' THEN 'completed'
+          -- DB에 명시적으로 설정된 최종 단계 우선 처리
+          WHEN p.status = 'completed' OR p.current_phase = 'completed' THEN 'completed'
+          WHEN p.status = 'in_progress' OR p.current_phase = 'in_progress' THEN 'in_progress'
+          -- 수지정산 단계
           WHEN settle.status IS NOT NULL THEN 'settlement'
           WHEN p.status = 'profitability_completed' THEN 'settlement'
+          -- 수지분석 단계
           WHEN prof.status IS NOT NULL THEN 'profitability'
           WHEN p.status IN ('vrb_completed', 'vrb_approved') THEN 'profitability'
+          -- VRB 단계
           WHEN vrb.status IS NOT NULL THEN 'vrb'
           WHEN p.status = 'md_estimation_completed' THEN 'vrb'
-          WHEN md.status = 'COMPLETED' THEN 'vrb' -- MD 완료 시 VRB 단계로
+          WHEN md.status = 'COMPLETED' THEN 'vrb'
+          -- MD 산정 단계
           WHEN md.status = 'IN_PROGRESS' THEN 'md_estimation'
           ELSE COALESCE(p.current_phase, 'md_estimation')
         END as computed_phase,
         -- 동적으로 current_status 계산 (현재 단계의 실제 데이터 상태 반영)
         CASE
-          WHEN p.status = 'completed' THEN 'COMPLETED'
+          -- DB에 명시적으로 설정된 최종 상태 우선 처리
+          WHEN p.status = 'completed' OR p.current_phase = 'completed' THEN 'COMPLETED'
+          WHEN p.status = 'in_progress' OR p.current_phase = 'in_progress' THEN 'PROGRESSING'
           WHEN p.status IN ('vrb_rejected', 'profitability_rejected') THEN 'REJECTED'
           -- 수지정산 단계
           WHEN settle.status IS NOT NULL OR p.status = 'profitability_completed' OR p.current_phase = 'settlement' 
@@ -61,8 +69,6 @@ export async function GET(request: NextRequest) {
           -- MD 산정 단계
           WHEN md.status IS NOT NULL OR p.status = 'md_estimation' OR p.current_phase = 'md_estimation' 
             THEN COALESCE(md.status, 'STANDBY')
-          -- 프로젝트 진행 단계
-          WHEN p.status = 'in_progress' OR p.current_phase = 'in_progress' THEN 'PROGRESSING'
           -- 영업 단계
           WHEN p.status = 'sales_opportunity' THEN 'STANDBY'
           ELSE 'STANDBY'
