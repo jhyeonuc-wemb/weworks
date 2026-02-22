@@ -10,9 +10,12 @@ import {
   RotateCw,
   Plus,
   Download,
+  Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button, Badge, Dropdown, StatusBadge, useToast } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
+import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import { cn } from "@/lib/utils";
 import {
   calculateTotalRevenue,
@@ -58,10 +61,11 @@ export default function ProfitabilityPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("summary");
-  const [status, setStatus] = useState("STANDBY");
+  const [status, setStatus] = useState<string>("STANDBY");
   const [currency] = useState<Currency>("KRW");
   // 버전 관리 상태
   const [versions, setVersions] = useState<any[]>([]);
@@ -70,6 +74,7 @@ export default function ProfitabilityPage({
   const [projectUnitPrices, setProjectUnitPrices] = useState<ProjectUnitPrice[]>([]);
   const [header, setHeader] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const { showToast, confirm } = useToast();
 
@@ -115,6 +120,13 @@ export default function ProfitabilityPage({
             currency: (data.project.currency || "KRW") as any,
             managerName: data.project.manager_name || "미지정",
           });
+        }
+
+        // 내 정보 로드
+        const meRes = await fetch("/api/auth/me");
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          setCurrentUser(meData.user);
         }
       } catch (error) {
         console.error("Error fetching project:", error);
@@ -267,7 +279,7 @@ export default function ProfitabilityPage({
       });
 
       if (res.ok) {
-        showAlert("수지차 데이터가 저장되었습니다.", "success");
+        showAlert("수지분석서가 저장되었습니다.", "success");
         refreshStatus();
       } else {
         showAlert("수지차 저장에 실패했습니다.", "error");
@@ -338,7 +350,11 @@ export default function ProfitabilityPage({
       const res = await fetch("/api/profitability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_id: id, version_comment: comment }),
+        body: JSON.stringify({
+          project_id: id,
+          version_comment: comment,
+          created_by: currentUser?.id || 1
+        }),
       });
 
       if (res.ok) {
@@ -354,6 +370,40 @@ export default function ProfitabilityPage({
     } finally {
       setIsCreatingVersion(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedVersionId) return;
+
+    confirm({
+      title: "수지분석서 삭제",
+      message: "정말로 이 수지분석서 버전을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/profitability/${selectedVersionId}`, {
+            method: 'DELETE',
+          });
+
+          if (response.ok) {
+            showAlert("수지분석서가 삭제되었습니다.", "success");
+            // 다른 버전을 선택하거나 목록으로 이동
+            const remainingVersions = versions.filter(v => v.id !== selectedVersionId);
+            if (remainingVersions.length > 0) {
+              setSelectedVersionId(remainingVersions[0].id);
+              refreshStatus();
+            } else {
+              router.push(`/projects/${id}`);
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            showAlert(`삭제 실패: ${errorData.message || '알 수 없는 오류'}`, "error");
+          }
+        } catch (e) {
+          console.error(e);
+          showAlert("삭제 중 오류가 발생했습니다.", "error");
+        }
+      },
+    });
   };
 
   const handleExportToExcel = async () => {
@@ -404,6 +454,7 @@ export default function ProfitabilityPage({
               <StatusBadge
                 status={status}
               />
+              <ProjectPhaseNav projectId={id} />
             </div>
             <p className="text-sm text-gray-600">
               {project.projectCode} | {project.customerName}
@@ -411,8 +462,16 @@ export default function ProfitabilityPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-
-          {/* Version Selection */}
+          {status === 'IN_PROGRESS' && selectedVersionId && (
+            <Button
+              variant="secondary"
+              onClick={handleDelete}
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50 border-red-200"
+            >
+              <Trash2 className="h-4 w-4" />
+              삭제
+            </Button>
+          )}
 
           {/* Version Selection */}
           <div className="flex items-center gap-1">
@@ -431,10 +490,10 @@ export default function ProfitabilityPage({
               variant="primary"
               size="md"
               onClick={handleCreateNewVersion}
-              disabled={isCreatingVersion || (versions.length > 0 && status !== 'COMPLETED' && status !== 'approved')}
+              disabled={isCreatingVersion || (versions.length > 0 && status !== 'COMPLETED' && status !== 'APPROVED')}
               className="flex items-center gap-1 ml-1 px-3"
               title={
-                versions.length > 0 && status !== 'COMPLETED' && status !== 'approved'
+                versions.length > 0 && status !== 'COMPLETED' && status !== 'APPROVED'
                   ? "현재 버전이 완료되어야 새 버전을 생성할 수 있습니다"
                   : "새 버전 생성"
               }
@@ -444,36 +503,39 @@ export default function ProfitabilityPage({
             </Button>
           </div>
 
-          <Button
-            variant="secondary"
-            onClick={handleExportToExcel}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
-          >
-            <Download className="h-4 w-4" />
-            엑셀
-          </Button>
+          {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'APPROVED') && (
+            <Button
+              variant="secondary"
+              onClick={handleExportToExcel}
+              disabled={isExporting}
+              className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
+            >
+              <Download className="h-4 w-4" />
+              엑셀
+            </Button>
+          )}
 
-          <Button
-            variant="primary"
-            onClick={async (e) => {
-              // 1. 현재 탭 데이터 저장
-              if (activeTab === 'manpower') handleSaveManpower();
-              else if (activeTab === 'standard-expense') handleSaveStandardExpenses();
-              else if (activeTab === 'project-expense') handleSaveProjectExpenses();
-              else if (activeTab === 'product') handleSaveProductPlan();
-              else if (activeTab === 'diff') await handleSaveProfitabilityDiff();
-              else if (activeTab === 'order-proposal') handleSaveOrderProposal();
+          {status === 'IN_PROGRESS' && (
+            <Button
+              variant="primary"
+              onClick={async (e) => {
+                // 1. 현재 탭 데이터 저장
+                if (activeTab === 'manpower-plan') handleSaveManpower();
+                else if (activeTab === 'standard-expense') handleSaveStandardExpenses();
+                else if (activeTab === 'project-expense') handleSaveProjectExpenses();
+                else if (activeTab === 'product-plan') handleSaveProductPlan();
+                else if (activeTab === 'profitability-diff') await handleSaveProfitabilityDiff();
+                else if (activeTab === 'order-proposal') handleSaveOrderProposal();
 
-              // 2. 상태를 'COMPLETED'로 변경
-              await handleStatusChange('COMPLETED');
-            }}
-            disabled={status === 'COMPLETED' || status === 'approved'}
-            className="flex items-center gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            작성완료
-          </Button>
+                // 2. 상태를 'COMPLETED'로 변경
+                await handleStatusChange('COMPLETED');
+              }}
+              className="flex items-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              작성완료
+            </Button>
+          )}
         </div>
       </div>
 
@@ -522,7 +584,7 @@ export default function ProfitabilityPage({
             productItems={productPlanItems}
             expenseItems={projectExpenseItems}
             currency={currency}
-            isReadOnly={status === "COMPLETED" || status === "approved" || status === "review"}
+            isReadOnly={status === "COMPLETED" || status === "APPROVED" || status === "review"}
             onSave={refreshStatus}
             profitabilityId={selectedVersionId}
           />
@@ -535,7 +597,7 @@ export default function ProfitabilityPage({
             productItems={productPlanItems}
             expenseItems={projectExpenseItems}
             refreshAllData={refreshAllData}
-            isReadOnly={status === "COMPLETED" || status === "approved" || status === "review"}
+            isReadOnly={status === "COMPLETED" || status === "APPROVED" || status === "review"}
             onSave={refreshStatus}
             profitabilityId={selectedVersionId}
           />
@@ -550,7 +612,7 @@ export default function ProfitabilityPage({
           <StandardExpenseTab
             projectId={project.id}
             onSave={handleSaveStandardExpenses}
-            isReadOnly={status === "COMPLETED"}
+            isReadOnly={status === "COMPLETED" || status === "APPROVED"}
           />
         )}
         {activeTab === "product-plan" && (

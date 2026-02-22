@@ -124,7 +124,7 @@ export function useProductPlan(projectId?: number, profitabilityId?: number) {
         prev.map((item) => {
           if (item.id !== id) return item;
 
-          let updated: ProductPlanItem = {
+          const updated: ProductPlanItem = {
             ...item,
             [field]: value,
           } as ProductPlanItem;

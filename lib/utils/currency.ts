@@ -25,7 +25,7 @@ export function formatCurrency(
       minimumFractionDigits: currencyInfo.decimalPlaces,
       maximumFractionDigits: currencyInfo.decimalPlaces,
     }
-  ).format(amount);
+  ).format(amount + 0);
 
   if (showSymbol) {
     if (currency === "KRW") {
@@ -45,7 +45,7 @@ export function formatNumber(
   return new Intl.NumberFormat("ko-KR", {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,
-  }).format(value);
+  }).format(value + 0);
 }
 
 // 통화 문자열을 숫자로 변환

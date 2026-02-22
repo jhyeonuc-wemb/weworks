@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { useManpowerPlan } from "@/hooks/useManpowerPlan";
 import type { Project, ProjectUnitPrice } from "@/types/profitability";
 import { formatCurrency, Currency } from "@/lib/utils/currency";
-import { DatePicker, MonthPicker, Button, Input, Select, Badge } from "@/components/ui";
+import { DatePicker, MonthPicker, Button, Input, Select, Badge, useToast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -153,14 +153,16 @@ export function ManpowerPlanTab({
     saveManpowerPlan,
   } = useManpowerPlan(projectId, projectUnitPrices, project, profitabilityId);
 
+  const { showToast } = useToast();
+
   const handleSave = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     try {
       await saveManpowerPlan();
-      alert("인력 계획이 저장되었습니다.");
+      showToast("인력 계획이 저장되었습니다.", "success");
       if (onSave) onSave();
     } catch (error) {
-      alert("인력 계획 저장에 실패했습니다.");
+      showToast("인력 계획 저장에 실패했습니다.", "error");
     }
   };
 
@@ -669,9 +671,13 @@ export function ManpowerPlanTab({
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalInternal = items.reduce((sum, item) => {
-                      if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
+                      const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
                       const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                      if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                        return sum + item.internalAmount;
+                      } else {
+                        return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                      }
                     }, 0);
                     const avgInternal = totalMM > 0 ? Math.round(totalInternal / totalMM) : 0;
                     return avgInternal > 0 ? avgInternal.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
@@ -679,15 +685,19 @@ export function ManpowerPlanTab({
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
                   {items.reduce((sum, item) => {
-                    if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                    const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
+                    const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
+                    const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                    if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                      return sum + item.internalAmount;
+                    } else {
+                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                    }
                   }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
               </tr>
 
               {/* 합계 행 (Grand Total) */}
-              <tr className="bg-orange-100 h-[35px]">
+              <tr className="bg-orange-100 h-[35px] font-bold">
                 <td colSpan={8} className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
                   합 계
                 </td>
@@ -741,9 +751,13 @@ export function ManpowerPlanTab({
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalInternal = items.reduce((sum, item) => {
-                      if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
+                      const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
                       const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                      if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                        return sum + item.internalAmount;
+                      } else {
+                        return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                      }
                     }, 0);
                     const avgInternalPrice = totalMM > 0 ? Math.round(totalInternal / totalMM) : 0;
                     return avgInternalPrice > 0 ? avgInternalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
@@ -751,9 +765,13 @@ export function ManpowerPlanTab({
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
                   {items.reduce((sum, item) => {
-                    if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                    const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
+                    const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
+                    const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                    if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                      return sum + item.internalAmount;
+                    } else {
+                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                    }
                   }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
               </tr>
@@ -855,21 +873,28 @@ export function ManpowerPlanTab({
               <tbody className="bg-white">
                 {/* Analysis Content Rows */}
                 {(() => {
+                  // Define fixed structure for Analysis Table rows
+                  const FIXED_ROLES: Record<string, string[]> = {
+                    "위엠비_컨설팅": ["상무", "이사", "수석(L)", "수석(S)", "책임(M)", "책임(A)", "사원"],
+                    "위엠비_개발": ["상무", "이사", "수석(L)", "수석(S)", "책임(M)", "책임(A)", "사원"],
+                    "외주_컨설팅": ["컨_특", "컨_고", "컨_중", "컨_초"],
+                    "외주_개발": ["개_특", "개_고", "개_중", "개_초"]
+                  };
+
                   const uniqueRoles: { affiliation: string; rank: string; isExternal: boolean }[] = [];
 
-                  distinctAffiliationGroups.forEach(aff => {
+                  // Use distinctAffiliationGroups to determine WHICH sections to render, 
+                  // but use FIXED_ROLES to determine the rows INSIDE the section.
+                  let targetAffiliations = distinctAffiliationGroups.filter(aff => FIXED_ROLES[aff]);
+
+                  // Sort affiliations: WMB first, then Outsourcing
+                  const affOrder = ["위엠비_컨설팅", "위엠비_개발", "외주_컨설팅", "외주_개발"];
+                  targetAffiliations.sort((a, b) => affOrder.indexOf(a) - affOrder.indexOf(b));
+
+                  targetAffiliations.forEach(aff => {
+                    const definedRanks = FIXED_ROLES[aff];
                     const isExternal = aff.startsWith("외주");
-                    let ranks: string[] = [];
-
-                    if (aff === "외주_컨설팅") {
-                      ranks = ["컨_특", "컨_고", "컨_중", "컨_초"];
-                    } else if (aff === "외주_개발") {
-                      ranks = ["개_특", "개_고", "개_중", "개_초"];
-                    } else {
-                      ranks = ["상무", "이사", "수석(L)", "수석(S)", "책임(M)", "책임(A)", "사원"];
-                    }
-
-                    ranks.forEach(rank => {
+                    definedRanks.forEach(rank => {
                       uniqueRoles.push({
                         affiliation: aff,
                         rank: rank,
@@ -983,10 +1008,11 @@ export function ManpowerPlanTab({
                           rowProposedAmount += Math.round(itemTotalMM * item.proposedUnitPrice);
                         }
 
-                        if (item.internalAmount !== null && item.internalAmount !== undefined) {
+                        const isOutsourcing = aff?.startsWith("외주");
+                        if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
                           rowInternalAmount += item.internalAmount;
-                        } else if (item.internalUnitPrice) {
-                          rowInternalAmount += Math.round(itemTotalMM * item.internalUnitPrice);
+                        } else {
+                          rowInternalAmount += (item.internalUnitPrice ? Math.round(itemTotalMM * item.internalUnitPrice) : 0);
                         }
                       });
                       sectionProposedAmount += rowProposedAmount;
@@ -1161,7 +1187,8 @@ export function ManpowerPlanTab({
                   }, 0);
 
                   const grandTotalInternal = items.reduce((sum, item) => {
-                    if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
+                    const isOutsourcing = item.affiliationGroup?.startsWith("외주");
+                    if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
                     const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
                     return sum + (item.internalUnitPrice ? Math.round(totalMM * item.internalUnitPrice) : 0);
                   }, 0);
@@ -1215,7 +1242,7 @@ export function ManpowerPlanTab({
                           const hasError = Math.abs(diff) > 0.01;
                           return (
                             <td key={`check-m-${m.key}`} className={`border border-gray-300 px-[10px] text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
-                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-"}
+                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "0"}
                             </td>
                           );
                         })}
@@ -1223,7 +1250,7 @@ export function ManpowerPlanTab({
                           {(() => {
                             const mainTotalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                             const diff = mainTotalMM - analysisGrandTotalMM;
-                            return Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-";
+                            return Math.abs(diff) > 0.01 ? diff.toFixed(2) : "0";
                           })()}
                         </td>
                         {sortedYears.map(year => {
@@ -1236,7 +1263,7 @@ export function ManpowerPlanTab({
                           const hasError = Math.abs(diff) > 0.01;
                           return (
                             <td key={`check-year-${year}`} className={`border border-gray-300 px-[10px] text-center text-sm ${hasError ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
-                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "-"}
+                              {Math.abs(diff) > 0.01 ? diff.toFixed(2) : "0"}
                             </td>
                           );
                         })}
@@ -1249,25 +1276,21 @@ export function ManpowerPlanTab({
                               return sum + (item.proposedUnitPrice ? Math.round(itemMM * item.proposedUnitPrice) : 0);
                             }, 0);
                             const diff = mainTotalProp - analysisGrandTotalProposed;
-                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "-";
+                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "0";
                           })()}
                         </td>
                         <td className="border border-gray-300 px-[10px] bg-blue-50"></td>
-                        <td className={`border border-gray-300 px-[10px] text-right text-sm ${Math.abs(items.reduce((sum, item) => { if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount; const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0); return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0); }, 0) - analysisGrandTotalInternal) > 1 ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
+                        <td className={`border border-gray-300 px-[10px] text-right text-sm ${Math.abs(grandTotalInternal - analysisGrandTotalInternal) > 1 ? 'text-red-600 font-bold' : 'text-blue-900'}`}>
                           {(() => {
-                            const mainTotalInt = items.reduce((sum, item) => {
-                              if (item.internalAmount !== null && item.internalAmount !== undefined) return sum + item.internalAmount;
-                              const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                              return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
-                            }, 0);
-                            const diff = mainTotalInt - analysisGrandTotalInternal;
-                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "-";
+                            const diff = grandTotalInternal - analysisGrandTotalInternal;
+                            return Math.abs(diff) > 1 ? diff.toLocaleString() : "0";
                           })()}
                         </td>
                       </tr>
                     </>
                   );
-                })()}
+                })()
+                }
               </tbody>
             </table>
           </div>

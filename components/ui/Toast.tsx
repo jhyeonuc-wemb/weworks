@@ -82,17 +82,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <ToastContext.Provider value={{ showToast, confirm }}>
             {children}
 
-            {/* 일반 토스트 (우측 하단) */}
-            <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+            {/* 일반 토스트 (상단 중앙) */}
+            <div className="fixed top-6 inset-x-0 z-[100] flex flex-col items-center gap-3 pointer-events-none">
                 {toasts.filter(t => t.type !== "confirm").map((toast) => (
                     <div
                         key={toast.id}
                         className={cn(
-                            "pointer-events-auto flex min-w-[320px] max-w-md items-start items-center gap-4 rounded-2xl border bg-white p-4 shadow-2xl animate-in slide-in-from-right-full duration-300",
-                            toast.type === "success" && "border-green-100 bg-green-50/50",
-                            toast.type === "error" && "border-red-100 bg-red-50/50",
-                            toast.type === "warning" && "border-amber-100 bg-amber-50/50",
-                            toast.type === "info" && "border-blue-100 bg-blue-50/50"
+                            "pointer-events-auto flex min-w-[320px] max-w-md items-center gap-4 rounded-2xl border bg-white p-4 shadow-2xl animate-in slide-in-from-top-full duration-300",
+                            toast.type === "success" && "border-green-100 bg-green-50/95", // 약간의 투명도 조절
+                            toast.type === "error" && "border-red-100 bg-red-50/95",
+                            toast.type === "warning" && "border-amber-100 bg-amber-50/95",
+                            toast.type === "info" && "border-blue-100 bg-blue-50/95"
                         )}
                     >
                         <div className={cn(

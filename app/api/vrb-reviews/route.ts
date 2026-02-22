@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
         v.best_operating_profit2,
         v.best_operating_profit2_percent,
         v.md_estimation_id,
+        v.review_result,
         v.created_at,
         p.name as project_name,
         p.project_code,
@@ -197,7 +198,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { project_id, version = 1, created_by = 1 } = body;
+    const { project_id, version, created_by = 1 } = body;
 
     // 프로젝트 ID 필수 검증
     if (!project_id) {
@@ -226,7 +227,9 @@ export async function POST(request: NextRequest) {
       [project_id]
     );
     const maxVersion = versionCheck.rows[0]?.max_version || 0;
-    const newVersion = version || maxVersion + 1;
+
+    // 버전이 명시되지 않았으면 자동 증가, 명시되었으면 해당 버전 사용
+    const newVersion = version ?? (maxVersion + 1);
 
     // 최신 M/D 산정 가져오기
     const mdEstimationResult = await query(

@@ -6,6 +6,7 @@ import {
   formatCurrency,
   type Currency
 } from "@/lib/utils/currency";
+import { useToast } from "@/components/ui";
 import { calculateProfitabilitySummary } from "@/lib/utils/calculations";
 import type {
   ManpowerPlanItem,
@@ -112,6 +113,8 @@ export function ProfitabilityDiffTab({
   const companyProfitTotal = summary.netProfit;
 
   // --- 저장 핸들러 ---
+  const { showToast, confirm: showConfirm } = useToast();
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -125,11 +128,11 @@ export function ProfitabilityDiffTab({
         netProfit: summary.netProfit,
         profitRate: summary.profitRate,
       }, profitabilityId);
-      alert("데이터가 성공적으로 저장되었습니다.");
+      showToast("데이터가 성공적으로 저장되었습니다.", "success");
       if (onSave) onSave();
     } catch (error) {
       console.error("Error saving profitability diff data:", error);
-      alert("저장에 실패했습니다.");
+      showToast("저장에 실패했습니다.", "error");
     } finally {
       setSaving(false);
     }
@@ -157,9 +160,13 @@ export function ProfitabilityDiffTab({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('모든 탭(매출, 원가, 경비)의 최신 데이터를 불러와 수지분석표를 갱신하시겠습니까?')) {
-                      refreshAllData();
-                    }
+                    showConfirm({
+                      title: "데이터 갱신",
+                      message: "모든 탭(매출, 원가, 경비)의 최신 데이터를 불러와 수지분석표를 갱신하시겠습니까?",
+                      onConfirm: () => {
+                        refreshAllData();
+                      }
+                    });
                   }}
                   className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 h-10 text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
                   title="데이터 갱신"

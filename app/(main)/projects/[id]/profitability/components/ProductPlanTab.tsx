@@ -4,7 +4,7 @@ import { Save, Plus, Trash2 } from "lucide-react";
 import { useProductPlan } from "@/hooks/useProductPlan";
 import { formatCurrency, Currency } from "@/lib/utils/currency";
 import { ProductType } from "@/types/profitability";
-import { DatePicker, Button, Input, Select, Badge } from "@/components/ui";
+import { DatePicker, Button, Input, Select, Badge, useToast } from "@/components/ui";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ interface ProductPlanTabProps {
 }
 
 export function ProductPlanTab({ projectId, currency, status, onSave, profitabilityId }: ProductPlanTabProps) {
-    const isReadOnly = status === "completed" || status === "approved" || status === "review";
+    const isReadOnly = status === "completed" || status === "COMPLETED" || status === "approved" || status === "APPROVED" || status === "review";
     const {
         items,
         masterItems,
@@ -315,14 +315,16 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
         );
     };
 
+    const { showToast } = useToast();
+
     const handleSave = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         try {
             await saveProductPlan();
-            alert("제품 계획이 저장되었습니다.");
+            showToast("제품 계획이 저장되었습니다.", "success");
             if (onSave) onSave();
         } catch (error) {
-            alert("제품 계획 저장에 실패했습니다.");
+            showToast("제품 계획 저장에 실패했습니다.", "error");
         }
     };
 

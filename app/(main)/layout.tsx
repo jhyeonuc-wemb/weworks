@@ -144,7 +144,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
         {/* Main Content Area */}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto relative custom-scrollbar-main">
-          <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60 sticky top-0">
+          <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setMobileMenuOpen(true)}

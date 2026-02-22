@@ -20,6 +20,7 @@ interface MdEstimation {
   project_code: string | null;
   project_name: string;
   customer_name: string | null;
+  project_difficulty?: number;
   version: number;
   total_mm: number;
   status: string;
@@ -30,6 +31,8 @@ const sortOptions = [
   { value: "project_code_desc", label: "프로젝트 코드순 (최신)" },
   { value: "mm_high", label: "총 M/M 많은 순" },
   { value: "mm_low", label: "총 M/M 적은 순" },
+  { value: "difficulty_high", label: "가중치 높은 순" },
+  { value: "difficulty_low", label: "가중치 낮은 순" },
 ];
 
 export default function MdEstimationListPage() {
@@ -91,6 +94,10 @@ export default function MdEstimationListPage() {
           return (b.total_mm || 0) - (a.total_mm || 0);
         case "mm_low":
           return (a.total_mm || 0) - (b.total_mm || 0);
+        case "difficulty_high":
+          return (b.project_difficulty || 0) - (a.project_difficulty || 0);
+        case "difficulty_low":
+          return (a.project_difficulty || 0) - (b.project_difficulty || 0);
         case "project_code_desc":
         default:
           if (!a.project_code) return 1;
@@ -216,18 +223,17 @@ export default function MdEstimationListPage() {
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">가중치</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">총 투입(M/M)</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">작성일</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-24 text-center border-none">
+                  <TableCell colSpan={7} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                       <p className="text-sm text-muted-foreground font-medium">데이터를 불러오고 있습니다...</p>
@@ -236,7 +242,7 @@ export default function MdEstimationListPage() {
                 </TableRow>
               ) : sortedEstimations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-24 text-center border-none">
+                  <TableCell colSpan={7} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4 opacity-40">
                       <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                         <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
@@ -256,54 +262,34 @@ export default function MdEstimationListPage() {
                     onClick={() => router.push(`/projects/${estimation.project_id}/md-estimation`)}
                   >
                     <TableCell align="center" className="px-8 py-3">
-                      <span className="text-[11px] font-black text-foreground/40 font-mono tracking-wider">{estimation.project_code || "-"}</span>
+                      <span className="text-sm text-foreground/80 font-mono">
+                        {estimation.project_code || "-"}
+                      </span>
                     </TableCell>
                     <TableCell align="left" className="px-8 py-3">
-                      <div className="space-y-0.5">
-                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">{estimation.project_name}</div>
-                        <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">EST-ID: {estimation.id}</div>
+                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                        {estimation.project_name}
                       </div>
                     </TableCell>
                     <TableCell align="center" className="px-8 py-3">
-                      <span className="text-sm font-bold text-muted-foreground/80">{estimation.customer_name || "-"}</span>
-                    </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
-                      <span className="text-sm font-black text-foreground">
-                        {estimation.total_mm ? `${Number(estimation.total_mm).toFixed(1)} M/M` : "-"}
+                      <span className="text-sm text-foreground/80">
+                        {estimation.customer_name || "-"}
                       </span>
                     </TableCell>
                     <TableCell align="center" className="px-8 py-3">
-                      <Badge variant={getStatusVariant(estimation.status)} className="rounded-xl px-3 py-1 font-bold text-[10px] shadow-sm">
-                        {getStatusLabel(estimation.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
-                      <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-tight">
-                        {new Date(estimation.created_at).toLocaleDateString()}
+                      <span className="text-sm text-foreground/80 font-mono">
+                        {estimation.project_difficulty ? Number(estimation.project_difficulty).toFixed(3) : "-"}
                       </span>
                     </TableCell>
                     <TableCell align="right" className="px-8 py-3">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/projects/${estimation.project_id}/md-estimation`);
-                          }}
-                          className="px-3 py-1.5 rounded-2xl bg-muted/60 text-[10px] font-black text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all uppercase tracking-widest"
-                        >
-                          상세보기
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(estimation.id);
-                          }}
-                          disabled={deletingId === estimation.id}
-                          className="p-1.5 rounded-2xl bg-muted/60 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      <span className="text-sm text-foreground/80 font-mono">
+                        {estimation.total_mm ? Number(estimation.total_mm).toFixed(2) : "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell align="center" className="px-8 py-3">
+                      <Badge variant={getStatusVariant(estimation.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
+                        {getStatusLabel(estimation.status)}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))

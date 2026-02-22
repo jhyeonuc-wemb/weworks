@@ -147,6 +147,23 @@ export function TableInput({ align = 'left', className, ...props }: TableInputPr
 *   **패딩:** 우측 패딩 **`px-[10px]`**를 적용하여 수치가 우측 테두리에 달라붙지 않도록 여백을 확보합니다.
 *   **폰트:** 숫자 데이터는 `font-mono` 사용을 적극 권장하지 않으나(일반 텍스트와 이질감), 정렬이 중요한 경우 고려 가능. 현재는 `Pretendard` 단일 사용을 원칙으로 함.
 
+### 5.4 행 제어 버튼 (Action Buttons)
+행 추가나 삭제를 위한 버튼은 다음과 같은 표준을 따릅니다.
+
+1.  **추가 버튼 (Add Button):**
+    *   테이블 하단에 `tr`을 하나 더하여 `colspan`으로 전체를 채운 형태로 배치합니다.
+    *   배경색: `bg-blue-50`, 텍스트색: `text-blue-700`, Hover 시: `bg-blue-100`.
+    *   읽기 전용 상태일 때는 버튼 전체를 **숨김(Hidden)** 처리합니다. (단순 `disabled` 지양)
+
+2.  **삭제 버튼 (Delete Button):**
+    *   아이콘 컴포넌트(`Trash2`)를 사용합니다.
+    *   **스타일:** 평소에는 회색 아이콘(`text-gray-400`), 마우스 오버 시에만 빨간색(`text-red-600`)으로 변하게 합니다.
+    *   `transition-colors`를 적용하여 부드럽게 색상이 변하도록 합니다.
+    *   읽기 전용 상태일 때는 아이콘 전체를 **숨김(Hidden)** 처리합니다.
+
+3.  **읽기 전용 (Read-only) 정책:**
+    *   문서의 상태가 '작성완료(WRITING_COMPLETED)', '승인완료(COMPLETED)', '중단(CANCELLED)' 등 수정이 불가능한 상태일 때는 행 추가/삭제와 관련된 모든 UI 요소를 화면에서 제거합니다.
+
 ## 6. 요약 체크리스트
 
 1.  [ ] `<table class="... table-fixed">` 인가?
@@ -157,3 +174,6 @@ export function TableInput({ align = 'left', className, ...props }: TableInputPr
 6.  [ ] 숫자 데이터의 우측 패딩이 `px-[10px]`이며, 텍스트 데이터의 좌측 패딩도 `px-[10px]`로 동일한가?
 7.  [ ] "소계", "합계" 라벨이 `text-center`로 설정되어 있는가?
 8.  [ ] 헤더 배경색은 `bg-blue-50/50`, 일반 셀(구분 포함)은 `bg-white`인가?
+9.  [ ] 도움말 툴팁이 부드러운 직각(`rounded-md`)이며 기본 폰트 크기(`text-sm`)를 따르는가?
+10. [ ] 행 삭제 아이콘이 평소 회색이며 hover 시에만 빨간색으로 변하는가?
+11. [ ] 읽기 전용 상태에서 행 추가/삭제 버튼이 숨겨졌는가?

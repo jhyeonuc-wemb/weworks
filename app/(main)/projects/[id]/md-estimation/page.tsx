@@ -25,6 +25,7 @@ import { formatNumber, Currency, formatCurrency } from "@/lib/utils/currency";
 import { AutoCalculatedField } from "@/components/AutoCalculatedField";
 import { Button, Input, Dropdown, Badge, StatusBadge, useToast } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
+import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import { cn } from "@/lib/utils";
 
 // 난이도 옵션
@@ -118,48 +119,48 @@ const INITIAL_COMMON_DIFFICULTY_ITEMS = [
   { id: 3, category: "요구사항", content: "고객의 IT 이해도 낮음", description: "기술적 소통 난이도 상승", difficulty: 2, weight: null },
   { id: 4, category: "요구사항", content: "고객 의사결정자 부재 또는 다수", description: "승인/결정 지연 가능성", difficulty: 2, weight: null },
   // 화면, 기능
-  { id: 5, category: "화면, 기능", content: "화면 ≥ 20개", description: "CRUD 중심 화면, 팝업포함", difficulty: 3, weight: null },
-  { id: 6, category: "화면, 기능", content: "업무 기능 ≥ 5개 모듈로 나눠짐", description: "업무 도메인 분리가 뚜렷함", difficulty: 1, weight: null },
-  { id: 7, category: "화면, 기능", content: "사용자 정의 기능 많음", description: "워크플로우, 조건부 입력 등", difficulty: 3, weight: null },
+  { id: 5, category: "화면, 기능", content: "화면 ≥ 20개", description: "CRUD 중심 화면, 팝업포함", difficulty: 2, weight: null },
+  { id: 6, category: "화면, 기능", content: "업무 기능 ≥ 5개 모듈로 나눠짐", description: "업무 도메인 분리가 뚜렷함", difficulty: 2, weight: null },
+  { id: 7, category: "화면, 기능", content: "사용자 정의 기능 많음", description: "워크플로우, 조건부 입력 등", difficulty: 2, weight: null },
   { id: 8, category: "화면, 기능", content: "권한, 조직별 접근 제한 포함", description: "Role-based UI 구성 필요", difficulty: 2, weight: null },
   { id: 9, category: "화면, 기능", content: "배치 프로세스 포함", description: "예약 실행, 로그처리 등 필요", difficulty: 2, weight: null },
-  { id: 10, category: "화면, 기능", content: "반응형 지원", description: "반응형 지원 개발 필요", difficulty: 3, weight: null },
-  { id: 11, category: "화면, 기능", content: "UI/접근성", description: "모바일 지원 포함 (앱, 웹앱)", difficulty: 3, weight: null },
+  { id: 10, category: "화면, 기능", content: "반응형 지원", description: "반응형 지원 개발 필요", difficulty: 2, weight: null },
+  { id: 11, category: "화면, 기능", content: "UI/접근성", description: "모바일 지원 포함 (앱, 웹앱)", difficulty: 2, weight: null },
   // 연계 및 외부 시스템
-  { id: 12, category: "연계 및 외부 시스템", content: "외부 시스템 연계 ≥ 5개", description: "API, DB 연동 등", difficulty: 1, weight: null },
+  { id: 12, category: "연계 및 외부 시스템", content: "외부 시스템 연계 ≥ 5개", description: "API, DB 연동 등", difficulty: 2, weight: null },
   { id: 13, category: "연계 및 외부 시스템", content: "실시간 연계 포함", description: "Webhook, Event 등", difficulty: 2, weight: null },
   { id: 14, category: "연계 및 외부 시스템", content: "레거시 시스템 연계", description: "명세 미비, 파악 난이도 ↑", difficulty: 2, weight: null },
-  { id: 15, category: "연계 및 외부 시스템", content: "인증/SSO 연동 포함", description: "AD, OAuth 등", difficulty: 3, weight: null },
+  { id: 15, category: "연계 및 외부 시스템", content: "인증/SSO 연동 포함", description: "AD, OAuth 등", difficulty: 2, weight: null },
   // 데이터 및 보고서
-  { id: 16, category: "데이터 및 보고서", content: "정형 보고서 ≥ 20건", description: "PDF/Excel 출력 등", difficulty: 1, weight: null },
+  { id: 16, category: "데이터 및 보고서", content: "정형 보고서 ≥ 20건", description: "PDF/Excel 출력 등", difficulty: 2, weight: null },
   { id: 17, category: "데이터 및 보고서", content: "대용량 데이터 처리", description: "100만건 이상", difficulty: 2, weight: null },
-  { id: 18, category: "데이터 및 보고서", content: "마이그레이션 포함", description: "데이터 정제/이관", difficulty: 0, weight: null },
+  { id: 18, category: "데이터 및 보고서", content: "마이그레이션 포함", description: "데이터 정제/이관", difficulty: 2, weight: null },
   { id: 19, category: "데이터 및 보고서", content: "정합성 검증 포함", description: "정확도 중요", difficulty: 2, weight: null },
   // 기술 환경
-  { id: 20, category: "기술 환경", content: "클라우드 환경 구축", description: "AWS, Azure 등", difficulty: 3, weight: null },
-  { id: 21, category: "기술 환경", content: "Hybrid 인프라", description: "온프 + 클라우드 병행", difficulty: 0, weight: null },
-  { id: 22, category: "기술 환경", content: "신규 기술 도입", description: "AI, IoT, GIS 등", difficulty: 0, weight: null },
+  { id: 20, category: "기술 환경", content: "클라우드 환경 구축", description: "AWS, Azure 등", difficulty: 2, weight: null },
+  { id: 21, category: "기술 환경", content: "Hybrid 인프라", description: "온프 + 클라우드 병행", difficulty: 2, weight: null },
+  { id: 22, category: "기술 환경", content: "신규 기술 도입", description: "AI, IoT, GIS 등", difficulty: 2, weight: null },
   { id: 23, category: "기술 환경", content: "복잡한 DB (30테이블 이상)", description: "관계 정규화 + 성능 고려", difficulty: 2, weight: null },
   // 보안 및 인증
   { id: 24, category: "보안 및 인증", content: "사용자 권한 분기 3단계 이상", description: "화면별 권한 설정 필수", difficulty: 2, weight: null },
   { id: 25, category: "보안 및 인증", content: "데이터 암호화 필요", description: "전송/저장 모두 포함", difficulty: 2, weight: null },
-  { id: 26, category: "보안 및 인증", content: "공공기관 보안규격 준수", description: "ISMS, CC 등 인증 요건 있음", difficulty: 3, weight: null },
+  { id: 26, category: "보안 및 인증", content: "공공기관 보안규격 준수", description: "ISMS, CC 등 인증 요건 있음", difficulty: 2, weight: null },
   // 운영/인력관리
-  { id: 27, category: "운영/인력관리", content: "납기 ≤ 2개월", description: "기간 촉박", difficulty: 0, weight: null },
-  { id: 28, category: "운영/인력관리", content: "프로젝트 기간 ≥ 12개월", description: "장기 인력 유지/교체 이슈", difficulty: 3, weight: null },
-  { id: 29, category: "운영/인력관리", content: "병행 프로젝트 존재", description: "일정/자원 집중 어려움", difficulty: 3, weight: null },
-  { id: 30, category: "운영/인력관리", content: "개발 서버 운영", description: "운영서버 직접 반영은 어려움", difficulty: 1, weight: null },
-  { id: 31, category: "운영/인력관리", content: "고객 내부 승인 절차 복잡", description: "화면마다 승인 필요", difficulty: 1, weight: null },
+  { id: 27, category: "운영/인력관리", content: "납기 ≤ 2개월", description: "기간 촉박", difficulty: 2, weight: null },
+  { id: 28, category: "운영/인력관리", content: "프로젝트 기간 ≥ 12개월", description: "장기 인력 유지/교체 이슈", difficulty: 2, weight: null },
+  { id: 29, category: "운영/인력관리", content: "병행 프로젝트 존재", description: "일정/자원 집중 어려움", difficulty: 2, weight: null },
+  { id: 30, category: "운영/인력관리", content: "개발 서버 운영", description: "운영서버 직접 반영은 어려움", difficulty: 2, weight: null },
+  { id: 31, category: "운영/인력관리", content: "고객 내부 승인 절차 복잡", description: "화면마다 승인 필요", difficulty: 2, weight: null },
   { id: 32, category: "운영/인력관리", content: "주 단위 납품 일정 요구", description: "세분화된 일정 관리 필요", difficulty: 2, weight: null },
   { id: 33, category: "운영/인력관리", content: "고객사 상주 필수", description: "피로도, 업무 밀도, 팀 운영 난이도 ↑", difficulty: 2, weight: null },
-  { id: 34, category: "운영/인력관리", content: "상주 위치 원거리", description: "출장, 교통, 숙소 등 추가 리스크", difficulty: 3, weight: null },
-  { id: 35, category: "운영/인력관리", content: "외주 인력과의 협업 필수", description: "SI 협력사, 고객 IT팀, 프리랜서 등 협조 필요", difficulty: 3, weight: null },
+  { id: 34, category: "운영/인력관리", content: "상주 위치 원거리", description: "출장, 교통, 숙소 등 추가 리스크", difficulty: 2, weight: null },
+  { id: 35, category: "운영/인력관리", content: "외주 인력과의 협업 필수", description: "SI 협력사, 고객 IT팀, 프리랜서 등 협조 필요", difficulty: 2, weight: null },
   { id: 36, category: "운영/인력관리", content: "인력 교체 가능성 있음 (예: 6개월 계약)", description: "인수인계 등 중간 공백 위험 존재", difficulty: 2, weight: null },
   { id: 37, category: "운영/인력관리", content: "고객 내부 정치적 이슈 있음", description: "팀 변경 등 승인 구조 변경", difficulty: 2, weight: null },
   // 감리
-  { id: 38, category: "감리", content: "감리 대상 프로젝트, 공공산출물", description: "일정금액 이상 또는 공공과제", difficulty: 3, weight: null },
-  { id: 40, category: "감리", content: "감리 전담 인력 부재", description: "기존 개발팀이 대응까지 담당", difficulty: 3, weight: null },
-  { id: 39, category: "감리", content: "단계별 감리 진행 (4단계 이상)", description: "분석/설계/개발/종료 감리", difficulty: 3, weight: null },
+  { id: 38, category: "감리", content: "감리 대상 프로젝트, 공공산출물", description: "일정금액 이상 또는 공공과제", difficulty: 2, weight: null },
+  { id: 39, category: "감리", content: "단계별 감리 진행 (4단계 이상)", description: "분석/설계/개발/종료 감리", difficulty: 2, weight: null },
+  { id: 40, category: "감리", content: "감리 전담 인력 부재", description: "기존 개발팀이 대응까지 담당", difficulty: 2, weight: null },
 ];
 
 export default function MdEstimationPage({
@@ -176,6 +177,8 @@ export default function MdEstimationPage({
   const [currentEstimationId, setCurrentEstimationId] = useState<number | null>(null);
   const [showListModal, setShowListModal] = useState(false);
   const [isNewEstimation, setIsNewEstimation] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const { showToast, confirm } = useToast();
 
@@ -300,7 +303,20 @@ export default function MdEstimationPage({
       }
     };
 
+    const loadCurrentUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data.user);
+        }
+      } catch (error) {
+        console.error("Error loading current user:", error);
+      }
+    };
+
     loadMasterWeights();
+    loadCurrentUser();
   }, []);
 
   // 프로젝트 정보 및 M/D 산정 목록 불러오기
@@ -324,7 +340,7 @@ export default function MdEstimationPage({
         }
 
         // M/D 산정 목록 불러오기 (현재 프로젝트만)
-        const estimationsResponse = await fetch(`/api/md-estimations?projectId=${id}`);
+        const estimationsResponse = await fetch(`/api/md-estimations?projectId=${id}`, { cache: "no-store" });
         if (estimationsResponse.ok) {
           const estimationsData = await estimationsResponse.json();
           console.log('[INIT] API 응답:', {
@@ -410,6 +426,33 @@ export default function MdEstimationPage({
     fetchData();
   }, [id]);
 
+  // 숫자 입력 필드에서 마우스 휠 및 방향키로 값이 조작되는 기능 비활성화
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLInputElement;
+      if (target.tagName === 'INPUT' && target.type === 'number') {
+        target.blur();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLInputElement;
+      if (target.tagName === 'INPUT' && target.type === 'number') {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // 프로젝트 난이도는 calculateDifficulty() 함수로 계산됨
 
 
@@ -473,21 +516,30 @@ export default function MdEstimationPage({
     }
   }, [commonDifficultyItems, selectedDifficultyItems, selectedFieldCategories, selectedFieldDifficultyItems, fieldDifficultyItems]);
 
-  // 렌더링을 위한 정렬된 항목 (Category 기준으로 정렬하여 rowSpan 오동작 방지)
+  // 렌더링을 위한 정렬된 항목 (정의된 카테고리 순서 유지)
   const sortedCommonDifficultyItems = useMemo(() => {
+    const categoryOrder = ["요구사항", "화면, 기능", "연계 및 외부 시스템", "데이터 및 보고서", "기술 환경", "보안 및 인증", "운영/인력관리", "감리"];
     return [...commonDifficultyItems].sort((a, b) => {
-      // 카테고리 정렬
-      const catDiff = a.category.localeCompare(b.category);
-      if (catDiff !== 0) return catDiff;
-      // 카테고리 내에서는 ID 정렬 (안정성을 위해)
+      const aIndex = categoryOrder.indexOf(a.category);
+      const bIndex = categoryOrder.indexOf(b.category);
+
+      // 카테고리 순서대로 정렬
+      if (aIndex !== bIndex) {
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      }
+      // 동일 카테고리 내에서는 ID 순서
       return a.id - b.id;
     });
   }, [commonDifficultyItems]);
 
   const sortedFieldDifficultyItems = useMemo(() => {
+    // 분야별 카테고리는 가나다순보다는 정의된 순서 또는 ID 순서 유지
     return [...fieldDifficultyItems].sort((a, b) => {
-      const catDiff = a.category.localeCompare(b.category);
-      if (catDiff !== 0) return catDiff;
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
       return a.id - b.id;
     });
   }, [fieldDifficultyItems]);
@@ -661,6 +713,13 @@ export default function MdEstimationPage({
       content: "MS Visio",
       weight: 0.1,
       description: "Visio 인식 (지원 예정)",
+    },
+    {
+      id: 4,
+      item: "전환 방식",
+      content: "AutoCAD",
+      weight: 0.1,
+      description: "AutoCAD(DWG) 파일 제공",
     },
   ];
 
@@ -1024,6 +1083,24 @@ export default function MdEstimationPage({
     []
   );
 
+  const handleRemovePidWeightItem = useCallback(
+    (id: number) => {
+      setPidWeightTable((prev) => {
+        // 마지막 레코드가 아닌 경우에만 삭제 가능하도록? 
+        // 요구사항에는 없지만 보통 다 지워지면 안될수도 있음. 
+        // 하지만 여기서는 제약 없이 삭제 구현.
+        const next = prev.filter((item) => item.id !== id);
+        return next;
+      });
+
+      // 만약 현재 선택된 항목을 삭제하는 경우 선택 해제
+      if (selectedPidWeightId === id) {
+        setSelectedPidWeightId(null);
+      }
+    },
+    [selectedPidWeightId]
+  );
+
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
@@ -1032,7 +1109,7 @@ export default function MdEstimationPage({
       // 새 M/D 산정인 경우 먼저 생성 또는 기존 draft 산정 찾기
       if (isNewEstimation || !estimationId) {
         // 먼저 기존 STANDBY 상태의 산정이 있는지 확인
-        const listResponse = await fetch(`/api/md-estimations?projectId=${id}&status=STANDBY`);
+        const listResponse = await fetch(`/api/md-estimations?projectId=${id}&status=STANDBY`, { cache: 'no-store' });
         let existingDraft = null;
         if (listResponse.ok) {
           const listData = await listResponse.json();
@@ -1064,6 +1141,7 @@ export default function MdEstimationPage({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               project_id: projectIdForCreate,
+              created_by: currentUser?.id || 1,
             }),
           });
 
@@ -1213,7 +1291,7 @@ export default function MdEstimationPage({
       }
 
       // 목록 새로고침 (현재 프로젝트만)
-      const listResponse = await fetch(`/api/md-estimations?projectId=${id}`);
+      const listResponse = await fetch(`/api/md-estimations?projectId=${id}`, { cache: 'no-store' });
       if (listResponse.ok) {
         const listData = await listResponse.json();
         // 프로젝트 ID로 한 번 더 필터링 (안전장치)
@@ -1232,7 +1310,29 @@ export default function MdEstimationPage({
       }
 
       // 저장 성공 메시지
-      showAlert("저장하였습니다.", "success");
+      // 현재 선택된 산정의 상태를 강제로 업데이트
+      if (estimationId) {
+        setMdEstimations((prev) => {
+          const exists = prev.some(est => String(est.id) === String(estimationId));
+          if (exists) {
+            return prev.map((est) =>
+              String(est.id) === String(estimationId) ? { ...est, status: 'IN_PROGRESS' } : est
+            );
+          } else {
+            // 목록에 없는 경우 (첫 저장 시) 새로 추가
+            return [{
+              id: estimationId,
+              status: 'IN_PROGRESS',
+              version: 1,
+              project_id: parseInt(id),
+              created_at: new Date().toISOString()
+            }, ...prev];
+          }
+        });
+        setCurrentEstimationId(estimationId);
+        setIsNewEstimation(false);
+      }
+      showAlert("M/D산정이 저장되었습니다.", "success");
     } catch (error: any) {
       console.error("Error saving MD estimation:", error);
       showAlert(`저장 실패: ${error.message}`, "error");
@@ -1277,7 +1377,7 @@ export default function MdEstimationPage({
           // 먼저 저장
           await handleSave();
 
-          let estimationId = currentEstimationId;
+          const estimationId = currentEstimationId;
           if (!estimationId) {
             throw new Error("M/D 산정을 먼저 저장해주세요.");
           }
@@ -1295,9 +1395,9 @@ export default function MdEstimationPage({
             throw new Error("M/D 산정 완료 처리에 실패했습니다.");
           }
 
-          showAlert("M/D 산정이 완료되었습니다.", "success");
+          showAlert("M/D산정이 완료되었습니다.", "success");
           // 목록 새로고침 (현재 프로젝트만)
-          const listResponse = await fetch(`/api/md-estimations?projectId=${id}`);
+          const listResponse = await fetch(`/api/md-estimations?projectId=${id}`, { cache: 'no-store' });
           if (listResponse.ok) {
             const listData = await listResponse.json();
             // 프로젝트 ID로 한 번 더 필터링 (안전장치)
@@ -1852,6 +1952,8 @@ export default function MdEstimationPage({
     [mdEstimations, currentEstimationId]
   );
 
+  const isCompleted = currentEstimation?.status?.toUpperCase() === 'COMPLETED';
+
   const handleStatusChange = async (newStatus: string) => {
     if (!currentEstimationId) {
       showAlert("먼저 저장을 해주세요.", "warning");
@@ -1885,6 +1987,51 @@ export default function MdEstimationPage({
     }
   };
 
+  // 삭제 처리
+  const handleDelete = useCallback(async () => {
+    if (!currentEstimationId) return;
+
+    confirm({
+      title: "M/D 산정 삭제",
+      message: "정말로 이 M/D 산정을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.",
+      confirmText: "삭제",
+      cancelText: "취소",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/md-estimations/${currentEstimationId}`, {
+            method: 'DELETE',
+          });
+
+          if (response.ok) {
+            showAlert("M/D 산정이 삭제되었습니다.", "success");
+            // 삭제 후 목록에서 제거 및 상태 초기화
+            setMdEstimations((prev) => prev.filter((e) => e.id !== currentEstimationId));
+            setCurrentEstimationId(null);
+            setIsNewEstimation(true); // 삭제 후 신규 작성 모드로 전환
+
+            // 폼 초기화 (handleNewEstimation 로직 일부 재사용)
+            setSelectedWeightId(null);
+            setSelectedDifficultyItems(
+              commonDifficultyItems.reduce((acc, item) => {
+                acc[item.id] = 2;
+                return acc;
+              }, {} as Record<number, number>)
+            );
+            setSelectedFieldDifficultyItems({});
+            setSelectedFieldCategories(new Set());
+            // 개발항목, 3D항목, PID항목 등은 useEffect에서 isNewEstimation 감지하여 초기화됨
+          } else {
+            const error = await response.json();
+            showAlert(`삭제 실패: ${error.message || '알 수 없는 오류'}`, "error");
+          }
+        } catch (e) {
+          console.error(e);
+          showAlert("삭제 중 오류가 발생했습니다.", "error");
+        }
+      }
+    });
+  }, [currentEstimationId, confirm, showAlert, commonDifficultyItems]);
+
   if (loading || !project) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1912,6 +2059,7 @@ export default function MdEstimationPage({
               <StatusBadge
                 status={currentEstimation?.status || 'STANDBY'}
               />
+              <ProjectPhaseNav projectId={id} />
             </div>
             <p className="text-sm text-gray-600">
               {project.projectCode} | {project.customerName}
@@ -1920,26 +2068,41 @@ export default function MdEstimationPage({
         </div>
         <div className="flex items-center gap-3">
 
-          <Button
-            variant="secondary"
-            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
-          >
-            <Download className="h-4 w-4" />
-            엑셀
-          </Button>
+          {currentEstimation?.status === 'IN_PROGRESS' && currentEstimationId && (
+            <Button
+              variant="secondary"
+              onClick={handleDelete}
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50 border-red-200"
+            >
+              <Trash2 className="h-4 w-4" />
+              삭제
+            </Button>
+          )}
 
-          <Button
-            variant="primary"
-            onClick={async () => {
-              await handleSave();
-              await handleStatusChange('COMPLETED');
-            }}
-            disabled={isSaving || (currentEstimation?.status === 'COMPLETED' || currentEstimation?.status === 'approved')}
-            className="flex items-center gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            작성완료
-          </Button>
+          {(currentEstimation?.status === 'IN_PROGRESS' || currentEstimation?.status === 'COMPLETED') && (
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
+            >
+              <Download className="h-4 w-4" />
+              엑셀
+            </Button>
+          )}
+
+          {currentEstimation?.status === 'IN_PROGRESS' && (
+            <Button
+              variant="primary"
+              onClick={async () => {
+                await handleSave();
+                await handleStatusChange('COMPLETED');
+              }}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              작성완료
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1966,45 +2129,24 @@ export default function MdEstimationPage({
       </div>
 
       {/* 탭 컨텐츠 */}
-      <div className="rounded-lg border border-gray-200 bg-white">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[400px]">
         {activeTab === "overview" && (
-          <div className="p-6" key={`overview-${currentEstimationId || 'new'}`}>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                M/D 산정 요약
-              </h2>
-              <button
-                onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "COMPLETED")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          <div className="space-y-6" key={`overview-${currentEstimationId || 'new'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  M/D 산정 요약
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  프로젝트의 가중치 및 분야별 산정된 공수를 요약하여 표시합니다.
+                </p>
+              </div>
             </div>
 
             {/* 요약 카드 */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="text-sm font-medium text-gray-500">
-                  M/D 가중치
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-blue-600">
-                  {calculatedDifficulty.toFixed(2)}
-                </div>
-              </div>
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="text-sm font-medium text-gray-500">
-                  개발 M/M
-                </div>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                  <Calculator className="h-4 w-4 text-blue-600" />
-                  <span className="text-2xl font-semibold text-blue-900">
-                    {formatNumber(finalDevelopmentMm, 2)} M/M
-                  </span>
-                </div>
-              </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            {/* 주요 지표 요약 (2 cols) */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
                 <div className="text-sm font-medium text-blue-700">
                   전체 M/M
                 </div>
@@ -2015,31 +2157,52 @@ export default function MdEstimationPage({
                   </span>
                 </div>
               </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <div className="text-sm font-medium text-gray-500">
+                  M/D 가중치
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-blue-600">
+                  {calculatedDifficulty.toFixed(3)}
+                </div>
+              </div>
             </div>
 
-            {/* 상세 내역 */}
-            <div className="mt-6">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">
+            {/* 상세 내역 카드 (3 cols) */}
+            <div>
+              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
+                <FileText className="h-5 w-5" />
                 상세 내역
               </h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2">
-                  <span className="text-sm text-gray-600">개발 M/M</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatNumber(finalDevelopmentMm, 2)} M/M
-                  </span>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                  <div className="text-sm font-medium text-gray-500">
+                    개발 M/M
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                    <span className="text-xl font-medium text-gray-900">
+                      {formatNumber(finalDevelopmentMm, 2)} M/M
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2">
-                  <span className="text-sm text-gray-600">3D 모델링 M/M</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatNumber(finalModeling3dMm, 2)} M/M
-                  </span>
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                  <div className="text-sm font-medium text-gray-500">
+                    3D 모델링 M/M
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                    <span className="text-xl font-medium text-gray-900">
+                      {formatNumber(finalModeling3dMm, 2)} M/M
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2">
-                  <span className="text-sm text-gray-600">P&ID M/M</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatNumber(finalPidMm, 2)} M/M
-                  </span>
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                  <div className="text-sm font-medium text-gray-500">
+                    P&ID M/M
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+                    <span className="text-xl font-medium text-gray-900">
+                      {formatNumber(finalPidMm, 2)} M/M
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2047,85 +2210,94 @@ export default function MdEstimationPage({
         )}
 
         {activeTab === "difficulty" && (
-          <div className="p-6" key={`difficulty-${currentEstimationId || 'new'}`}>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                M/D 가중치 산정
-              </h2>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "COMPLETED")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          <div className="space-y-6" key={`difficulty-${currentEstimationId || 'new'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  M/D 가중치 산정
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  프로젝트의 특성에 따른 공수 가중치(경험난이도 등)를 산정합니다.
+                </p>
+              </div>
+              {!isCompleted && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "저장 중..." : "저장"}
+                </button>
+              )}
             </div>
 
             {/* 난이도 계산 결과 - 맨 위로 이동 */}
-            <div className="mb-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-blue-700">M/D 가중치</span>
+                  <span className="text-xs text-blue-600 font-normal">
+                    (개발 항목별 M/D 산정에 사용됩니다.)
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-100 px-3 py-2">
+                  <Calculator className="h-4 w-4 text-blue-700" />
+                  <span className="text-2xl font-bold text-blue-900">
+                    {calculatedDifficulty.toFixed(3)}
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
                 <div className="text-sm font-medium text-gray-500">공통 난이도 합계</div>
                 <div className="mt-2 text-2xl font-semibold text-gray-900">
                   {commonDifficultySum}
                 </div>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
                 <div className="text-sm font-medium text-gray-500">분야별 난이도 합계</div>
                 <div className="mt-2 text-2xl font-semibold text-gray-900">
                   {fieldDifficultySum}
                 </div>
               </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="text-sm font-medium text-blue-700">M/D 가중치</div>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-100 px-3 py-2">
-                  <Calculator className="h-4 w-4 text-blue-700" />
-                  <span className="text-2xl font-bold text-blue-900">
-                    {calculatedDifficulty.toFixed(2)}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-blue-600">
-                  이 값이 개발항목별 M/D 산정에 사용됩니다.
-                </p>
-              </div>
             </div>
 
             {/* 난이도 산정 안내 */}
-            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-6">
               <p className="text-sm text-blue-800">
-                <span className="font-bold">※ 산정 방식:</span> 각 항목에 대해 난이도(0, 1, 2, 3)를 선택하면 가중치가 자동 계산됩니다.
+                <span className="font-bold">※ 산정 방식 :</span> 각 항목에 대해 난이도(0, 1, 2, 3)를 선택하면 가중치가 자동 계산됩니다.
                 <br />
-                <span className="font-bold">※ 최종 M/D 가중치:</span> 선택된 항목들의 난이도 합계를 기반으로 계산됩니다.
+                <span className="font-bold">※ 최종 M/D 가중치 :</span> 선택된 항목들의 난이도 합계를 기반으로 계산됩니다.
               </p>
             </div>
 
             {/* 공통 난이도 */}
-            <div className="mb-10">
-              <h3 className="mb-4 text-base font-bold text-gray-900 px-1 flex items-center gap-2">
+            <div>
+              <h3 className="mb-4 text-base font-semibold text-gray-900 px-1 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 공통 난이도 산정
               </h3>
-              <div className="neo-light-card border border-gray-200 overflow-hidden">
+              <div className="bg-white overflow-x-auto shadow-none">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead className="bg-slate-50 border-b border-gray-200">
-                      <tr>
-                        <th className="w-[150px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-blue-50/50">
+                      <tr className="h-[35px]">
+                        <th className="w-[150px] px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                           구분
                         </th>
-                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                        <th className="px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-left border border-gray-300">
                           내용
                         </th>
-                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                        <th className="px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-left border border-gray-300">
                           설명
                         </th>
-                        <th className="w-[120px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center">
+                        <th className="w-[120px] px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                           난이도
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="bg-white">
                       {sortedCommonDifficultyItems.map((item, index) => {
                         const selectedDifficulty = selectedDifficultyItems[item.id] ?? item.difficulty;
                         const isHighDifficulty = selectedDifficulty === 3;
@@ -2138,7 +2310,7 @@ export default function MdEstimationPage({
                           <tr
                             key={item.id}
                             className={cn(
-                              "transition-all duration-200 h-[52px] relative",
+                              "transition-all duration-200 h-[35px] relative",
                               isHighDifficulty
                                 ? "bg-orange-50/50 hover:bg-orange-100/50"
                                 : "hover:bg-slate-50/50"
@@ -2148,34 +2320,35 @@ export default function MdEstimationPage({
                             {isFirstInCategory && (
                               <td
                                 rowSpan={commonCategoryCounts[item.category]}
-                                className="px-4 py-2 text-sm font-bold text-center border-r border-gray-200 bg-gray-50/50 text-gray-900 align-middle"
+                                className="px-[10px] py-1 text-sm font-bold text-center border border-gray-300 bg-gray-50/50 text-gray-900 align-middle"
                               >
                                 {item.category}
                               </td>
                             )}
                             <td className={cn(
-                              "px-4 py-2 text-sm border-r border-gray-200",
+                              "px-[10px] py-1 text-sm border border-gray-300",
                               isHighDifficulty ? "font-bold text-orange-900" : "text-gray-900 font-medium"
                             )}>
                               {item.content}
                             </td>
                             <td className={cn(
-                              "px-4 py-2 text-sm border-r border-gray-200",
+                              "px-[10px] py-1 text-sm border border-gray-300",
                               isHighDifficulty ? "text-orange-700 font-medium" : "text-gray-500 font-medium"
                             )}>
                               {item.description}
                             </td>
-                            <td className="px-3 py-2 text-center">
+                            <td className="p-0 h-[35px] text-center border border-gray-300">
                               <Dropdown
                                 value={selectedDifficulty}
                                 onChange={(val) => handleDifficultyItemChange(item.id, Number(val))}
-                                disabled={currentEstimation?.status === "COMPLETED"}
+                                disabled={isCompleted}
                                 options={scoreOptions}
                                 align="center"
                                 variant="premium"
+                                listClassName="rounded-none"
                                 className={cn(
-                                  "w-full max-w-[80px] mx-auto transition-transform active:scale-95",
-                                  isHighDifficulty && "border-orange-400 ring-orange-200"
+                                  "w-full h-full border-none rounded-none px-2 transition-transform active:scale-95 bg-transparent hover:bg-blue-50/50",
+                                  isHighDifficulty && "bg-orange-100/30"
                                 )}
                               />
                             </td>
@@ -2189,36 +2362,36 @@ export default function MdEstimationPage({
             </div>
 
             {/* 분야별 난이도 */}
-            <div className="mb-10">
-              <h3 className="mb-4 text-base font-bold text-gray-900 px-1 flex items-center gap-2">
+            <div>
+              <h3 className="mb-4 text-base font-semibold text-gray-900 px-1 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 분야별 난이도 산정
               </h3>
               <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-sm text-blue-800">
-                  <span className="font-bold">※ 안내:</span> 체크박스를 선택한 분야의 난이도만 프로젝트 난이도 계산에 적용됩니다.
+                  <span className="font-bold">※ 안내 :</span> 체크박스를 선택한 분야의 난이도만 프로젝트 난이도 계산에 적용됩니다.
                 </p>
               </div>
-              <div className="neo-light-card border border-gray-200 overflow-hidden">
+              <div className="bg-white overflow-x-auto shadow-none">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead className="bg-slate-50 border-b border-gray-200">
-                      <tr>
-                        <th className="w-[150px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-blue-50/50">
+                      <tr className="h-[35px]">
+                        <th className="w-[150px] px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                           적용 분야
                         </th>
-                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                        <th className="px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-left border border-gray-300">
                           내용
                         </th>
-                        <th className="px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                        <th className="px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-left border border-gray-300">
                           설명
                         </th>
-                        <th className="w-[120px] px-4 py-4 text-sm font-bold tracking-wider text-slate-700 text-center">
+                        <th className="w-[120px] px-4 py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                           난이도
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="bg-white">
                       {sortedFieldDifficultyItems.map((item, index) => {
                         const isCategorySelected = selectedFieldCategories.has(item.category);
                         const rawDifficulty = selectedFieldDifficultyItems[item.id] ?? item.difficulty;
@@ -2232,7 +2405,7 @@ export default function MdEstimationPage({
                           <tr
                             key={item.id}
                             className={cn(
-                              "transition-all duration-200 h-[52px] relative",
+                              "transition-all duration-200 h-[35px] relative",
                               !isCategorySelected && "opacity-60 bg-slate-50/30",
                               isHighDifficulty
                                 ? "bg-orange-50/50 hover:bg-orange-100/50"
@@ -2243,14 +2416,14 @@ export default function MdEstimationPage({
                             {isFirstInCategory && (
                               <td
                                 rowSpan={fieldCategoryCounts[item.category]}
-                                className="px-4 py-2 border-r border-gray-200 bg-gray-50/50 align-middle"
+                                className="px-[10px] py-1 border border-gray-300 bg-gray-50/50 align-middle"
                               >
                                 <div className="flex items-center justify-center gap-2">
                                   <input
                                     type="checkbox"
                                     checked={isCategorySelected}
                                     onChange={() => handleFieldCategoryToggle(item.category)}
-                                    disabled={currentEstimation?.status === "COMPLETED"}
+                                    disabled={isCompleted}
                                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
                                   />
                                   <span className="text-sm font-bold text-gray-900">{item.category}</span>
@@ -2258,28 +2431,29 @@ export default function MdEstimationPage({
                               </td>
                             )}
                             <td className={cn(
-                              "px-4 py-2 text-sm border-r border-gray-200",
+                              "px-[10px] py-1 text-sm border border-gray-300",
                               isHighDifficulty ? "font-bold text-orange-900" : "text-gray-900 font-medium"
                             )}>
                               {item.content}
                             </td>
                             <td className={cn(
-                              "px-4 py-2 text-sm border-r border-gray-200",
+                              "px-[10px] py-1 text-sm border border-gray-300",
                               isHighDifficulty ? "text-orange-700 font-medium" : "text-gray-500 font-medium"
                             )}>
                               {item.description}
                             </td>
-                            <td className="px-3 py-2 text-center">
+                            <td className="p-0 h-[35px] text-center border border-gray-300">
                               <Dropdown
                                 value={selectedDifficulty}
                                 onChange={(val) => handleFieldDifficultyItemChange(item.id, Number(val))}
-                                disabled={currentEstimation?.status === "COMPLETED" || !isCategorySelected}
+                                disabled={isCompleted || !isCategorySelected}
                                 options={scoreOptions}
                                 align="center"
                                 variant="premium"
+                                listClassName="rounded-none"
                                 className={cn(
-                                  "w-full max-w-[80px] mx-auto transition-transform active:scale-95",
-                                  isHighDifficulty && "border-orange-400 ring-orange-200"
+                                  "w-full h-full border-none rounded-none px-2 transition-transform active:scale-95 bg-transparent hover:bg-blue-50/50",
+                                  isHighDifficulty && "bg-orange-100/30"
                                 )}
                               />
                             </td>
@@ -2295,96 +2469,170 @@ export default function MdEstimationPage({
         )}
 
         {activeTab === "development" && (
-          <div className="p-6" key={`development-${currentEstimationId || 'new'}`}>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                개발 공수 기준표
-              </h2>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          <div className="space-y-6" key={`development-${currentEstimationId || 'new'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  개발 공수 기준표
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  시스템 개발 기능별 표준 M/D를 기반으로 수량을 입력하여 공수를 산정합니다.
+                </p>
+              </div>
+              {!isCompleted && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "저장 중..." : "저장"}
+                </button>
+              )}
             </div>
 
-            {/* 난이도 작성 안내 */}
-            <div className="mb-4 flex items-center gap-4">
-              <div className="flex-1 rounded-xl border border-blue-100 bg-blue-50 p-4">
+            {/* 난이도 작성 안내 스타일 조정 */}
+            {/* 난이도 작성 안내 및 결과 통합 */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 flex items-center justify-between">
+              <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-blue-600" />
                   <p className="text-sm text-blue-800">
-                    <span className="font-bold">※ 안내:</span> 프로젝트 가중치는 <span className="font-bold">가중치 탭</span>에서 작성해주세요.
+                    <span className="font-bold">※ 안내 :</span> 프로젝트 가중치는 <span className="font-bold">가중치 탭</span>에서 작성해주세요.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm text-blue-800">
+                    <span className="font-bold">※ 계산 방식 :</span> M/D = 수량 × 기준M/D, 최종 M/M = 개발항목 M/D 합계 × 프로젝트 가중치
                   </p>
                 </div>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">가중치:</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    {formatNumber(calculatedDifficulty, 2)}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-lg border border-blue-200/50">
+                <span className="text-sm font-medium text-blue-900">가중치:</span>
+                <span className="text-lg font-bold text-blue-700">
+                  {formatNumber(calculatedDifficulty, 3)}
+                </span>
               </div>
             </div>
 
             {/* 상단 왼쪽: 개발 공수 합계 요약 표, 오른쪽: 개발 산정 공수 */}
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                  ○ 개발 공수 합계
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            {/* 상단: 개발 산정 공수(좌) 및 개발 공수 합계 요약 표(우) */}
+            {/* 상단: 개발 산정 공수(좌) 및 개발 공수 합계 요약 표(우) */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* 왼쪽: 계산 결과 요약 */}
+              <div className="flex flex-col h-full gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Calculator className="h-5 w-5" />
+                    개발 산정 공수
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">M/M 기준 :</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={mmCalculationBase}
+                        onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
+                        disabled={isCompleted}
+                        className={cn(
+                          "w-16 h-8 text-sm text-right focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all rounded-md px-2",
+                          isCompleted
+                            ? "bg-gray-50/50 border border-gray-200 cursor-default font-bold text-gray-900 shadow-none"
+                            : "bg-white border border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                        )}
+                      />
+                      <span className="text-sm text-gray-600">일</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-6 flex-grow flex flex-col justify-center gap-4">
+                  <div className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 px-4 py-3">
+                    <span className="text-sm font-medium text-gray-700">
+                      합계 (M/D)
+                    </span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {formatNumber(totalDevelopmentMd, 2)} M/D
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
+                    <span className="text-sm font-medium text-blue-900">
+                      최종 M/D
+                    </span>
+                    <span className="text-sm font-medium text-blue-900">
+                      {formatNumber(totalSummary.mdWithDifficulty, 2)} M/D
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-4 py-3">
+                    <span className="text-sm font-bold text-green-900">
+                      최종 M/M
+                    </span>
+                    <span className="text-sm font-bold text-green-900">
+                      {formatNumber(finalDevelopmentMm, 2)} M/M
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 오른쪽: 개발 공수 합계 */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between h-8">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <TrendingUp className="h-5 w-5" />
+                    개발 공수 합계
+                  </h3>
+                </div>
+                <div className="overflow-x-auto bg-white">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-blue-50/50">
+                      <tr className="h-[35px]">
+                        <th className="px-[10px] py-1 text-center text-sm font-bold uppercase tracking-wider text-slate-700 border border-gray-300">
                           구분
                         </th>
-                        <th className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-[10px] py-1 text-center text-sm font-bold uppercase tracking-wider text-slate-700 border border-gray-300">
                           M/D
                         </th>
-                        <th className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-[10px] py-1 text-center text-sm font-bold uppercase tracking-wider text-slate-700 border border-gray-300">
                           M/D × 가중치
                         </th>
-                        <th className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-[10px] py-1 text-center text-sm font-bold uppercase tracking-wider text-slate-700 border border-gray-300">
                           M/M
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="bg-white">
                       {summaryByClassification.map((item) => (
-                        <tr key={item.classification} className="hover:bg-gray-50">
-                          <td className="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">
+                        <tr key={item.classification} className="h-[35px]">
+                          <td className="whitespace-nowrap px-[10px] py-1 text-sm font-medium text-center text-gray-900 border border-gray-300">
                             {item.classification}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-right text-sm text-gray-600">
+                          <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm text-gray-600 border border-gray-300">
                             {formatNumber(item.md, 2)}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-right text-sm font-medium text-blue-600">
+                          <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-medium text-blue-600 border border-gray-300">
                             {formatNumber(item.mdWithDifficulty, 2)}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-right text-sm text-gray-600">
+                          <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm text-gray-600 border border-gray-300">
                             {formatNumber(item.mm, 2)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot className="bg-yellow-50">
-                      <tr>
-                        <td className="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">
+                      <tr className="h-[35px]">
+                        <td className="whitespace-nowrap px-[10px] py-1 text-sm font-bold text-center text-gray-900 border border-gray-300">
                           합계
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-right text-sm font-medium text-gray-900">
+                        <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-bold text-gray-900 border border-gray-300">
                           {formatNumber(totalSummary.md, 2)}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-right text-sm font-bold text-blue-900">
+                        <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-bold text-blue-900 border border-gray-300">
                           {formatNumber(totalSummary.mdWithDifficulty, 2)}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-right text-sm font-bold text-gray-900">
+                        <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-bold text-gray-900 border border-gray-300">
                           {formatNumber(totalSummary.mm, 2)}
                         </td>
                       </tr>
@@ -2392,135 +2640,79 @@ export default function MdEstimationPage({
                   </table>
                 </div>
               </div>
-
-              {/* 상단 오른쪽: 계산 결과 요약 */}
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                  ○ 개발 산정 공수
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">합계 (M/D)</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatNumber(totalDevelopmentMd, 2)} M/D
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-blue-900">
-                      최종 M/D
-                    </span>
-                    <span className="text-lg font-bold text-blue-900">
-                      {formatNumber(totalSummary.mdWithDifficulty, 2)} M/D
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-green-900">
-                      최종 M/M
-                    </span>
-                    <span className="text-lg font-bold text-green-900">
-                      {formatNumber(finalDevelopmentMm, 2)} M/M
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-end gap-2">
-                    <label className="text-sm text-gray-600">M/M 계산 기준값:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="0.1"
-                      value={mmCalculationBase}
-                      onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
-                      disabled={currentEstimation?.status === "completed"}
-                      className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <span className="text-sm text-gray-600">일</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* 하단: 공수 기준표 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">
-                  ○ 개발 공수 기준표
-                </h3>
-                <button
-                  onClick={handleAddDevelopmentItem}
-                  disabled={currentEstimation?.status === "completed"}
-                  className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="h-3 w-3" />
-                  항목 추가
-                </button>
+            <div className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-2">
+                    <List className="h-5 w-5" />
+                    개발 공수 기준표
+                  </h3>
+                </div>
               </div>
-              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
-                <p className="text-sm text-blue-800">
-                  <span className="font-bold">※ 계산 방식:</span> M/D = 수량 × 기준M/D, 최종 M/M = 개발항목 M/D 합계 × 프로젝트 가중치
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-slate-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead className="bg-blue-50/50">
+                    <tr className="h-[35px]">
+                      <th className="w-[120px] px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                         구분
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                         내용
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                      <th className="w-[100px] px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                         수량
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                      <th className="w-[100px] px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                         기준M/D
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-center border-r border-gray-200">
+                      <th className="w-[100px] px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
                         산정M/D
                       </th>
-                      <th className="relative px-3 py-4">
-                        <span className="sr-only">Actions</span>
-                      </th>
+                      {!isCompleted && (
+                        <th className="w-[50px] px-[10px] py-1 text-sm font-bold tracking-wider text-slate-700 text-center border border-gray-300">
+                          작업
+                        </th>
+                      )}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="bg-white">
                     {developmentItems.map((item) => {
-                      // 새로 추가한 항목인지 구분 (기본 항목은 id가 1~25 범위, 저장된 항목은 development_item_id가 있거나 id가 10000 이상)
-                      // 저장된 데이터를 로드할 때는 development_item_id가 있으면 기본 항목, 없으면 새 항목
-                      // 새로 추가한 항목은 id가 10000 이상이거나 development_item_id가 null인 경우
                       const isNewItem = item.id > 25 && item.id >= 10000;
 
                       return (
-                        <tr key={item.id} className="hover:bg-gray-50">
-                          <td className="whitespace-nowrap px-3 py-2">
+                        <tr key={item.id} className="h-[35px]">
+                          <td className="whitespace-nowrap p-0 border border-gray-300 h-[35px]">
                             {isNewItem ? (
-                              <Dropdown
+                              <select
                                 value={item.classification || ""}
-                                onChange={(val) =>
+                                onChange={(e) =>
                                   handleDevelopmentItemChange(
                                     item.id,
                                     "classification",
-                                    val
+                                    e.target.value
                                   )
                                 }
-                                disabled={currentEstimation?.status === "completed"}
-                                options={[
-                                  { value: "", label: "구분 선택" },
-                                  { value: "PM", label: "PM" },
-                                  { value: "개발", label: "개발" },
-                                  { value: "I/F", label: "I/F" },
-                                  { value: "2D디자인", label: "2D디자인" },
-                                  { value: "포탈", label: "포탈" },
-                                ]}
-                                variant="premium"
-                                className="w-full"
-                              />
+                                disabled={currentEstimation?.status === "COMPLETED"}
+                                className="w-full h-full border-none px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
+                              >
+                                <option value="">구분 선택</option>
+                                <option value="PM">PM</option>
+                                <option value="개발">개발</option>
+                                <option value="I/F">I/F</option>
+                                <option value="2D디자인">2D디자인</option>
+                                <option value="포탈">포탈</option>
+                              </select>
                             ) : (
-                              <span className="text-sm font-bold text-gray-900">
+                              <span className="text-sm font-medium text-gray-900 block text-center px-[10px]">
                                 {item.classification}
                               </span>
                             )}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="p-0 border border-gray-300 h-[35px]">
                             {isNewItem ? (
                               <input
                                 type="text"
@@ -2533,16 +2725,16 @@ export default function MdEstimationPage({
                                   )
                                 }
                                 placeholder="내용 입력"
-                                disabled={currentEstimation?.status === "completed"}
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                disabled={currentEstimation?.status === "COMPLETED"}
+                                className="w-full h-full border-none bg-transparent px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors placeholder:text-gray-400"
                               />
                             ) : (
-                              <span className="text-sm text-gray-900">
+                              <span className="text-sm text-gray-900 block px-[10px]">
                                 {item.content}
                               </span>
                             )}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2">
+                          <td className="whitespace-nowrap p-0 border border-gray-300 h-[35px]">
                             <input
                               type="number"
                               min="0"
@@ -2555,16 +2747,26 @@ export default function MdEstimationPage({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              disabled={currentEstimation?.status === "completed"}
-                              className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              onWheel={(e) => e.currentTarget.blur()}
+                              onKeyDown={(e) => (e.key === 'ArrowUp' || e.key === 'ArrowDown') && e.preventDefault()}
+                              disabled={isCompleted}
+                              className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2">
+                          <td className="whitespace-nowrap p-0 border border-gray-300 h-[35px]">
                             <input
                               type="number"
                               min="0"
-                              step="0.1"
-                              value={item.standardMd || ""}
+                              step="0.01"
+                              value={
+                                currentEstimation?.status === "completed"
+                                  ? (item.standardMd || 0).toFixed(2)
+                                  : focusedInput === `dev-std-${item.id}`
+                                    ? (item.standardMd ?? "")
+                                    : (item.standardMd !== undefined ? item.standardMd.toFixed(2) : "")
+                              }
+                              onFocus={() => setFocusedInput(`dev-std-${item.id}`)}
+                              onBlur={() => setFocusedInput(null)}
                               onChange={(e) =>
                                 handleDevelopmentItemChange(
                                   item.id,
@@ -2572,49 +2774,57 @@ export default function MdEstimationPage({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              disabled={currentEstimation?.status === "completed"}
-                              className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              onWheel={(e) => e.currentTarget.blur()}
+                              onKeyDown={(e) => (e.key === 'ArrowUp' || e.key === 'ArrowDown') && e.preventDefault()}
+                              disabled={isCompleted}
+                              className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-gray-50 disabled:text-gray-900"
                             />
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2">
-                            <div className="flex items-center justify-end gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                              <Calculator className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-semibold text-blue-900">
-                                {formatNumber(item.calculatedMd || 0, 2)} M/D
-                              </span>
-                            </div>
+                          <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-medium text-blue-900 border border-gray-300">
+                            {formatNumber(item.calculatedMd || 0, 2)}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-right">
-                            {isNewItem && (
-                              <button
-                                onClick={() => handleRemoveDevelopmentItem(item.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                          </td>
+                          {!isCompleted && (
+                            <td className="whitespace-nowrap px-[10px] py-1 text-center border border-gray-300">
+                              {isNewItem && (
+                                <button
+                                  onClick={() => handleRemoveDevelopmentItem(item.id)}
+                                  className="text-gray-400 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
+                    {!isCompleted && (
+                      <tr className="h-[35px]">
+                        <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={6}>
+                          <button
+                            type="button"
+                            onClick={handleAddDevelopmentItem}
+                            className="w-full h-full flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm font-medium m-0 p-0 rounded-none border-none outline-none focus:outline-none"
+                          >
+                            <Plus className="h-4 w-4" />
+                            개발 공수 항목 추가
+                          </button>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
-                  <tfoot className="bg-gray-50">
-                    <tr>
+                  <tfoot className="bg-yellow-50">
+                    <tr className="h-[35px]">
                       <td
                         colSpan={4}
-                        className="px-3 py-2 text-right text-sm font-medium text-gray-900"
+                        className="px-[10px] py-1 text-right text-sm font-bold text-gray-900 border border-gray-300"
                       >
                         합계 (M/D)
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <div className="flex items-center justify-end gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                          <Calculator className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-900">
-                            {formatNumber(totalDevelopmentMd, 2)} M/D
-                          </span>
-                        </div>
+                      <td className="whitespace-nowrap px-[10px] py-1 text-right text-sm font-bold text-blue-900 border border-gray-300">
+                        {formatNumber(totalDevelopmentMd, 2)}
                       </td>
-                      <td className="px-3 py-2"></td>
+                      {!isCompleted && <td className="px-[10px] py-1 border border-gray-300"></td>}
                     </tr>
                   </tfoot>
                 </table>
@@ -2624,253 +2834,273 @@ export default function MdEstimationPage({
         )}
 
         {activeTab === "modeling3d" && (
-          <div className="p-6" key={`modeling3d-${currentEstimationId || 'new'}`}>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                3D 모델링(배치 포함) 공수 기준표
-              </h2>
-              <button
-                onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          <div className="space-y-6" key={`modeling3d-${currentEstimationId || 'new'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  3D 모델링(배치 포함) 공수 기준표
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  설비, 배관, 전기/계장 등 3D 모델링 대상 항목의 수량과 난이도를 적용하여 공수를 산정합니다.
+                </p>
+              </div>
+              {!isCompleted && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "저장 중..." : "저장"}
+                </button>
+              )}
             </div>
 
-            {/* 상단 왼쪽: M/D 산정 가중치 테이블 */}
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    ○ M/D 산정 가중치 (3D 입력자료)
+            {/* 3D 모델링: 좌측 산정 공수, 우측 가중치 표 */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* 좌측: 3D 모델링 산정 공수 */}
+              <div className="flex flex-col h-full gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Calculator className="h-5 w-5" />
+                    3D 모델링 산정 공수
                   </h3>
-                  <button
-                    onClick={handleAddWeightItem}
-                    disabled={currentEstimation?.status === "completed"}
-                    className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Plus className="h-3 w-3" />
-                    추가
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          내용
-                        </th>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          가중치
-                        </th>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          설명
-                        </th>
-                        <th className="relative px-2 py-2">
-                          <span className="sr-only">Actions</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {weightTable.map((weight) => {
-                        // 내용과 설명이 모두 입력되었는지 확인
-                        const isCompleted = weight.content.trim() !== "" && weight.description.trim() !== "";
-
-                        return (
-                          <tr
-                            key={weight.id}
-                            className={
-                              selectedWeightId === weight.id
-                                ? "bg-blue-50"
-                                : "hover:bg-gray-50"
-                            }
-                          >
-                            <td className="whitespace-nowrap px-2 py-2">
-                              {isCompleted ? (
-                                <span className="text-sm text-gray-900">{weight.content}</span>
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={weight.content}
-                                  onChange={(e) =>
-                                    handleWeightItemChange(
-                                      weight.id,
-                                      "content",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="내용 입력"
-                                  disabled={currentEstimation?.status === "completed"}
-                                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                />
-                              )}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2">
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={weight.weight}
-                                onChange={(e) =>
-                                  handleWeightItemChange(
-                                    weight.id,
-                                    "weight",
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                                disabled={currentEstimation?.status === "completed"}
-                                className="w-20 rounded-md border border-gray-300 px-2 py-1 text-xs text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className="px-2 py-2">
-                              {isCompleted ? (
-                                <span className="text-sm text-gray-600">{weight.description}</span>
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={weight.description}
-                                  onChange={(e) =>
-                                    handleWeightItemChange(
-                                      weight.id,
-                                      "description",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="설명 입력"
-                                  disabled={currentEstimation?.status === "completed"}
-                                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                />
-                              )}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-right">
-                              <button
-                                onClick={() => setSelectedWeightId(weight.id)}
-                                disabled={currentEstimation?.status === "completed"}
-                                className={`rounded px-2 py-1 text-xs ${selectedWeightId === weight.id
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                              >
-                                선택
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* 상단 오른쪽: 계산 결과 요약 */}
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                  ○ 3D 모델링 산정 공수
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">합계 (M/D)</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatNumber(totalModeling3dMd, 2)} M/D
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">M/M 기준 :</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={mmCalculationBase}
+                        onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
+                        disabled={isCompleted}
+                        className={cn(
+                          "w-16 h-8 text-sm text-right focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all rounded-md px-2",
+                          isCompleted
+                            ? "bg-gray-50/50 border border-gray-200 cursor-default font-bold text-gray-900 shadow-none"
+                            : "bg-white border border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                        )}
+                      />
+                      <span className="text-sm text-gray-600">일</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">선택된 가중치</span>
-                    {selectedWeightId ? (
-                      <span className="text-sm font-semibold text-gray-900">
-                        {selectedWeight?.content} (
-                        {formatNumber(selectedWeightValue, 2)})
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-white p-6 flex-grow flex flex-col justify-center gap-4 transition-all hover:border-gray-300">
+                  <div className={weightTable.length >= 6 ? "flex flex-col gap-4" : "grid grid-cols-2 gap-4"}>
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 border border-gray-100">
+                      <span className="text-sm font-medium text-gray-600">합계 (M/D)</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {formatNumber(totalModeling3dMd, 2)} M/D
                       </span>
-                    ) : (
-                      <div className="flex items-center gap-1 rounded-md border border-red-300 bg-red-50 px-2 py-1">
-                        <AlertCircle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm font-semibold text-red-600">
-                          미선택 - 가중치를 선택해주세요
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-blue-50/50 px-4 py-3 border border-blue-100">
+                      <span className="text-sm font-medium text-gray-600">선택된 가중치</span>
+                      {selectedWeightId ? (
+                        <span className="text-sm font-medium text-gray-900">
+                          {selectedWeight?.content} ({formatNumber(selectedWeightValue, 2)})
                         </span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-sm font-medium text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-4 w-4" /> 가중치 미선택
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-blue-900">
-                      최종 M/D
-                    </span>
-                    <span className="text-lg font-bold text-blue-900">
+                  <div className="flex items-center justify-between rounded-lg bg-indigo-50 px-4 py-3 border border-indigo-100">
+                    <span className="text-sm font-medium text-indigo-900">최종 M/D</span>
+                    <span className="text-sm font-medium text-indigo-900">
                       {formatNumber(finalModeling3dMd, 2)} M/D
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-green-900">
-                      최종 M/M
-                    </span>
-                    <span className="text-lg font-bold text-green-900">
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3 border border-emerald-100">
+                    <span className="text-sm font-bold text-emerald-900">최종 M/M</span>
+                    <span className="text-sm font-bold text-emerald-900">
                       {formatNumber(finalModeling3dMm, 2)} M/M
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center justify-end gap-2">
-                    <label className="text-sm text-gray-600">M/M 계산 기준값:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="0.1"
-                      value={mmCalculationBase}
-                      onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
-                      disabled={currentEstimation?.status === "completed"}
-                      className="w-20 rounded-xl border border-gray-300 px-2 h-10 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm text-gray-600">일</span>
+                </div>
+              </div>
+
+              {/* 우측: 가중치 표 */}
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="flex items-center justify-between h-8">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <BarChart3 className="h-5 w-5" />
+                    가중치 (3D 입력자료) 선택
+                  </h3>
+                </div>
+                <div className="bg-white flex-grow flex flex-col overflow-hidden rounded-none shadow-none">
+                  <div className="overflow-x-auto flex-grow">
+                    <table className="w-full divide-y divide-gray-200 border-collapse">
+                      <thead className="bg-blue-50/50">
+                        <tr>
+                          <th className="w-12 px-0 py-0 text-center border border-gray-300 h-[35px]">
+                            <span className="text-sm font-bold text-gray-900">선택</span>
+                          </th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">내용</th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">가중치</th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">설명</th>
+                          {!isCompleted && (
+                            <th className="w-12 px-0 py-0 text-center border border-gray-300 h-[35px]">
+                              <span className="text-sm font-bold text-gray-900">작업</span>
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {weightTable.map((weight) => {
+                          const isSelected = selectedWeightId === weight.id;
+                          return (
+                            <tr
+                              key={weight.id}
+                              className={`transition-colors h-[35px] ${isSelected ? "bg-blue-100" : ""
+                                }`}
+                            >
+                              <td className="p-0 text-center border border-gray-300 h-[35px]">
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-center h-full w-full transition-colors",
+                                    !isCompleted ? "cursor-pointer hover:bg-blue-50/50" : "cursor-default"
+                                  )}
+                                  onClick={() => !isCompleted && setSelectedWeightId(weight.id)}
+                                >
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-blue-600 bg-white' : 'border-gray-300 bg-white'}`}>
+                                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                {isCompleted ? (
+                                  <div className="px-[10px] h-full flex items-center text-sm text-gray-900">{weight.content}</div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={weight.content}
+                                    onChange={(e) => handleWeightItemChange(weight.id, "content", e.target.value)}
+                                    className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-gray-900 placeholder-gray-400 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all"
+                                    placeholder="내용"
+                                  />
+                                )}
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                <input
+                                  type="number"
+                                  value={
+                                    isCompleted
+                                      ? (weight.weight || 0).toFixed(2)
+                                      : focusedInput === `weight-3d-${weight.id}`
+                                        ? (weight.weight ?? "")
+                                        : (weight.weight !== undefined ? weight.weight.toFixed(2) : "")
+                                  }
+                                  onFocus={() => setFocusedInput(`weight-3d-${weight.id}`)}
+                                  onBlur={() => setFocusedInput(null)}
+                                  onChange={(e) => handleWeightItemChange(weight.id, "weight", parseFloat(e.target.value))}
+                                  step="0.01"
+                                  disabled={isCompleted}
+                                  className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-right text-gray-900 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all disabled:bg-transparent"
+                                />
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                {isCompleted ? (
+                                  <div className="px-[10px] h-full flex items-center text-sm text-gray-500">{weight.description}</div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={weight.description}
+                                    onChange={(e) => handleWeightItemChange(weight.id, "description", e.target.value)}
+                                    className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-gray-900 placeholder-gray-400 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all"
+                                    placeholder="설명"
+                                  />
+                                )}
+                              </td>
+                              {!isCompleted && (
+                                <td className="p-0 text-center border border-gray-300 h-[35px]">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveWeightItem(weight.id);
+                                    }}
+                                    className="text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center w-full h-full"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                        {/* 행 추가 버튼 */}
+                        {currentEstimation?.status?.toUpperCase() !== 'COMPLETED' && (
+                          <tr className="h-[35px]">
+                            <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={5}>
+                              <button
+                                type="button"
+                                onClick={handleAddWeightItem}
+                                className="w-full h-full flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm font-medium m-0 p-0 rounded-none border-none outline-none focus:outline-none"
+                              >
+                                <Plus className="h-4 w-4" />
+                                항목 추가
+                              </button>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* 하단: 공수 기준표 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">
-                  ○ 3D 모델링(배치 포함) 공수 기준표
+            <div className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                  <Box className="h-5 w-5" />
+                  3D 모델링(배치 포함) 공수 기준표
                 </h3>
               </div>
               <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-sm text-blue-800">
-                  <span className="font-bold">※ 계산 방식:</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
+                  <span className="font-bold">※ 계산 방식 :</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
                 </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-slate-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full border-collapse">
+                  <thead className="bg-blue-50/50">
+                    <tr className="h-[35px]">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         구분
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         난이도
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         수량
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         기준M/D
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         산정M/D
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         비고
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="bg-white">
                     {modeling3dItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-900">
+                      <tr key={item.id} className="h-[35px]">
+                        <td className="whitespace-nowrap px-[10px] text-center text-sm text-gray-900 border border-gray-300">
                           {item.category}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-[10px] text-center text-sm text-gray-600 border border-gray-300">
                           {item.difficulty || "-"}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
+                        <td className="p-0 border border-gray-300 h-[35px]">
                           <input
                             type="number"
                             min="0"
@@ -2883,16 +3113,26 @@ export default function MdEstimationPage({
                                 parseFloat(e.target.value) || 0
                               )
                             }
-                            disabled={currentEstimation?.status === "completed"}
-                            className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            onWheel={(e) => e.currentTarget.blur()}
+                            onKeyDown={(e) => (e.key === 'ArrowUp' || e.key === 'ArrowDown') && e.preventDefault()}
+                            disabled={currentEstimation?.status === "COMPLETED"}
+                            className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
+                        <td className="p-0 border border-gray-300 h-[35px]">
                           <input
                             type="number"
                             min="0"
-                            step="0.1"
-                            value={item.baseMd || ""}
+                            step="0.01"
+                            value={
+                              currentEstimation?.status === "completed"
+                                ? (item.baseMd || 0).toFixed(2)
+                                : focusedInput === `mod-base-${item.id}`
+                                  ? (item.baseMd ?? "")
+                                  : (item.baseMd !== undefined ? item.baseMd.toFixed(2) : "")
+                            }
+                            onFocus={() => setFocusedInput(`mod-base-${item.id}`)}
+                            onBlur={() => setFocusedInput(null)}
                             onChange={(e) =>
                               handleModeling3dItemChange(
                                 item.id,
@@ -2900,41 +3140,33 @@ export default function MdEstimationPage({
                                 parseFloat(e.target.value) || 0
                               )
                             }
-                            disabled={currentEstimation?.status === "completed"}
-                            className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            onWheel={(e) => e.currentTarget.blur()}
+                            onKeyDown={(e) => (e.key === 'ArrowUp' || e.key === 'ArrowDown') && e.preventDefault()}
+                            disabled={currentEstimation?.status === "COMPLETED"}
+                            className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-gray-50 disabled:text-gray-900"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
-                          <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                            <Calculator className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-semibold text-blue-900">
-                              {formatNumber(item.calculatedMd || 0, 2)} M/D
-                            </span>
-                          </div>
+                        <td className="whitespace-nowrap px-[10px] text-right text-sm font-medium text-blue-900 border border-gray-300">
+                          {formatNumber(item.calculatedMd || 0, 2)}
                         </td>
-                        <td className="px-3 py-2 text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-[10px] text-center text-sm text-gray-600 border border-gray-300">
                           {item.remarks}
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50">
-                    <tr>
+                  <tfoot className="bg-yellow-50">
+                    <tr className="h-[35px]">
                       <td
                         colSpan={4}
-                        className="px-3 py-2 text-right text-sm font-medium text-gray-900"
+                        className="px-[10px] text-right text-sm font-bold text-gray-900 border border-gray-300"
                       >
                         합계 (M/D)
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                          <Calculator className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-900">
-                            {formatNumber(totalModeling3dMd, 2)} M/D
-                          </span>
-                        </div>
+                      <td className="whitespace-nowrap px-[10px] text-right text-sm font-bold text-blue-900 border border-gray-300">
+                        {formatNumber(totalModeling3dMd, 2)}
                       </td>
-                      <td className="px-3 py-2"></td>
+                      <td className="border border-gray-300"></td>
                     </tr>
                   </tfoot>
                 </table>
@@ -2944,236 +3176,267 @@ export default function MdEstimationPage({
         )}
 
         {activeTab === "pid" && (
-          <div className="p-6" key={`pid-${currentEstimationId || 'new'}`}>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                P&ID 공수 기준표
-              </h2>
-              <button
-                onClick={handleSave}
-                disabled={isSaving || (currentEstimation?.status === "completed")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          <div className="space-y-6" key={`pid-${currentEstimationId || 'new'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  P&ID 공수 기준표
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  P&ID 및 SLD의 수량과 수기 작성/자동 인식 등 전환 방식별 가중치를 적용하여 공수를 산정합니다.
+                </p>
+              </div>
+              {!isCompleted && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "저장 중..." : "저장"}
+                </button>
+              )}
             </div>
 
-            {/* 상단 왼쪽: M/D 산정 가중치 테이블 */}
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    ○ M/D 산정 가중치 (전환 방식)
+            {/* P&ID: 좌측 산정 공수, 우측 가중치 표 */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* 좌측: P&ID 산정 공수 */}
+              <div className="flex flex-col h-full gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Calculator className="h-5 w-5" />
+                    P&ID 산정 공수
                   </h3>
-                  <button
-                    onClick={handleAddPidWeightItem}
-                    disabled={currentEstimation?.status === "completed"}
-                    className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Plus className="h-3 w-3" />
-                    추가
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">M/M 기준 :</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={mmCalculationBase}
+                        onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
+                        disabled={isCompleted}
+                        className={cn(
+                          "w-16 h-8 text-sm text-right focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all rounded-md px-2",
+                          isCompleted
+                            ? "bg-gray-50/50 border border-gray-200 cursor-default font-bold text-gray-900 shadow-none"
+                            : "bg-white border border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                        )}
+                      />
+                      <span className="text-sm text-gray-600">일</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          내용
-                        </th>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          가중치
-                        </th>
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          설명
-                        </th>
-                        <th className="relative px-2 py-2">
-                          <span className="sr-only">Actions</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {pidWeightTable.map((weight) => {
-                        return (
-                          <tr
-                            key={weight.id}
-                            className={
-                              selectedPidWeightId === weight.id
-                                ? "bg-blue-50"
-                                : "hover:bg-gray-50"
-                            }
-                          >
-                            <td className="whitespace-nowrap px-2 py-2">
-                              <input
-                                type="text"
-                                value={weight.content || ""}
-                                onChange={(e) =>
-                                  handlePidWeightItemChange(
-                                    weight.id,
-                                    "content",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="내용 입력"
-                                disabled={currentEstimation?.status === "completed"}
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2">
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={weight.weight}
-                                onChange={(e) =>
-                                  handlePidWeightItemChange(
-                                    weight.id,
-                                    "weight",
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                                disabled={currentEstimation?.status === "completed"}
-                                className="w-20 rounded-md border border-gray-300 px-2 py-1 text-xs text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className="px-2 py-2">
-                              <input
-                                type="text"
-                                value={weight.description || ""}
-                                onChange={(e) =>
-                                  handlePidWeightItemChange(
-                                    weight.id,
-                                    "description",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="설명 입력"
-                                disabled={currentEstimation?.status === "completed"}
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-2 text-right">
-                              <button
-                                onClick={() => setSelectedPidWeightId(weight.id)}
-                                disabled={currentEstimation?.status === "completed"}
-                                className={`rounded px-2 py-1 text-xs ${selectedPidWeightId === weight.id
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                              >
-                                선택
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
 
-              {/* 상단 오른쪽: 계산 결과 요약 */}
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                  ○ P&ID 산정 공수
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">합계 (M/D)</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatNumber(totalPidMd, 2)} M/D
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">선택된 가중치</span>
-                    {selectedPidWeightId ? (
-                      <span className="text-sm font-semibold text-gray-900">
-                        {selectedPidWeight?.content} (
-                        {formatNumber(selectedPidWeightValue, 2)})
+                <div className="rounded-lg border border-gray-200 bg-white p-6 flex-grow flex flex-col justify-center gap-4 transition-all hover:border-gray-300">
+                  <div className={pidWeightTable.length >= 6 ? "flex flex-col gap-4" : "grid grid-cols-2 gap-4"}>
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 border border-gray-100">
+                      <span className="text-sm font-medium text-gray-600">합계 (M/D)</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {formatNumber(totalPidMd, 2)} M/D
                       </span>
-                    ) : (
-                      <div className="flex items-center gap-1 rounded-md border border-red-300 bg-red-50 px-2 py-1">
-                        <AlertCircle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm font-semibold text-red-600">
-                          미선택 - 가중치를 선택해주세요
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-blue-50/50 px-4 py-3 border border-blue-100">
+                      <span className="text-sm font-medium text-gray-600">선택된 가중치</span>
+                      {selectedPidWeightId ? (
+                        <span className="text-sm font-medium text-gray-900">
+                          {selectedPidWeight?.content} ({formatNumber(selectedPidWeightValue, 2)})
                         </span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-sm font-medium text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-4 w-4" /> 가중치 미선택
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-blue-900">
-                      최종 M/D
-                    </span>
-                    <span className="text-lg font-bold text-blue-900">
+                  <div className="flex items-center justify-between rounded-lg bg-indigo-50 px-4 py-3 border border-indigo-100">
+                    <span className="text-sm font-medium text-indigo-900">최종 M/D</span>
+                    <span className="text-sm font-medium text-indigo-900">
                       {formatNumber(finalPidMd, 2)} M/D
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2">
-                    <span className="text-sm font-semibold text-green-900">
-                      최종 M/M
-                    </span>
-                    <span className="text-lg font-bold text-green-900">
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3 border border-emerald-100">
+                    <span className="text-sm font-bold text-emerald-900">최종 M/M</span>
+                    <span className="text-sm font-bold text-emerald-900">
                       {formatNumber(finalPidMm, 2)} M/M
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center justify-end gap-2">
-                    <label className="text-sm text-gray-600">M/M 계산 기준값:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="0.1"
-                      value={mmCalculationBase}
-                      onChange={(e) => setMmCalculationBase(parseFloat(e.target.value) || 21)}
-                      disabled={currentEstimation?.status === "completed"}
-                      className="w-20 rounded-xl border border-gray-300 px-2 h-10 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm text-gray-600">일</span>
+                </div>
+              </div>
+
+              {/* 우측: 가중치 표 */}
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="flex items-center justify-between h-8">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <BarChart3 className="h-5 w-5" />
+                    가중치 (도면 자료) 선택
+                  </h3>
+                </div>
+                <div className="bg-white flex-grow flex flex-col overflow-hidden rounded-none shadow-none">
+                  <div className="overflow-x-auto flex-grow">
+                    <table className="w-full divide-y divide-gray-200 border-collapse">
+                      <thead className="bg-blue-50/50">
+                        <tr>
+                          <th className="w-12 px-0 py-0 text-center border border-gray-300 h-[35px]">
+                            <span className="text-sm font-bold text-gray-900">선택</span>
+                          </th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">내용</th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">가중치</th>
+                          <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-gray-900 border border-gray-300 h-[35px]">설명</th>
+                          {!isCompleted && (
+                            <th className="w-12 px-0 py-0 text-center border border-gray-300 h-[35px]">
+                              <span className="text-sm font-bold text-gray-900">작업</span>
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {pidWeightTable.map((weight) => {
+                          const isSelected = selectedPidWeightId === weight.id;
+                          return (
+                            <tr
+                              key={weight.id}
+                              className={`transition-colors h-[35px] ${isSelected ? "bg-blue-100" : ""
+                                }`}
+                            >
+                              <td className="p-0 text-center border border-gray-300 h-[35px]">
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-center h-full w-full transition-colors",
+                                    !isCompleted ? "cursor-pointer hover:bg-blue-50/50" : "cursor-default"
+                                  )}
+                                  onClick={() => !isCompleted && setSelectedPidWeightId(weight.id)}
+                                >
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-blue-600 bg-white' : 'border-gray-300 bg-white'}`}>
+                                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                {isCompleted ? (
+                                  <div className="px-[10px] h-full flex items-center text-sm text-gray-900">{weight.content}</div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={weight.content}
+                                    onChange={(e) => handlePidWeightItemChange(weight.id, "content", e.target.value)}
+                                    className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-gray-900 placeholder-gray-400 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all"
+                                    placeholder="내용"
+                                  />
+                                )}
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                <input
+                                  type="number"
+                                  value={
+                                    isCompleted
+                                      ? (weight.weight || 0).toFixed(2)
+                                      : focusedInput === `pid-weight-${weight.id}`
+                                        ? (weight.weight ?? "")
+                                        : (weight.weight !== undefined ? weight.weight.toFixed(2) : "")
+                                  }
+                                  onFocus={() => setFocusedInput(`pid-weight-${weight.id}`)}
+                                  onBlur={() => setFocusedInput(null)}
+                                  onChange={(e) => handlePidWeightItemChange(weight.id, "weight", parseFloat(e.target.value))}
+                                  step="0.01"
+                                  disabled={isCompleted}
+                                  className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-right text-gray-900 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all disabled:bg-transparent"
+                                />
+                              </td>
+                              <td className="p-0 border border-gray-300 hover:bg-blue-50/50 transition-colors group h-[35px]">
+                                {isCompleted ? (
+                                  <div className="px-[10px] h-full flex items-center text-sm text-gray-500">{weight.description}</div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={weight.description}
+                                    onChange={(e) => handlePidWeightItemChange(weight.id, "description", e.target.value)}
+                                    className="w-full h-full bg-transparent border-none outline-none rounded-none px-[10px] text-sm text-gray-900 placeholder-gray-400 focus:bg-blue-50/50 focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all"
+                                    placeholder="설명"
+                                  />
+                                )}
+                              </td>
+                              {!isCompleted && (
+                                <td className="p-0 text-center border border-gray-300 h-[35px]">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemovePidWeightItem(weight.id);
+                                    }}
+                                    className="text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center w-full h-full"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                        {/* 행 추가 버튼 */}
+                        {currentEstimation?.status?.toUpperCase() !== 'COMPLETED' && (
+                          <tr className="h-[35px]">
+                            <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={5}>
+                              <button
+                                type="button"
+                                onClick={handleAddPidWeightItem}
+                                className="w-full h-full flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-sm font-medium m-0 p-0 rounded-none border-none outline-none focus:outline-none"
+                              >
+                                <Plus className="h-4 w-4" />
+                                항목 추가
+                              </button>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* 하단: 공수 기준표 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">
-                  ○ P&ID 공수 기준표
+            <div className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                  <Settings className="h-5 w-5" />
+                  P&ID 공수 기준표
                 </h3>
               </div>
               <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-sm text-blue-800">
-                  <span className="font-bold">※ 계산 방식:</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
+                  <span className="font-bold">※ 계산 방식 :</span> 산정M/D = 수량 × 기준M/D, 최종M/D = 합계(M/D) × 가중치, 최종M/M = 최종M/D / M/M 계산 기준값
                 </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-slate-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full border-collapse">
+                  <thead className="bg-blue-50/50">
+                    <tr className="h-[35px]">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         구분
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         수량
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         기준M/D
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left border-r border-gray-200">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         산정M/D
                       </th>
-                      <th className="px-3 py-4 text-sm font-bold tracking-wider text-slate-700 text-left">
+                      <th className="px-[10px] py-1 text-center text-sm font-bold tracking-wider text-slate-700 border border-gray-300">
                         비고
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="bg-white">
                     {pidItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-900">
+                      <tr key={item.id} className="h-[35px]">
+                        <td className="whitespace-nowrap px-[10px] text-center text-sm text-gray-900 border border-gray-300">
                           {item.category}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
+                        <td className="p-0 border border-gray-300 h-[35px]">
                           <input
                             type="number"
                             min="0"
@@ -3186,16 +3449,24 @@ export default function MdEstimationPage({
                                 parseFloat(e.target.value) || 0
                               )
                             }
-                            disabled={currentEstimation?.status === "completed"}
-                            className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            disabled={currentEstimation?.status === "COMPLETED"}
+                            className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
+                        <td className="p-0 border border-gray-300 h-[35px]">
                           <input
                             type="number"
                             min="0"
-                            step="0.1"
-                            value={item.baseMd || ""}
+                            step="0.01"
+                            value={
+                              currentEstimation?.status === "completed"
+                                ? (item.baseMd || 0).toFixed(2)
+                                : focusedInput === `pid-base-${item.id}`
+                                  ? (item.baseMd ?? "")
+                                  : (item.baseMd !== undefined ? item.baseMd.toFixed(2) : "")
+                            }
+                            onFocus={() => setFocusedInput(`pid-base-${item.id}`)}
+                            onBlur={() => setFocusedInput(null)}
                             onChange={(e) =>
                               handlePidItemChange(
                                 item.id,
@@ -3203,41 +3474,31 @@ export default function MdEstimationPage({
                                 parseFloat(e.target.value) || 0
                               )
                             }
-                            disabled={currentEstimation?.status === "completed"}
-                            className="w-24 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            disabled={isCompleted}
+                            className="w-full h-full border-none bg-transparent px-[10px] text-right text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white hover:bg-blue-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-gray-50 disabled:text-gray-900"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2">
-                          <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                            <Calculator className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-semibold text-blue-900">
-                              {formatNumber(item.calculatedMd || 0, 2)} M/D
-                            </span>
-                          </div>
+                        <td className="whitespace-nowrap px-[10px] text-right text-sm font-medium text-blue-900 border border-gray-300">
+                          {formatNumber(item.calculatedMd || 0, 2)}
                         </td>
-                        <td className="px-3 py-2 text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-[10px] text-center text-sm text-gray-600 border border-gray-300">
                           {item.remarks}
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50">
-                    <tr>
+                  <tfoot className="bg-yellow-50">
+                    <tr className="h-[35px]">
                       <td
                         colSpan={3}
-                        className="px-3 py-2 text-right text-sm font-medium text-gray-900"
+                        className="px-[10px] text-right text-sm font-bold text-gray-900 border border-gray-300"
                       >
                         합계 (M/D)
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-                          <Calculator className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-900">
-                            {formatNumber(totalPidMd, 2)} M/D
-                          </span>
-                        </div>
+                      <td className="whitespace-nowrap px-[10px] text-right text-sm font-bold text-blue-900 border border-gray-300">
+                        {formatNumber(totalPidMd, 2)}
                       </td>
-                      <td className="px-3 py-2"></td>
+                      <td className="border border-gray-300"></td>
                     </tr>
                   </tfoot>
                 </table>
@@ -3245,127 +3506,113 @@ export default function MdEstimationPage({
             </div>
           </div>
         )}
-      </div>
 
-      {/* M/D 산정 목록 모달 */}
-      {showListModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-4xl rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                M/D 산정 목록
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowListModal(false)}
-                  className="rounded-xl border border-gray-300 bg-white px-4 h-10 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  닫기
-                </button>
+        {/* M/D 산정 목록 모달 */}
+        {
+          showListModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="w-full max-w-4xl rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    M/D 산정 목록
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowListModal(false)}
+                      className="rounded-xl border border-gray-300 bg-white px-4 h-10 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      닫기
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          버전
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          총 M/D
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          총 M/M
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          상태
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          작성자
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          작성일
+                        </th>
+                        <th className="relative px-4 py-3">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {mdEstimations.map((estimation) => (
+                        <tr
+                          key={estimation.id}
+                          className={
+                            estimation.id === currentEstimationId
+                              ? "bg-blue-50"
+                              : "hover:bg-gray-50"
+                          }
+                        >
+                          <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                            v{estimation.version}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            {formatNumber(estimation.totalMd, 2)} M/D
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            {formatNumber(estimation.totalMm, 2)} M/M
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${estimation.status === "completed"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                                }`}
+                            >
+                              {estimation.status === "completed" ? "완료" : "작성중"}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            {estimation.createdBy}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            {estimation.createdAt}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleSelectEstimation(estimation.id)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                선택
+                              </button>
+                              <button
+                                onClick={() => handleCopyEstimation(estimation.id)}
+                                className="text-gray-600 hover:text-gray-900"
+                                title="복사"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      버전
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      총 M/D
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      총 M/M
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      상태
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      작성자
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      작성일
-                    </th>
-                    <th className="relative px-4 py-3">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {mdEstimations.map((estimation) => (
-                    <tr
-                      key={estimation.id}
-                      className={
-                        estimation.id === currentEstimationId
-                          ? "bg-blue-50"
-                          : "hover:bg-gray-50"
-                      }
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                        v{estimation.version}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                        {formatNumber(estimation.totalMd, 2)} M/D
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                        {formatNumber(estimation.totalMm, 2)} M/M
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${estimation.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                            }`}
-                        >
-                          {estimation.status === "completed" ? "완료" : "작성중"}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                        {estimation.createdBy}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                        {estimation.createdAt}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleSelectEstimation(estimation.id)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            선택
-                          </button>
-                          <button
-                            onClick={() => handleCopyEstimation(estimation.id)}
-                            className="text-gray-600 hover:text-gray-900"
-                            title="복사"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {currentEstimation && !isNewEstimation && (
-        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-900">
-                <span className="font-bold">현재 선택:</span> M/D 산정 v{currentEstimation.version} ({currentEstimation.status === "completed" ? "완료" : "작성중"})
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-
+          )}
+      </div>
     </div>
   );
 }

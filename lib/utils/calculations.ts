@@ -103,12 +103,13 @@ export function calculateProfitabilitySummary(
   }, 0);
 
   const srvInternalCost = srvInternalItems.reduce((sum: number, i) => {
-    if (i.internalAmount !== null && i.internalAmount !== undefined) return sum + i.internalAmount;
+    // 당사 인력은 무조건 자동 계산 (M/M * 단가) - 저장된 internalAmount 무시 (찌꺼기 데이터 방지)
     const totalMM = Object.values(i.monthlyAllocation || {}).reduce((s: number, v) => s + (Number(v) || 0), 0);
     return sum + Math.round(totalMM * (i.internalUnitPrice || 0));
   }, 0);
 
   const srvExternalCost = srvExternalItems.reduce((sum: number, i) => {
+    // 외주 인력은 저장된 금액 우선 사용
     if (i.internalAmount !== null && i.internalAmount !== undefined) return sum + i.internalAmount;
     const totalMM = Object.values(i.monthlyAllocation || {}).reduce((s: number, v) => s + (Number(v) || 0), 0);
     return sum + Math.round(totalMM * (i.internalUnitPrice || 0));

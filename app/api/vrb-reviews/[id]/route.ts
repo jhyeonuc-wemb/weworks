@@ -297,6 +297,7 @@ export async function PUT(
       'status',
       'rejection_reason',
       'ui_settings',
+      'review_result',
     ];
 
     headerFields.forEach((field) => {
@@ -319,7 +320,9 @@ export async function PUT(
 
     if (updateFields.length > 0) {
       updateValues.push(id);
-      const updateSql = `UPDATE we_project_vrb_reviews SET ${updateFields.join(', ')}, status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
+      // status 컬럼 중복 할당 제거: headerFields에 'status'가 포함되어 있으므로 body에 status가 있으면 updateFields에 포함됨
+      // 따라서 별도의 status = CASE ... 구문은 제거하고 updated_at만 추가함
+      const updateSql = `UPDATE we_project_vrb_reviews SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
       console.log('[API PUT] 업데이트 SQL:', updateSql);
       console.log('[API PUT] 업데이트 값:', updateValues);
 

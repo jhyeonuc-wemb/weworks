@@ -30,7 +30,7 @@ export function formatNumber(
   return new Intl.NumberFormat("ko-KR", {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,
-  }).format(numValue);
+  }).format(numValue + 0);
 }
 
 /**
@@ -70,7 +70,7 @@ export function formatPercent(
   const numValue = Number(value);
   if (isNaN(numValue)) return "-";
 
-  return `${numValue.toFixed(decimalPlaces)}%`;
+  return `${(numValue + 0).toFixed(decimalPlaces)}%`;
 }
 
 /**

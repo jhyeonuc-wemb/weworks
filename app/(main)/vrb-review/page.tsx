@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, FileText, HelpCircle, CheckCircle2, XCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
 
 interface Project {
   id: number;
@@ -27,6 +27,7 @@ interface VrbReview {
   best_estimated_revenue_services?: number | null;
   best_operating_profit?: number | null;
   best_operating_profit_percent?: number | null;
+  review_result?: string | null;
 }
 
 const sortOptions = [
@@ -35,6 +36,15 @@ const sortOptions = [
   { value: "revenue_low", label: "예상 매출 낮은 순" },
   { value: "profit_high", label: "영업이익 높은 순" },
   { value: "profit_low", label: "영업이익 낮은 순" },
+  { value: "rate_high", label: "이익률 높은 순" },
+  { value: "rate_low", label: "이익률 낮은 순" },
+];
+
+const resultFilterOptions = [
+  { value: "all", label: "심의결과 전체" },
+  { value: "PROCEED", label: "진행" },
+  { value: "STOP", label: "미진행" },
+  { value: "NONE", label: "미지정" },
 ];
 
 export default function VrbReviewListPage() {
@@ -46,8 +56,30 @@ export default function VrbReviewListPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState("project_code_desc");
+  const [resultFilter, setResultFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isProfitHovered, setIsProfitHovered] = useState(false);
+  const [isRateHovered, setIsRateHovered] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleMouseEnter = (type: 'profit' | 'rate') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (type === 'profit') setIsProfitHovered(true);
+    else setIsRateHovered(true);
+  };
+
+  const handleMouseLeave = (type: 'profit' | 'rate') => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (type === 'profit') setIsProfitHovered(false);
+      else setIsRateHovered(false);
+    }, 150); // 150ms buffer
+  };
 
   useEffect(() => {
     fetchData();
@@ -82,12 +114,19 @@ export default function VrbReviewListPage() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = reviews.filter(
+      filtered = filtered.filter(
         (review) =>
           review.project_name?.toLowerCase().includes(query) ||
           review.project_code?.toLowerCase().includes(query) ||
           review.customer_name?.toLowerCase().includes(query)
       );
+    }
+
+    if (resultFilter !== "all") {
+      filtered = filtered.filter((review) => {
+        if (resultFilter === "NONE") return !review.review_result;
+        return review.review_result === resultFilter;
+      });
     }
 
     return [...filtered].sort((a, b) => {
@@ -100,6 +139,10 @@ export default function VrbReviewListPage() {
           return (b.best_operating_profit || 0) - (a.best_operating_profit || 0);
         case "profit_low":
           return (a.best_operating_profit || 0) - (b.best_operating_profit || 0);
+        case "rate_high":
+          return (b.best_operating_profit_percent || 0) - (a.best_operating_profit_percent || 0);
+        case "rate_low":
+          return (a.best_operating_profit_percent || 0) - (b.best_operating_profit_percent || 0);
         case "project_code_desc":
         default:
           if (!a.project_code) return 1;
@@ -107,7 +150,7 @@ export default function VrbReviewListPage() {
           return b.project_code.localeCompare(a.project_code);
       }
     });
-  }, [reviews, sortOption, searchQuery]);
+  }, [reviews, sortOption, searchQuery, resultFilter]);
 
   const paginatedReviews = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -118,7 +161,7 @@ export default function VrbReviewListPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortOption, itemsPerPage]);
+  }, [searchQuery, sortOption, resultFilter, itemsPerPage]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -207,6 +250,14 @@ export default function VrbReviewListPage() {
 
       {/* 검색 및 필터 */}
       <div className="flex items-center gap-x-4 mx-1">
+        <Dropdown
+          value={resultFilter}
+          onChange={(value) => setResultFilter(value as string)}
+          options={resultFilterOptions}
+          className="w-48"
+          align="left"
+          placeholder="심의결과 필터"
+        />
         <SearchInput
           placeholder="프로젝트, 코드, 고객사 검색..."
           value={searchQuery}
@@ -216,7 +267,7 @@ export default function VrbReviewListPage() {
           value={sortOption}
           onChange={(value) => setSortOption(value as string)}
           options={sortOptions}
-          className="w-64"
+          className="w-48"
           align="center"
         />
       </div>
@@ -228,20 +279,54 @@ export default function VrbReviewListPage() {
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">심의 결과</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">예상 매출</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">영업이익</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">이익률</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">예상 매출(원)</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    영업이익(원)
+                    {isMounted && (
+                      <Popover open={isProfitHovered}>
+                        <PopoverTrigger asChild onMouseEnter={() => handleMouseEnter('profit')} onMouseLeave={() => handleMouseLeave('profit')}>
+                          <HelpCircle className="h-3.5 w-3.5 text-slate-400 hover:text-primary transition-colors cursor-help" />
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="center" className="w-64 p-3 bg-slate-900/95 text-white text-sm rounded-md shadow-2xl backdrop-blur-md border-none font-medium animate-in fade-in zoom-in-95 duration-200 pointer-events-none mb-1">
+                          <div className="relative">
+                            영업이익과 이익률은 Best Case(최선의 시나리오)를 기준으로 산출된 값입니다.
+                            <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900/95" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    이익률
+                    {isMounted && (
+                      <Popover open={isRateHovered}>
+                        <PopoverTrigger asChild onMouseEnter={() => handleMouseEnter('rate')} onMouseLeave={() => handleMouseLeave('rate')}>
+                          <HelpCircle className="h-3.5 w-3.5 text-slate-400 hover:text-primary transition-colors cursor-help" />
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="center" className="w-64 p-3 bg-slate-900/95 text-white text-sm rounded-none shadow-2xl backdrop-blur-md border-none font-medium animate-in fade-in zoom-in-95 duration-200 pointer-events-none mb-1">
+                          <div className="relative">
+                            영업이익과 이익률은 Best Case(최선의 시나리오)를 기준으로 산출된 값입니다.
+                            <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900/95" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                </TableHead>
+
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">작성일</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-24 text-center border-none">
+                  <TableCell colSpan={8} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                       <p className="text-sm text-muted-foreground font-medium">데이터를 불러오고 있습니다...</p>
@@ -250,7 +335,7 @@ export default function VrbReviewListPage() {
                 </TableRow>
               ) : sortedReviews.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-24 text-center border-none">
+                  <TableCell colSpan={8} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4 opacity-40">
                       <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                         <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
@@ -270,70 +355,76 @@ export default function VrbReviewListPage() {
                     onClick={() => router.push(`/projects/${review.project_id}/vrb-review`)}
                   >
                     <TableCell align="center" className="px-8 py-3">
-                      <span className="text-xs font-bold text-foreground/40 font-mono italic">{review.project_code || "-"}</span>
+                      <span className="text-sm text-foreground/80 font-mono">
+                        {review.project_code || "-"}
+                      </span>
                     </TableCell>
                     <TableCell align="left" className="px-8 py-3">
-                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1">{review.project_name}</div>
+                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                        {review.project_name}
+                      </div>
                     </TableCell>
                     <TableCell align="center" className="px-8 py-3">
-                      <span className="text-sm font-bold text-muted-foreground/80">{review.customer_name || "-"}</span>
+                      <div className="flex items-center justify-center">
+                        {review.review_result === "PROCEED" ? (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 text-emerald-700 border border-emerald-200/50 shadow-[0_2px_10px_-4px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.4)]">
+                            <div className="relative flex h-5 w-5 items-center justify-center">
+                              <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
+                              <div className="relative flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100">
+                                <CheckCircle2 className="h-2.5 w-2.5" strokeWidth={4} />
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-black tracking-tight leading-none">진행</span>
+                          </div>
+                        ) : review.review_result === "STOP" ? (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/50 shadow-[0_2px_10px_-4px_rgba(244,63,94,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(244,63,94,0.4)]">
+                            <div className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm ring-2 ring-rose-100">
+                              <XCircle className="h-2.5 w-2.5" strokeWidth={4} />
+                            </div>
+                            <span className="text-[11px] font-black tracking-tight leading-none">미진행</span>
+                          </div>
+                        ) : (
+                          <div className="w-8 h-[1px] bg-slate-200" />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell align="center" className="px-8 py-3">
-                      <span className="text-sm font-black text-foreground font-mono">
+                      <span className="text-sm text-foreground/80">
+                        {review.customer_name || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell align="right" className="px-8 py-3">
+                      <span className="text-sm text-foreground/80 font-mono">
                         {review.best_estimated_revenue_services
-                          ? formatCurrency(review.best_estimated_revenue_services * 1000, "KRW")
+                          ? formatCurrency(review.best_estimated_revenue_services, "KRW", false)
                           : "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
-                      <span className="text-sm font-black text-foreground font-mono">
+                    <TableCell align="right" className="px-8 py-3">
+                      <span className={cn(
+                        "text-sm font-mono font-bold",
+                        (review.best_operating_profit || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+                      )}>
                         {review.best_operating_profit
-                          ? formatCurrency(review.best_operating_profit * 1000, "KRW")
+                          ? formatCurrency(review.best_operating_profit, "KRW", false)
                           : "-"}
                       </span>
                     </TableCell>
                     <TableCell align="center" className="px-8 py-3">
                       <span className={cn(
-                        "text-xs font-black font-mono px-2 py-1 rounded-md",
-                        (review.best_operating_profit_percent || 0) >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                        "text-sm font-bold font-mono",
+                        (review.best_operating_profit_percent || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
                       )}>
                         {review.best_operating_profit_percent
                           ? formatPercent(review.best_operating_profit_percent)
                           : "-"}
                       </span>
                     </TableCell>
+
                     <TableCell align="center" className="px-8 py-3">
-                      <Badge variant={getStatusVariant(review.status)} className="rounded-xl px-3 py-1 font-bold text-[10px]">
+                      <Badge variant={getStatusVariant(review.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                         {getStatusLabel(review.status)}
                       </Badge>
-                    </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
-                      <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-tighter">
-                        {new Date(review.created_at).toLocaleDateString()}
-                      </span>
-                    </TableCell>
-                    <TableCell align="right" className="px-8 py-3">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/projects/${review.project_id}/vrb-review`);
-                          }}
-                          className="px-3 py-1.5 rounded-2xl bg-muted/50 text-[10px] font-black text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all uppercase tracking-widest"
-                        >
-                          Review
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(review.id);
-                          }}
-                          disabled={deletingId === review.id}
-                          className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))

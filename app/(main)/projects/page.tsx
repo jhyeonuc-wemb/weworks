@@ -247,7 +247,7 @@ export default function ProjectsPage() {
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">분야</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계약금액(원)</TableHead>

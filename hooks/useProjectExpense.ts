@@ -241,7 +241,7 @@ export function useProjectExpense(
             if (item.id !== id) return item;
 
             const newAuto = !item.isAutoCalculated;
-            let newValues = item.monthlyValues;
+            const newValues = item.monthlyValues;
 
             // 켜는 순간 재계산
             if (newAuto) {

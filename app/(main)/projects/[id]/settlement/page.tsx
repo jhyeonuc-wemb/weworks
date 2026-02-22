@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Download, Plus, Trash2, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Save, Download, Plus, Trash2, CheckCircle2, Calendar as CalendarIcon, BarChart3, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { DatePicker, StatusBadge, Button, useToast } from "@/components/ui";
+import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import type { AlertType } from "@/components/ui";
 import {
   mapRankToJobLevel,
@@ -182,6 +183,7 @@ export default function ProjectSettlementPage() {
   const [initialMonthCount, setInitialMonthCount] = useState<number>(0);
   const [extCompanyPlans, setExtCompanyPlans] = useState<ExtCompanyPlan[]>([]);
   const [standardExpenseTotal, setStandardExpenseTotal] = useState<number>(0);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const [settlement, setSettlement] = useState<SettlementData>({
     project_id: projectId,
@@ -304,6 +306,14 @@ export default function ProjectSettlementPage() {
           grade: u.grade,
         }));
         setUsers(fetchedUsers);
+        setUsers(fetchedUsers);
+      }
+
+      // 내 정보 로드
+      const meRes = await fetch("/api/auth/me");
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        setCurrentUser(meData.user);
       }
 
       // 기준 단가 조회
@@ -443,7 +453,7 @@ export default function ProjectSettlementPage() {
                 const start = new Date(firstManpowerData.analysisStartMonth + '-01');
                 const end = new Date(firstManpowerData.analysisEndMonth + '-01');
 
-                let current = new Date(start);
+                const current = new Date(start);
                 while (current <= end) {
                   const year = current.getFullYear();
                   const month = current.getMonth() + 1;
@@ -775,6 +785,7 @@ export default function ProjectSettlementPage() {
             planned_profit_rate: baseProfitRateCalculated,
             planned_svc_mm_own: baseInternalMM,
             planned_svc_mm_ext: baseExternalMM,
+            created_by: currentUser?.id || 1,
           },
           labor: laborToSave,
           extCompanies: extCompanyPlans,
@@ -782,7 +793,7 @@ export default function ProjectSettlementPage() {
       });
 
       if (response.ok) {
-        showToast("정산서가 저장되었습니다", "success");
+        showToast("수지정산서가 저장되었습니다.", "success");
         fetchData();
       } else {
         showToast("저장 실패", "error");
@@ -876,7 +887,7 @@ export default function ProjectSettlementPage() {
   const handleManpowerChange = (id: number, field: keyof ManpowerPlanItem, value: any) => {
     setBaseManpowerPlan(prev => prev.map(item => {
       if (item.id === id) {
-        let updatedItem = { ...item, [field]: value };
+        const updatedItem = { ...item, [field]: value };
 
         // Handle name change for auto-fill
         if (field === 'name') {
@@ -1014,12 +1025,17 @@ export default function ProjectSettlementPage() {
     ));
   };
 
-  const deleteLastMonth = () => {
-    if (monthColumns.length <= initialMonthCount) return;
+  const deleteMonthAtEnd = () => {
+    if (monthColumns.length === 0) return;
     setMonthColumns(prev => prev.slice(0, -1));
   };
 
-  const addMonth = () => {
+  const deleteMonthAtStart = () => {
+    if (monthColumns.length === 0) return;
+    setMonthColumns(prev => prev.slice(1));
+  };
+
+  const addMonthAtEnd = () => {
     if (monthColumns.length === 0) {
       // Default start
       const now = new Date();
@@ -1030,14 +1046,31 @@ export default function ProjectSettlementPage() {
     }
     const lastMonth = monthColumns[monthColumns.length - 1];
     const [year, month] = lastMonth.split('-').map(Number);
-    const nextDate = new Date(year, month, 1); // month is 1-indexed for Input, but here used for calculation logic
-    // Correction: new Date(year, month, 1) creates date for Next Month because month argument is 0-indexed in Date constructor.
-    // If input is "2024-01" (January), month=1. new Date(2024, 1, 1) -> Feb 1st. Correct.
+    const nextDate = new Date(year, month, 1); // month is 1-indexed from split, so new Date(year, month, 1) gives next month
 
     const nextYear = nextDate.getFullYear();
     const nextMonth = nextDate.getMonth() + 1;
     const nextMonthStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
     setMonthColumns([...monthColumns, nextMonthStr]);
+  };
+
+  const addMonthAtStart = () => {
+    if (monthColumns.length === 0) {
+      // Default start
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      setMonthColumns([`${year}-${String(month).padStart(2, '0')}`]);
+      return;
+    }
+    const firstMonth = monthColumns[0];
+    const [year, month] = firstMonth.split('-').map(Number);
+    const prevDate = new Date(year, month - 2, 1); // month is 1-based. To get previous month: (month-1) is current in 0-based, so (month-2) is previous.
+
+    const prevYear = prevDate.getFullYear();
+    const prevMonth = prevDate.getMonth() + 1;
+    const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+    setMonthColumns([prevMonthStr, ...monthColumns]);
   };
 
   const addManpowerRow = () => {
@@ -1243,6 +1276,7 @@ export default function ProjectSettlementPage() {
               <StatusBadge
                 status={settlement.status || 'STANDBY'}
               />
+              <ProjectPhaseNav projectId={projectId} />
             </div>
             <p className="text-sm text-gray-600">
               {projectCode} | {customerName}
@@ -1250,60 +1284,67 @@ export default function ProjectSettlementPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {(settlement.id && settlement.status !== "completed" && settlement.status !== "COMPLETED") && (
+          {settlement.status === 'IN_PROGRESS' && settlement.id && (
             <Button
-              variant="danger"
+              variant="secondary"
               onClick={handleDelete}
-              className="flex items-center gap-2 shadow-md"
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50 border-red-200"
             >
               <Trash2 className="h-4 w-4" />
               삭제
             </Button>
           )}
 
+          {(settlement.status === 'IN_PROGRESS' || settlement.status === 'COMPLETED' || settlement.status === 'completed') && (
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
+            >
+              <Download className="h-4 w-4" />
+              엑셀
+            </Button>
+          )}
 
-          <Button
-            variant="secondary"
-            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
-          >
-            <Download className="h-4 w-4" />
-            엑셀
-          </Button>
-
-          <Button
-            variant="primary"
-            onClick={async () => {
-              await handleSave();
-              await handleStatusChange('COMPLETED');
-            }}
-            disabled={saving || settlement.status === 'COMPLETED' || settlement.status === 'completed'}
-            className="flex items-center gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            작성완료
-          </Button>
+          {settlement.status === 'IN_PROGRESS' && (
+            <Button
+              variant="primary"
+              onClick={async () => {
+                await handleSave();
+                await handleStatusChange('COMPLETED');
+              }}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              작성완료
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Summary Calculation Logic */}
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
         {/* 작성 기준 일자 */}
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
           <div className="flex items-center justify-between">
-            <DatePicker
-              label="작성 기준 일자"
-              date={settlement.settlement_date ? new Date(settlement.settlement_date) : undefined}
-              setDate={(date) => setSettlement({ ...settlement, settlement_date: date ? format(date, "yyyy-MM-dd") : "" })}
-              disabled={settlement.status === "completed"}
-              className="w-48"
-            />
-            <DatePicker
-              label="승인일"
-              date={settlement.approved_date ? new Date(settlement.approved_date) : undefined}
-              setDate={(date) => setSettlement({ ...settlement, approved_date: date ? format(date, "yyyy-MM-dd") : "" })}
-              disabled={settlement.status === "completed"}
-              className="w-48"
-            />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">작성 기준 일자</span>
+              <DatePicker
+                date={settlement.settlement_date ? new Date(settlement.settlement_date) : undefined}
+                setDate={(date) => setSettlement({ ...settlement, settlement_date: date ? format(date, "yyyy-MM-dd") : "" })}
+                disabled={settlement.status === "completed"}
+                className="w-32"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">승인일</span>
+              <DatePicker
+                date={settlement.approved_date ? new Date(settlement.approved_date) : undefined}
+                setDate={(date) => setSettlement({ ...settlement, approved_date: date ? format(date, "yyyy-MM-dd") : "" })}
+                disabled={settlement.status === "completed"}
+                className="w-32"
+              />
+            </div>
           </div>
         </div>
 
@@ -1321,81 +1362,67 @@ export default function ProjectSettlementPage() {
                   <col />
                 </colgroup>
                 <tbody>
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">프로젝트명</td>
-                    <td className="border border-gray-300 px-4 py-[4px] text-[14px] truncate">{projectName}</td>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">고객명</td>
-                    <td className="border border-gray-300 px-4 py-[4px] text-[14px] truncate">{customerName}</td>
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">프로젝트명</td>
+                    <td className="border border-gray-300 px-[10px] text-sm text-gray-900 truncate">{projectName}</td>
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">고객명</td>
+                    <td className="border border-gray-300 px-[10px] text-sm text-gray-900 truncate">{customerName}</td>
                   </tr>
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">기준 계획 수지분석서</td>
-                    <td className="border border-gray-300 px-4 py-[4px]">
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">기준 계획 수지분석서</td>
+                    <td className="border border-gray-300 px-[10px]">
                       {firstProfitabilityId ? (
                         <a
                           href={`/projects/${projectId}/profitability`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-[14px] truncate block"
+                          className="text-blue-600 hover:underline text-sm truncate block"
                         >
                           WEMB-수지분석서-{((firstProfitabilityApprovedDate || '').split('T')[0] || '').replace(/-/g, '') || '00000000'}
                         </a>
                       ) : (
-                        <span className="text-gray-400 text-[14px]">없음</span>
+                        <span className="text-gray-400 text-sm">없음</span>
                       )}
                     </td>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">최종 변경 수지분석서</td>
-                    <td className="border border-gray-300 px-4 py-[4px]">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">최종 변경 수지분석서</td>
+                    <td className="border border-gray-300 px-[10px]">
                       {latestProfitabilityId ? (
                         firstProfitabilityId === latestProfitabilityId ? (
-                          <span className="text-gray-600 text-[14px]">변경 없음</span>
+                          <span className="text-gray-600 text-sm">변경 없음</span>
                         ) : (
                           <a
                             href={`/projects/${projectId}/profitability`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-[14px] truncate block"
+                            className="text-blue-600 hover:underline text-sm truncate block"
                           >
                             WEMB-수지분석서-{((latestProfitabilityApprovedDate || '').split('T')[0] || '').replace(/-/g, '') || '00000000'}
                           </a>
                         )
                       ) : (
-                        <span className="text-gray-400 text-[14px]">없음</span>
+                        <span className="text-gray-400 text-sm">없음</span>
                       )}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">매출액</td>
-                    <td className="border border-gray-300 px-4 py-[4px] text-left text-[14px]">
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">매출액</td>
+                    <td className="border border-gray-300 px-[10px] text-left text-sm text-gray-900">
                       {Math.floor(totalRevenue || latestPlanSummary?.total_revenue || 0).toLocaleString()} (천원)
                     </td>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">구축 기간</td>
-                    <td className="border border-gray-300 px-4 py-[4px]">
-                      <div className="flex items-center gap-2">
-                        <DatePicker
-                          date={contractStartDate ? new Date(contractStartDate) : undefined}
-                          setDate={(date) => setContractStartDate(date ? format(date, "yyyy-MM-dd") : "")}
-                          disabled={settlement.status === "completed"}
-                          className="w-36"
-                          placeholder="시작일"
-                        />
-                        <span className="text-gray-400">~</span>
-                        <DatePicker
-                          date={contractEndDate ? new Date(contractEndDate) : undefined}
-                          setDate={(date) => setContractEndDate(date ? format(date, "yyyy-MM-dd") : "")}
-                          disabled={settlement.status === "completed"}
-                          className="w-36"
-                          placeholder="종료일"
-                        />
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">구축 기간</td>
+                    <td className="border border-gray-300 px-[10px]">
+                      <div className="text-sm text-gray-900">
+                        {contractStartDate || ''} ~ {contractEndDate || ''}
                       </div>
                     </td>
                   </tr>
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">담당 PM</td>
-                    <td className="border border-gray-300 px-4 py-[4px] text-[14px] truncate">
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">담당 PM</td>
+                    <td className="border border-gray-300 px-[10px] text-sm text-gray-900 truncate">
                       {managerName} {managerPosition}
                     </td>
-                    <td className="border border-gray-300 px-4 py-[4px] bg-[#DAEEF3] font-medium text-center text-[14px]">영업 담당</td>
-                    <td className="border border-gray-300 px-4 py-[4px] text-[14px] truncate">
+                    <td className="border border-gray-300 px-[10px] bg-blue-50/50 font-bold text-center text-sm">영업 담당</td>
+                    <td className="border border-gray-300 px-[10px] text-sm text-gray-900 truncate">
                       {salesPersonName} {salesPersonPosition}
                     </td>
                   </tr>
@@ -1409,34 +1436,43 @@ export default function ProjectSettlementPage() {
             <h2 className="text-base font-bold text-red-600">2. 수주 내용 요약 및 수지차</h2>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium">(1) 정산 결과</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-medium text-gray-800">(1) 정산 결과</p>
                 <div className="text-gray-600 text-[14px]">[단위 : 천원, %]</div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300 text-[16px] table-fixed">
-                  <colgroup>
-                    <col className="w-[300px]" />
-                    <col />
-                    <col className="w-[300px]" />
-                    <col />
-                  </colgroup>
-                  <tbody>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2 bg-[#F2DCDC] font-bold text-center text-[16px] whitespace-nowrap">기준 계획대비_영업이익 증감액</td>
-                      <td className={`border border-gray-300 px-4 py-2 text-center text-[16px] font-bold ${profitDiff < 0 ? 'text-red-600' : 'text-blue-600'}`}>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {/* 영업이익 증감액 카드 */}
+                <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${profitDiff >= 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                      <TrendingUp className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">기준 계획대비 영업이익 증감액</p>
+                      <p className={`mt-1 text-2xl font-bold ${profitDiff >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {profitDiff.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 bg-[#F2DCDC] font-bold text-center text-[16px] whitespace-nowrap">기준 계획대비_매출이익 증감율</td>
-                      <td className={`border border-gray-300 px-4 py-2 text-center text-[16px] font-bold ${profitRateDiff < 0 ? 'text-red-600' : 'text-blue-600'}`}>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 매출이익 증감율 카드 */}
+                <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${profitRateDiff >= 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                      <BarChart3 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">기준 계획대비 매출이익 증감율</p>
+                      <p className={`mt-1 text-2xl font-bold ${profitRateDiff >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {profitRateDiff.toFixed(2)}%
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-[14px] text-gray-500 mt-2">※ 기준 계획 : 전자결재가 완료 된 최초의 수지분석서.</p>
+              <p className="text-[14px] text-gray-500 mt-3">※ 기준 계획 : 전자결재가 완료 된 최초의 수지분석서.</p>
             </div>
 
             {/* (2) 수주 내용 요약 */}
@@ -1465,7 +1501,7 @@ export default function ProjectSettlementPage() {
                     <col />
                   </colgroup>
                   <thead>
-                    <tr className="bg-[#DAEEF3]">
+                    <tr className="bg-blue-50/50 h-[35px]">
                       <th colSpan={2} rowSpan={2} className="border border-gray-300 px-1 py-[4px] whitespace-nowrap text-[14px]">구분</th>
                       <th colSpan={3} className="border border-gray-300 px-1 py-[4px] text-[14px]">매출액</th>
                       <th rowSpan={2} className="border border-gray-300 px-1 py-[4px] text-[14px]">매입액</th>
@@ -1475,7 +1511,7 @@ export default function ProjectSettlementPage() {
                       <th rowSpan={2} className="border border-gray-300 px-1 py-[4px] text-[14px]">정산 후<br />영업이익의 30%</th>
                       <th colSpan={2} className="border border-gray-300 px-1 py-[4px] text-[14px]">영업 이익</th>
                     </tr>
-                    <tr className="bg-[#DAEEF3]">
+                    <tr className="bg-blue-50/50 h-[35px]">
                       <th className="border border-gray-300 px-1 py-[4px] text-[14px]">상품매출</th>
                       <th className="border border-gray-300 px-1 py-[4px] text-[14px]">용역매출</th>
                       <th className="border border-gray-300 px-1 py-[4px] text-[14px]">합계</th>
@@ -1632,7 +1668,7 @@ export default function ProjectSettlementPage() {
                     <col className="w-[180px]" />
                   </colgroup>
                   <thead>
-                    <tr className="bg-[#DAEEF3]">
+                    <tr className="bg-blue-50/50 h-[35px]">
                       <th colSpan={3} className="border border-gray-400 py-[4px] font-bold px-4 text-[14px]">구분</th>
                       <th className="border border-gray-400 py-[4px] font-bold px-4 text-[14px]">계획_기준 계획</th>
                       <th className="border border-gray-400 py-[4px] font-bold px-4 text-[14px]">계획_최종 변경</th>
@@ -1647,10 +1683,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-[4px] text-[14px]">자사 제품</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{baseSum.prodRevOwn.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{latestSum.prodRevOwn.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-[4px] text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_prod_rev_own || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_prod_rev_own: Number(e.target.value) })}
@@ -1661,10 +1697,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-[4px] text-[14px]">타사 상품</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{baseSum.prodRevExt.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{latestSum.prodRevExt.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-[4px] text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_prod_rev_ext || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_prod_rev_ext: Number(e.target.value) })}
@@ -1684,10 +1720,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-[4px] text-[14px]">자사 인력</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{baseSum.svcRevOwn.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{latestSum.svcRevOwn.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-[4px] font-medium text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_svc_rev_own || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_rev_own: Number(e.target.value) })}
@@ -1698,10 +1734,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-[4px] text-[14px]">외주 인력</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{baseSum.svcRevExt.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-[4px] text-[14px]">{latestSum.svcRevExt.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-[4px] text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_svc_rev_ext || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_rev_ext: Number(e.target.value) })}
@@ -1732,10 +1768,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 text-[14px]">제품원가</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.prodCostOwn.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.prodCostOwn.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_prod_cost_own || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_prod_cost_own: Number(e.target.value) })}
@@ -1759,10 +1795,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">상품원가</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.prodCostExt.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.prodCostExt.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={settlement.actual_prod_cost_ext || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_prod_cost_ext: Number(e.target.value) })}
@@ -1799,13 +1835,13 @@ export default function ProjectSettlementPage() {
                       <td rowSpan={7} className="border border-gray-400 bg-[#D9D9D9] font-bold py-2 text-[14px]">용역 매출 원가</td>
                       <td rowSpan={3} className="border border-gray-400 bg-white py-2 text-[14px]">자사 인력</td>
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">M/M</td>
-                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.internalMM.toFixed(2)}</td>
-                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.internalMM.toFixed(2)}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.internalMM.toFixed(3)}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.internalMM.toFixed(3)}</td>
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
-                          step="0.01"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                          step="0.001"
                           value={settlement.actual_svc_mm_own || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_mm_own: Number(e.target.value) })}
                         />
@@ -1815,10 +1851,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">자사 인력 원가</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.svcCostOwn.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.svcCostOwn.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={settlement.actual_svc_cost_own || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_cost_own: Number(e.target.value) })}
                         />
@@ -1839,13 +1875,13 @@ export default function ProjectSettlementPage() {
                     <tr>
                       <td rowSpan={3} className="border border-gray-400 bg-white py-2 text-[14px]">타사 인력</td>
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">M/M</td>
-                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.externalMM.toFixed(2)}</td>
-                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.externalMM.toFixed(2)}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.externalMM.toFixed(3)}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.externalMM.toFixed(3)}</td>
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
-                          step="0.01"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                          step="0.001"
                           value={settlement.actual_svc_mm_ext || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_mm_ext: Number(e.target.value) })}
                         />
@@ -1855,10 +1891,10 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">외주 인력 원가</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{baseSum.svcCostExt.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.svcCostExt.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={settlement.actual_svc_cost_ext || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_svc_cost_ext: Number(e.target.value) })}
                         />
@@ -1895,10 +1931,10 @@ export default function ProjectSettlementPage() {
                       <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">일반 경비</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{Math.round(expenseBreakdown.general).toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.expenseTotal.toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={settlement.actual_expense_general || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_expense_general: Number(e.target.value) })}
                         />
@@ -1908,10 +1944,10 @@ export default function ProjectSettlementPage() {
                       <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">특별 경비</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{Math.round(expenseBreakdown.special).toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">-</td>
-                      <td className="border border-gray-400 bg-white text-right px-2 py-2 text-[14px]">
+                      <td className="border border-gray-400 bg-white text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full text-right border border-gray-300 rounded pl-1 pr-2"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={settlement.actual_expense_special || 0}
                           onChange={(e) => setSettlement({ ...settlement, actual_expense_special: Number(e.target.value) })}
                         />
@@ -1970,22 +2006,22 @@ export default function ProjectSettlementPage() {
                     <col className="w-[150px]" />
                   </colgroup>
                   <thead>
-                    <tr className="bg-[#DAEEF3]">
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">구분</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">업체명</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">제품/상품명</th>
-                      <th colSpan={3} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">매출</th>
-                      <th colSpan={3} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">매입</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">손익_실행</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">비고</th>
+                    <tr className="bg-blue-50/50 h-[35px]">
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">구분</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">업체명</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">제품/상품명</th>
+                      <th colSpan={3} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">매출</th>
+                      <th colSpan={3} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">매입</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">손익_실행</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">비고</th>
                     </tr>
-                    <tr className="bg-[#DAEEF3]">
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">계획_기준 계획</th>
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">계획_최종 변경</th>
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">실행</th>
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">계획_기준 계획</th>
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">계획_최종 변경</th>
-                      <th className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap">실행</th>
+                    <tr className="bg-blue-50/50 h-[35px]">
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">계획_기준 계획</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">계획_최종 변경</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">실행</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">계획_기준 계획</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">계획_최종 변경</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap">실행</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2023,53 +2059,53 @@ export default function ProjectSettlementPage() {
                             const latestItem = latestInternal[i];
 
                             return (
-                              <tr key={`internal-${i}`}>
+                              <tr key={`internal-${i}`} className="h-[35px]">
                                 {i === 0 && (
-                                  <td rowSpan={internalRowCount + 1} className="border border-gray-400 bg-[#D9D9D9] font-bold py-[4px] text-[14px]">자사</td>
+                                  <td rowSpan={internalRowCount + 1} className="border border-gray-300 bg-gray-50 font-bold py-[4px] text-sm">자사</td>
                                 )}
-                                <td className="border border-gray-400 bg-white py-[4px] text-left px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-white py-[4px] text-left px-[10px] text-sm">
                                   {baseItem?.companyName || latestItem?.companyName || '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-white py-[4px] text-left px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-white py-[4px] text-left px-[10px] text-sm">
                                   {baseItem?.productName || latestItem?.productName || '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {baseItem?.proposalPrice ? baseItem.proposalPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {latestItem?.proposalPrice ? latestItem.proposalPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {baseItem?.costPrice ? baseItem.costPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {latestItem?.costPrice ? latestItem.costPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-white py-[4px] text-[14px]">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-white py-[4px] text-sm">&nbsp;</td>
                               </tr>
                             );
                           })}
-                          <tr className="bg-[#D9D9D9] font-bold">
-                            <td colSpan={2} className="border border-gray-400 py-[4px] text-left px-4 text-[14px]">자사 합계</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                          <tr className="bg-gray-50 font-bold h-[35px]">
+                            <td colSpan={2} className="border border-gray-300 py-[4px] text-left px-[10px] text-sm">자사 합계</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {baseInternalSalesTotal > 0 ? baseInternalSalesTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {latestInternalSalesTotal > 0 ? latestInternalSalesTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {baseInternalCostTotal > 0 ? baseInternalCostTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {latestInternalCostTotal > 0 ? latestInternalCostTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
                           </tr>
 
                           {/* 타사 섹션 */}
@@ -2078,74 +2114,74 @@ export default function ProjectSettlementPage() {
                             const latestItem = latestExternal[i];
 
                             return (
-                              <tr key={`external-${i}`}>
+                              <tr key={`external-${i}`} className="h-[35px]">
                                 {i === 0 && (
-                                  <td rowSpan={externalRowCount + 1} className="border border-gray-400 bg-[#D9D9D9] font-bold py-[4px] text-[14px]">타사</td>
+                                  <td rowSpan={externalRowCount + 1} className="border border-gray-300 bg-gray-50 font-bold py-[4px] text-sm">타사</td>
                                 )}
-                                <td className="border border-gray-400 bg-white py-[4px] text-left px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-white py-[4px] text-left px-[10px] text-sm">
                                   {baseItem?.companyName || latestItem?.companyName || '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-white py-[4px] text-left px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-white py-[4px] text-left px-[10px] text-sm">
                                   {baseItem?.productName || latestItem?.productName || '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {baseItem?.proposalPrice ? baseItem.proposalPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {latestItem?.proposalPrice ? latestItem.proposalPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {baseItem?.costPrice ? baseItem.costPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] text-right px-2 text-[14px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] text-right px-[10px] text-sm">
                                   {latestItem?.costPrice ? latestItem.costPrice.toLocaleString() : '\u00a0'}
                                 </td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] text-[14px]">&nbsp;</td>
-                                <td className="border border-gray-400 bg-white py-[4px] text-[14px]">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] text-sm">&nbsp;</td>
+                                <td className="border border-gray-300 bg-white py-[4px] text-sm">&nbsp;</td>
                               </tr>
                             );
                           })}
-                          <tr className="bg-[#D9D9D9] font-bold">
-                            <td colSpan={2} className="border border-gray-400 py-[4px] text-left px-4 text-[14px]">타사 합계</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                          <tr className="bg-gray-50 font-bold h-[35px]">
+                            <td colSpan={2} className="border border-gray-300 py-[4px] text-left px-[10px] text-sm">타사 합계</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {baseExternalSalesTotal > 0 ? baseExternalSalesTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {latestExternalSalesTotal > 0 ? latestExternalSalesTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {baseExternalCostTotal > 0 ? baseExternalCostTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {latestExternalCostTotal > 0 ? latestExternalCostTotal.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
                           </tr>
 
                           {/* 합계 행 */}
-                          <tr className="bg-[#D9D9D9] font-bold text-gray-900 border-t-2 border-gray-500">
-                            <td colSpan={3} className="border border-gray-400 py-[4px] text-left px-4 text-[14px]">제품/상품 합계</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                          <tr className="bg-gray-50 font-bold text-gray-900 border-t-2 border-gray-500 h-[35px]">
+                            <td colSpan={3} className="border border-gray-300 py-[4px] text-left px-[10px] text-sm">제품/상품 합계</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {(baseInternalSalesTotal + baseExternalSalesTotal) > 0 ? (baseInternalSalesTotal + baseExternalSalesTotal).toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {(latestInternalSalesTotal + latestExternalSalesTotal) > 0 ? (latestInternalSalesTotal + latestExternalSalesTotal).toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {(baseInternalCostTotal + baseExternalCostTotal) > 0 ? (baseInternalCostTotal + baseExternalCostTotal).toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-right px-2 text-[14px]">
+                            <td className="border border-gray-300 py-[4px] text-right px-[10px] text-sm">
                               {(latestInternalCostTotal + latestExternalCostTotal) > 0 ? (latestInternalCostTotal + latestExternalCostTotal).toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
-                            <td className="border border-gray-400 py-[4px] text-[14px]">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
+                            <td className="border border-gray-300 py-[4px] text-sm">&nbsp;</td>
                           </tr>
                         </>
                       );
@@ -2168,42 +2204,67 @@ export default function ProjectSettlementPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-gray-800 text-[14px]">⑴ 내부/외부 인력 투입 계획 (월별 세부)</p>
-                  <button
-                    onClick={addMonth}
-                    className="px-2 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs border border-gray-400 flex items-center gap-1"
-                  >
-                    <Plus className="h-3 w-3" /> 월 추가
-                  </button>
-                  {monthColumns.length > initialMonthCount && (
+
+                  {/* 월(전) 컨트롤 */}
+                  <div className="flex items-center gap-1 ml-2">
                     <button
-                      onClick={deleteLastMonth}
-                      className="px-2 py-0.5 bg-red-100 hover:bg-red-200 text-red-600 rounded text-xs border border-red-200 flex items-center gap-1"
+                      onClick={addMonthAtStart}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded transition-colors flex items-center gap-1"
                     >
-                      <Trash2 className="h-3 w-3" /> 월 삭제
+                      <Plus className="h-3.5 w-3.5" /> 월(전)
                     </button>
-                  )}
+                    {monthColumns.length > 0 && (
+                      <button
+                        onClick={deleteMonthAtStart}
+                        className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> 월(전)
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 구분선 */}
+                  <div className="w-px h-7 bg-gray-300 mx-0.5" />
+
+                  {/* 월(후) 컨트롤 */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={addMonthAtEnd}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded transition-colors flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> 월(후)
+                    </button>
+                    {monthColumns.length > 0 && (
+                      <button
+                        onClick={deleteMonthAtEnd}
+                        className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> 월(후)
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-gray-600 text-[14px]">[단위 : M/M, 천원]</div>
+                <div className="text-gray-600 text-[14px] whitespace-nowrap ml-auto">[단위 : M/M, 천원]</div>
               </div>
               <div className="overflow-x-auto">
                 <table className="border-collapse border border-gray-400 text-[14px] text-center">
                   <thead>
-                    <tr className="bg-[#DAEEF3]">
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">구분</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[100px] min-w-[100px]">업체명</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[120px] min-w-[120px]">역할Ⅰ</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[240px] min-w-[240px]">역할Ⅱ</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[100px] min-w-[100px]">소속 및 직군</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[70px] min-w-[70px]">등급</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[70px] min-w-[70px]">직급</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[100px] min-w-[100px]">성함</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">
+                    <tr className="bg-blue-50/50 h-[35px]">
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">구분</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[100px] min-w-[100px]">업체명</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[120px] min-w-[120px]">역할Ⅰ</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[240px] min-w-[240px]">역할Ⅱ</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[100px] min-w-[100px]">소속 및 직군</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[70px] min-w-[70px]">등급</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[70px] min-w-[70px]">직급</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[100px] min-w-[100px]">성함</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">
                         <div>계획_기준</div>
                         <div>/</div>
                         <div>실행</div>
                       </th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[70px] min-w-[70px]">투입</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[70px] min-w-[70px]">합계</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[70px] min-w-[70px]">투입</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[70px] min-w-[70px]">합계</th>
                       {(() => {
                         // 연도별로 월을 그룹화
                         const yearGroups: { [key: string]: string[] } = {};
@@ -2216,25 +2277,25 @@ export default function ProjectSettlementPage() {
                         });
 
                         return Object.entries(yearGroups).map(([year, months]) => (
-                          <th key={year} colSpan={months.length} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px]">
+                          <th key={year} colSpan={months.length} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">
                             {year}년
                           </th>
                         ));
                       })()}
-                      <th colSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px]">투입금액</th>
+                      <th colSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">투입금액</th>
                     </tr>
-                    <tr className="bg-[#DAEEF3]">
+                    <tr className="bg-blue-50/50 h-[35px]">
                       {monthColumns.map((month, index) => {
                         const monthNum = parseInt(month.split('-')[1]);
                         return (
-                          <th key={month} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap w-[60px] min-w-[60px]">
+                          <th key={month} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[60px] min-w-[60px]">
                             <div>{monthNum}월</div>
                             <div className="text-[11px] font-normal">M{index + 1}</div>
                           </th>
                         );
                       })}
-                      <th className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">투입</th>
-                      <th className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[100px] min-w-[100px]">합계</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">투입</th>
+                      <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[100px] min-w-[100px]">합계</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2246,10 +2307,10 @@ export default function ProjectSettlementPage() {
                       return (
                         <React.Fragment key={`manpower-${index}`}>
                           {/* 계획 행 */}
-                          <tr>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
+                          <tr className="h-[35px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-center p-0 appearance-none"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.affiliationGroup?.startsWith('외주') ? '외부' : '내부'}
                                 onChange={(e) => {
                                   const isExternal = e.target.value === '외부';
@@ -2262,36 +2323,36 @@ export default function ProjectSettlementPage() {
                               </select>
                             </td>
 
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-left text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-left p-0"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.companyName || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'companyName', e.target.value)}
                                 placeholder=""
                               />
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-left text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-left p-0"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.role || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'role', e.target.value)}
                                 placeholder=""
                               />
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-left text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-left p-0"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.detailedTask || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'detailedTask', e.target.value)}
                                 placeholder=""
                               />
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-center p-0 appearance-none"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.affiliationGroup || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'affiliationGroup', e.target.value)}
                               >
@@ -2301,9 +2362,9 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </select>
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-center p-0 appearance-none"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.grade || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'grade', e.target.value)}
                               >
@@ -2313,9 +2374,9 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </select>
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-center p-0 appearance-none"
+                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.wmbRank || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'wmbRank', e.target.value)}
                               >
@@ -2325,13 +2386,13 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </select>
                             </td>
-                            <td rowSpan={2} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
-                              <div className="flex items-center gap-1">
-                                <div className="relative flex-1">
+                            <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
+                              <div className="flex items-center gap-1 h-full hover:bg-blue-50/50 transition-colors">
+                                <div className="relative flex-1 h-full">
                                   <input
                                     type="text"
                                     list={`users-list-${item.id}`}
-                                    className="w-full border-0 focus:ring-0 bg-transparent text-[14px] text-center p-0"
+                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] rounded-none focus:bg-white"
                                     value={item.name || ''}
                                     onChange={(e) => handleManpowerChange(item.id || 0, 'name', e.target.value)}
                                     placeholder=""
@@ -2354,55 +2415,55 @@ export default function ProjectSettlementPage() {
                                 )}
                               </div>
                             </td>
-                            <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-sm font-medium">
                               계획
                             </td>
-                            <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right text-[14px] font-medium">
-                              {(totalMM || 0).toFixed(2)}
+                            <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm font-medium">
+                              {(totalMM || 0).toFixed(3)}
                             </td>
-                            <td className="border border-gray-400 bg-gray-400 py-[4px] px-2 text-right text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-gray-400 py-[4px] px-[10px] text-right text-sm font-medium">
                               &nbsp;
                             </td>
                             {monthColumns.map((month) => (
-                              <td key={`plan-${month}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1 text-right text-[14px]">
-                                {(item.monthlyAllocation?.[month] || 0).toFixed(2)}
+                              <td key={`plan-${month}`} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">
+                                {(item.monthlyAllocation?.[month] || 0).toFixed(3)}
                               </td>
                             ))}
-                            <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm font-medium">
                               {item.internalAmount ? item.internalAmount.toLocaleString() : '\u00a0'}
                             </td>
-                            <td className="border border-gray-400 bg-gray-400 py-[4px] px-2 text-right text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-gray-400 py-[4px] px-[10px] text-right text-sm font-medium">
                               &nbsp;
                             </td>
                           </tr>
                           {/* 실행 행 */}
-                          <tr>
+                          <tr className="h-[35px]">
 
-                            <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-sm font-medium">
                               실행
                             </td>
-                            <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px] font-medium">
-                              {(actualTotalMM || 0).toFixed(2)}
+                            <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm font-medium">
+                              {(actualTotalMM || 0).toFixed(3)}
                             </td>
-                            <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px] font-medium">
-                              {(actualTotalMM || 0).toFixed(2)}
+                            <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm font-medium">
+                              {(actualTotalMM || 0).toFixed(3)}
                             </td>
                             {monthColumns.map((month) => (
-                              <td key={`exec-${month}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1 text-right text-[14px]">
+                              <td key={`exec-${month}`} className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px]">
                                 <input
                                   type="number"
-                                  step="0.01"
-                                  className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  step="0.001"
+                                  className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                   placeholder="0"
                                   value={item.actualMonthlyAllocation?.[month] == null ? '' : item.actualMonthlyAllocation[month]}
                                   onChange={(e) => handleActualAllocationChange(item.id || 0, month, e.target.value)}
                                 />
                               </td>
                             ))}
-                            <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px] font-medium">
                               <input
                                 type="text"
-                                className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                 value={item.actualInternalAmount != null
                                   ? item.actualInternalAmount.toLocaleString()
                                   : (Number(actualTotalMM) > 0 ? Math.round((item.internalUnitPrice || 0) * Number(actualTotalMM)).toLocaleString() : '')}
@@ -2413,7 +2474,7 @@ export default function ProjectSettlementPage() {
                                 placeholder="0"
                               />
                             </td>
-                            <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px] font-medium">
+                            <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm font-medium">
                               {item.actualInternalAmount != null
                                 ? item.actualInternalAmount.toLocaleString()
                                 : (Number(actualTotalMM) > 0 ? Math.round((item.internalUnitPrice || 0) * Number(actualTotalMM)).toLocaleString() : '\u00a0')}
@@ -2427,51 +2488,51 @@ export default function ProjectSettlementPage() {
                     {manpowerSummaries.map((summary, sIdx) => (
                       <React.Fragment key={`summary-${sIdx}`}>
                         {/* 계획 행 */}
-                        <tr className="bg-gray-100 font-bold">
-                          <td rowSpan={2} colSpan={8} className="border border-gray-400 py-[4px] px-4 text-center text-[14px]">
+                        <tr className="bg-gray-100 font-bold h-[35px]">
+                          <td rowSpan={2} colSpan={8} className="border border-gray-300 py-[4px] px-[10px] text-center text-sm">
                             {summary.label}
                           </td>
-                          <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-center text-[14px] font-bold">
+                          <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-center text-sm font-bold">
                             계획
                           </td>
-                          <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right text-[14px]">
-                            {(summary.totalPlanMM || 0).toFixed(2)}
+                          <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">
+                            {(summary.totalPlanMM || 0).toFixed(3)}
                           </td>
-                          <td className="border border-gray-400 bg-gray-400 py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-gray-400 py-[4px] px-[10px] text-right text-sm">
                             &nbsp;
                           </td>
                           {summary.planMonthly.map((val, mIdx) => (
-                            <td key={`plan-sum-${mIdx}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1 text-right text-[14px]">
+                            <td key={`plan-sum-${mIdx}`} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">
                               {(val || 0).toFixed(2)}
                             </td>
                           ))}
-                          <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">
                             {summary.totalPlanAmount > 0 ? summary.totalPlanAmount.toLocaleString() : '-'}
                           </td>
-                          <td className="border border-gray-400 bg-gray-400 py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-gray-400 py-[4px] px-[10px] text-right text-sm">
                             &nbsp;
                           </td>
                         </tr>
                         {/* 실행 행 */}
-                        <tr className="bg-gray-100 font-bold">
-                          <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-center text-[14px] font-bold">
+                        <tr className="bg-gray-100 font-bold h-[35px]">
+                          <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-center text-sm font-bold">
                             실행
                           </td>
-                          <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm">
                             {(summary.totalActualMM || 0).toFixed(2)}
                           </td>
-                          <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm">
                             {(summary.totalActualMM || 0).toFixed(2)}
                           </td>
                           {summary.actualMonthly.map((val, mIdx) => (
-                            <td key={`actual-sum-${mIdx}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1 text-right text-[14px]">
+                            <td key={`actual-sum-${mIdx}`} className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm">
                               {(val || 0).toFixed(2)}
                             </td>
                           ))}
-                          <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm">
                             {summary.totalActualAmount > 0 ? summary.totalActualAmount.toLocaleString() : '-'}
                           </td>
-                          <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right text-[14px]">
+                          <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right text-sm">
                             {summary.totalActualAmount > 0 ? summary.totalActualAmount.toLocaleString() : '-'}
                           </td>
                         </tr>
@@ -2481,11 +2542,11 @@ export default function ProjectSettlementPage() {
                   {/* 행 추가 버튼 */}
                   <tfoot>
                     <tr>
-                      <td colSpan={8} className="border border-gray-400 p-2">
+                      <td colSpan={8} className="border border-gray-400 p-0 h-[35px]">
                         <button
                           type="button"
                           onClick={addManpowerRow}
-                          className="flex items-center justify-center gap-1.5 w-full rounded bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                          className="flex items-center justify-center gap-1.5 w-full h-full rounded-none bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           <Plus className="h-3 w-3" />
                           인력 추가
@@ -2505,15 +2566,15 @@ export default function ProjectSettlementPage() {
                 <div className="text-gray-600 text-[14px]">[단위 : M/M, 천원]</div>
               </div>
               <div className="overflow-x-auto">
-                <table className="border-collapse border border-gray-400 text-[14px] text-center w-full">
+                <table className="border-collapse border border-gray-400 text-sm text-center w-full">
                   <thead>
-                    <tr className="bg-[#DAEEF3]">
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[180px] min-w-[180px]">업체명</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[120px] min-w-[120px]">역할Ⅰ</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[240px] min-w-[240px]">역할Ⅱ</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">계획/실행</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">M/M / 금액</th>
-                      <th rowSpan={2} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px] whitespace-nowrap w-[100px] min-w-[100px]">합계</th>
+                    <tr className="bg-blue-50/50 h-[35px]">
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[180px] min-w-[180px]">업체명</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[120px] min-w-[120px]">역할Ⅰ</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[240px] min-w-[240px]">역할Ⅱ</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">계획/실행</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">M/M / 금액</th>
+                      <th rowSpan={2} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[100px] min-w-[100px]">합계</th>
                       {(() => {
                         const yearGroups: { [key: string]: string[] } = {};
                         monthColumns.forEach((month) => {
@@ -2522,17 +2583,17 @@ export default function ProjectSettlementPage() {
                           yearGroups[year].push(month);
                         });
                         return Object.entries(yearGroups).map(([year, months]) => (
-                          <th key={`ext-year-${year}`} colSpan={months.length} className="border border-gray-400 py-[4px] px-2 font-bold text-[14px]">
+                          <th key={`ext-year-${year}`} colSpan={months.length} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">
                             {year}년
                           </th>
                         ));
                       })()}
                     </tr>
-                    <tr className="bg-[#DAEEF3]">
+                    <tr className="bg-blue-50/50 h-[35px]">
                       {monthColumns.map((month, index) => {
                         const monthNum = parseInt(month.split('-')[1]);
                         return (
-                          <th key={`ext-month-${month}`} className="border border-gray-400 py-[4px] px-1 font-bold text-[14px] whitespace-nowrap w-[80px] min-w-[80px]">
+                          <th key={`ext-month-${month}`} className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm whitespace-nowrap w-[80px] min-w-[80px]">
                             <div>{monthNum}월</div>
                             <div className="text-[11px] font-normal">M{index + 1}</div>
                           </th>
@@ -2548,8 +2609,8 @@ export default function ProjectSettlementPage() {
                     ) : (
                       <>
                         {extCompanyPlans.map((item, index) => {
-                          const calcTotal = (map: Record<string, string>) =>
-                            Object.values(map).reduce((sum, val) => sum + (parseFloat(val.replace(/,/g, '')) || 0), 0);
+                          const calcTotal = (map: Record<string, string | number>): number =>
+                            Object.values(map).reduce<number>((sum, val) => sum + (parseFloat(String(val).replace(/,/g, '')) || 0), 0);
 
                           const totalPlanMM = calcTotal(item.planMM);
                           const totalPlanAmt = calcTotal(item.planAmt);
@@ -2559,12 +2620,12 @@ export default function ProjectSettlementPage() {
                           return (
                             <React.Fragment key={`ext-company-${item.id}`}>
                               {/* 1. 계획 - M/M */}
-                              <tr>
-                                <td rowSpan={4} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px]">
-                                  <div className="flex items-center gap-1">
+                              <tr className="h-[35px]">
+                                <td rowSpan={4} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
+                                  <div className="flex items-center gap-1 h-full hover:bg-blue-50/50 transition-colors">
                                     <input
                                       type="text"
-                                      className="w-full border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                      className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm px-[10px] rounded-none focus:bg-white"
                                       value={item.companyName}
                                       onChange={(e) => handleExtCompanyChange(item.id, 'companyName', e.target.value)}
                                       placeholder="업체명"
@@ -2572,33 +2633,33 @@ export default function ProjectSettlementPage() {
                                     <button onClick={() => deleteExtCompanyRow(item.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
                                   </div>
                                 </td>
-                                <td rowSpan={4} className="border border-gray-400 bg-white py-[4px] px-2">
+                                <td rowSpan={4} className="border border-gray-300 bg-white p-0 h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                     value={item.role1}
                                     onChange={(e) => handleExtCompanyChange(item.id, 'role1', e.target.value)}
                                     placeholder="역할Ⅰ"
                                   />
                                 </td>
-                                <td rowSpan={4} className="border border-gray-400 bg-white py-[4px] px-2">
+                                <td rowSpan={4} className="border border-gray-300 bg-white p-0 h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                     value={item.role2}
                                     onChange={(e) => handleExtCompanyChange(item.id, 'role2', e.target.value)}
                                     placeholder="역할Ⅱ"
                                   />
                                 </td>
-                                <td rowSpan={2} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 font-medium">계획</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 font-medium">M/M</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right font-medium">{totalPlanMM > 0 ? totalPlanMM.toFixed(2) : ''}</td>
+                                <td rowSpan={2} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] font-medium text-sm">계획</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] font-medium text-sm">M/M</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right font-medium text-sm">{totalPlanMM > 0 ? totalPlanMM.toFixed(2) : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-plan-mm-${item.id}-${month}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1">
+                                  <td key={`ext-plan-mm-${item.id}-${month}`} className="border border-gray-300 bg-[#FFFFCC] p-0 h-[35px]">
                                     <input
                                       type="number"
                                       step="0.01"
-                                      className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.planMM[month] && Number(item.planMM[month]) !== 0 ? item.planMM[month] : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'planMM', month, e.target.value)}
                                       placeholder="0"
@@ -2607,14 +2668,14 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </tr>
                               {/* 2. 계획 - 금액 */}
-                              <tr>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 font-medium">금액</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right font-medium">{totalPlanAmt > 0 ? Math.round(totalPlanAmt / 1000).toLocaleString() : ''}</td>
+                              <tr className="h-[35px]">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] font-medium text-sm">금액</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right font-medium text-sm">{totalPlanAmt > 0 ? Math.round(totalPlanAmt / 1000).toLocaleString() : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-plan-amt-${item.id}-${month}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1">
+                                  <td key={`ext-plan-amt-${item.id}-${month}`} className="border border-gray-300 bg-[#FFFFCC] p-0 h-[35px]">
                                     <input
                                       type="text"
-                                      className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.planAmt[month] && parseInt(item.planAmt[month].replace(/,/g, '')) !== 0 ? parseInt(item.planAmt[month].replace(/,/g, '')).toLocaleString() : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'planAmt', month, e.target.value.replace(/,/g, ''))}
                                       placeholder="0"
@@ -2623,16 +2684,16 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </tr>
                               {/* 3. 실행 - M/M */}
-                              <tr>
-                                <td rowSpan={2} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 font-medium">실행</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 font-medium">M/M</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right font-medium">{totalExecMM > 0 ? totalExecMM.toFixed(2) : ''}</td>
+                              <tr className="h-[35px]">
+                                <td rowSpan={2} className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] font-medium text-sm">실행</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] font-medium text-sm">M/M</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right font-medium text-sm">{totalExecMM > 0 ? totalExecMM.toFixed(2) : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-exec-mm-${item.id}-${month}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1">
+                                  <td key={`ext-exec-mm-${item.id}-${month}`} className="border border-gray-300 bg-[#EBF1DE] p-0 h-[35px]">
                                     <input
                                       type="number"
                                       step="0.01"
-                                      className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.execMM[month] && Number(item.execMM[month]) !== 0 ? item.execMM[month] : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'execMM', month, e.target.value)}
                                       placeholder="0"
@@ -2641,14 +2702,14 @@ export default function ProjectSettlementPage() {
                                 ))}
                               </tr>
                               {/* 4. 실행 - 금액 */}
-                              <tr>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 font-medium">금액</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right font-medium">{totalExecAmt > 0 ? Math.round(totalExecAmt / 1000).toLocaleString() : ''}</td>
+                              <tr className="h-[35px]">
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] font-medium text-sm">금액</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right font-medium text-sm">{totalExecAmt > 0 ? Math.round(totalExecAmt / 1000).toLocaleString() : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-exec-amt-${item.id}-${month}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1">
+                                  <td key={`ext-exec-amt-${item.id}-${month}`} className="border border-gray-300 bg-[#EBF1DE] p-0 h-[35px]">
                                     <input
                                       type="text"
-                                      className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.execAmt[month] && parseInt(item.execAmt[month].replace(/,/g, '')) !== 0 ? parseInt(item.execAmt[month].replace(/,/g, '')).toLocaleString() : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'execAmt', month, e.target.value.replace(/,/g, ''))}
                                       placeholder="0"
@@ -2666,27 +2727,27 @@ export default function ProjectSettlementPage() {
                             extCompanyPlans.reduce((sum, item) => sum + (parseFloat((item[field][month] || '0').toString().replace(/,/g, '')) || 0), 0);
 
                           const totalPlanMM = extCompanyPlans.reduce((sum, item) => {
-                            return sum + Object.values(item.planMM).reduce((subSum, val) => subSum + (parseFloat(val.replace(/,/g, '')) || 0), 0);
+                            return sum + Object.values(item.planMM).reduce((subSum, val) => subSum + (parseFloat(String(val).replace(/,/g, '')) || 0), 0);
                           }, 0);
                           const totalPlanAmt = extCompanyPlans.reduce((sum, item) => {
-                            return sum + Object.values(item.planAmt).reduce((subSum, val) => subSum + (parseFloat(val.replace(/,/g, '')) || 0), 0);
+                            return sum + Object.values(item.planAmt).reduce((subSum, val) => subSum + (parseFloat(String(val).replace(/,/g, '')) || 0), 0);
                           }, 0);
                           const totalExecMM = extCompanyPlans.reduce((sum, item) => {
-                            return sum + Object.values(item.execMM).reduce((subSum, val) => subSum + (parseFloat(val.replace(/,/g, '')) || 0), 0);
+                            return sum + Object.values(item.execMM).reduce((subSum, val) => subSum + (parseFloat(String(val).replace(/,/g, '')) || 0), 0);
                           }, 0);
                           const totalExecAmt = extCompanyPlans.reduce((sum, item) => {
-                            return sum + Object.values(item.execAmt).reduce((subSum, val) => subSum + (parseFloat(val.replace(/,/g, '')) || 0), 0);
+                            return sum + Object.values(item.execAmt).reduce((subSum, val) => subSum + (parseFloat(String(val).replace(/,/g, '')) || 0), 0);
                           }, 0);
 
                           return (
                             <React.Fragment key="ext-total-summary">
-                              <tr className="bg-gray-100 font-bold">
-                                <td rowSpan={4} colSpan={3} className="border border-gray-400 py-[4px] px-2 text-[14px] text-center">합계</td>
-                                <td rowSpan={2} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-[14px] text-center">계획</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-[14px] text-center">M/M</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right text-[14px]">{totalPlanMM > 0 ? totalPlanMM.toFixed(2) : ''}</td>
+                              <tr className="bg-gray-100 font-bold h-[35px]">
+                                <td rowSpan={4} colSpan={3} className="border border-gray-300 py-[4px] px-[10px] text-sm text-center">합계</td>
+                                <td rowSpan={2} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-sm text-center">계획</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-sm text-center">M/M</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">{totalPlanMM > 0 ? totalPlanMM.toFixed(2) : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-sum-plan-mm-${month}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1 text-right text-[14px]">
+                                  <td key={`ext-sum-plan-mm-${month}`} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right text-sm">
                                     {(() => {
                                       const val = calcTotalByMonth('planMM', month);
                                       return val > 0 ? val.toFixed(2) : '';
@@ -2694,11 +2755,11 @@ export default function ProjectSettlementPage() {
                                   </td>
                                 ))}
                               </tr>
-                              <tr className="bg-gray-100 font-bold text-[14px]">
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-center">금액</td>
-                                <td className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-2 text-right">{totalPlanAmt > 0 ? Math.round(totalPlanAmt / 1000).toLocaleString() : ''}</td>
+                              <tr className="bg-gray-100 font-bold h-[35px] text-sm">
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-center">금액</td>
+                                <td className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right">{totalPlanAmt > 0 ? Math.round(totalPlanAmt / 1000).toLocaleString() : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-sum-plan-amt-${month}`} className="border border-gray-400 bg-[#FFFFCC] py-[4px] px-1 text-right">
+                                  <td key={`ext-sum-plan-amt-${month}`} className="border border-gray-300 bg-[#FFFFCC] py-[4px] px-[10px] text-right">
                                     {(() => {
                                       const val = calcTotalByMonth('planAmt', month);
                                       return val > 0 ? Math.round(val / 1000).toLocaleString() : '';
@@ -2706,12 +2767,12 @@ export default function ProjectSettlementPage() {
                                   </td>
                                 ))}
                               </tr>
-                              <tr className="bg-gray-100 font-bold text-[14px]">
-                                <td rowSpan={2} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-center">실행</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-center">M/M</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right">{totalExecMM > 0 ? totalExecMM.toFixed(2) : ''}</td>
+                              <tr className="bg-gray-100 font-bold h-[35px] text-sm">
+                                <td rowSpan={2} className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-center">실행</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-center">M/M</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right">{totalExecMM > 0 ? totalExecMM.toFixed(2) : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-sum-exec-mm-${month}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1 text-right">
+                                  <td key={`ext-sum-exec-mm-${month}`} className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right">
                                     {(() => {
                                       const val = calcTotalByMonth('execMM', month);
                                       return val > 0 ? val.toFixed(2) : '';
@@ -2719,11 +2780,11 @@ export default function ProjectSettlementPage() {
                                   </td>
                                 ))}
                               </tr>
-                              <tr className="bg-gray-100 font-bold text-[14px]">
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-center">금액</td>
-                                <td className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-2 text-right">{totalExecAmt > 0 ? Math.round(totalExecAmt / 1000).toLocaleString() : ''}</td>
+                              <tr className="bg-gray-100 font-bold h-[35px] text-sm">
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-center">금액</td>
+                                <td className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right">{totalExecAmt > 0 ? Math.round(totalExecAmt / 1000).toLocaleString() : ''}</td>
                                 {monthColumns.map((month) => (
-                                  <td key={`ext-sum-exec-amt-${month}`} className="border border-gray-400 bg-[#EBF1DE] py-[4px] px-1 text-right">
+                                  <td key={`ext-sum-exec-amt-${month}`} className="border border-gray-300 bg-[#EBF1DE] py-[4px] px-[10px] text-right">
                                     {(() => {
                                       const val = calcTotalByMonth('execAmt', month);
                                       return val > 0 ? Math.round(val / 1000).toLocaleString() : '';
@@ -2739,10 +2800,10 @@ export default function ProjectSettlementPage() {
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td colSpan={3} className="border border-gray-400 p-2">
+                      <td colSpan={3} className="border border-gray-400 p-0 h-[35px]">
                         <button
                           onClick={addExtCompanyRow}
-                          className="flex items-center justify-center gap-1.5 w-full rounded bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                          className="flex items-center justify-center gap-1.5 w-full h-full rounded-none bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           <Plus className="h-3 w-3" /> 업체 추가
                         </button>
@@ -2772,72 +2833,72 @@ export default function ProjectSettlementPage() {
                   <col className="w-[50px]" />
                 </colgroup>
                 <thead>
-                  <tr className="bg-[#DAEEF3]">
-                    <th className="border border-gray-400 py-2 font-bold">구분</th>
-                    <th className="border border-gray-400 py-2 font-bold">계정</th>
-                    <th className="border border-gray-400 py-2 font-bold">계획_기준 계획</th>
-                    <th className="border border-gray-400 py-2 font-bold">계획_최종 변경</th>
-                    <th className="border border-gray-400 py-2 font-bold border-x-2 border-x-gray-500">실행 합계</th>
-                    <th className="border border-gray-400 py-2 font-bold"></th>
-                    <th className="border border-gray-400 py-2 font-bold">판관</th>
-                    <th className="border border-gray-400 py-2 font-bold">원가</th>
-                    <th className="border border-gray-400 py-2 font-bold"></th>
+                  <tr className="bg-blue-50/50 h-[35px]">
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">구분</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">계정</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">계획_기준 계획</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">계획_최종 변경</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm border-x-2 border-x-gray-500">실행 합계</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm"></th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">판관</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm">원가</th>
+                    <th className="border border-gray-300 py-[4px] px-[10px] font-bold text-sm"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {expenseDetails.map((item, index) => (
-                    <tr key={index}>
+                    <tr key={index} className="h-[35px]">
                       {index === 0 && (
-                        <td rowSpan={EXPENSE_ITEMS.length} className="border border-gray-400 bg-white py-[4px] px-2 text-[14px] align-middle font-bold">전체</td>
+                        <td rowSpan={EXPENSE_ITEMS.length} className="border border-gray-300 bg-white py-[4px] px-[10px] text-sm align-middle font-bold">전체</td>
                       )}
-                      <td className="border border-gray-400 py-[4px] px-2 text-left bg-white font-medium">{item.item}</td>
-                      <td className="border border-gray-400 py-[4px] px-2 bg-[#FFFFCC] text-right">
+                      <td className="border border-gray-300 py-[4px] px-[10px] text-left bg-white font-medium text-sm">{item.item}</td>
+                      <td className="border border-gray-300 p-0 bg-[#FFFFCC] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.planStandard === 0 ? '' : item.planStandard.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'planStandard', e.target.value)}
                           placeholder="0"
                         />
                       </td>
-                      <td className="border border-gray-400 py-[4px] px-2 bg-[#FFFFCC] text-right">
+                      <td className="border border-gray-300 p-0 bg-[#FFFFCC] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.planLatest === 0 ? '' : item.planLatest.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'planLatest', e.target.value)}
                           placeholder="0"
                         />
                       </td>
-                      <td className="border border-gray-400 py-[4px] px-2 bg-white text-right border-x-2 border-x-gray-500">
+                      <td className="border border-gray-300 p-0 bg-white text-right border-x-2 border-x-gray-500 text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.execTotal === 0 ? '' : item.execTotal.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'execTotal', e.target.value)}
                           placeholder="0"
                         />
                       </td>
-                      <td className="border border-gray-400 bg-white"></td>
-                      <td className="border border-gray-400 py-[4px] px-2 bg-white text-right">
+                      <td className="border border-gray-300 bg-white text-sm"></td>
+                      <td className="border border-gray-300 p-0 bg-white text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.sellAdmin === 0 ? '' : item.sellAdmin.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'sellAdmin', e.target.value)}
                           placeholder="0"
                         />
                       </td>
-                      <td className="border border-gray-400 py-[4px] px-2 bg-white text-right">
+                      <td className="border border-gray-300 p-0 bg-white text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full text-right border-0 focus:ring-0 bg-transparent text-[14px] p-0"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.cost === 0 ? '' : item.cost.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'cost', e.target.value)}
                           placeholder="0"
                         />
                       </td>
-                      <td className="border border-gray-400 bg-white"></td>
+                      <td className="border border-gray-300 bg-white text-sm"></td>
                     </tr>
                   ))}
                   {(() => {
@@ -2846,25 +2907,25 @@ export default function ProjectSettlementPage() {
                     const totalCost = expenseDetails.reduce((sum, item) => sum + item.cost, 0);
 
                     return (
-                      <tr className="bg-white font-bold">
-                        <td colSpan={2} className="border border-gray-400 py-[4px] px-2 text-center text-[14px]">전체 비용 합계</td>
-                        <td className="border border-gray-400 py-[4px] px-2 text-right bg-white text-[14px]">
+                      <tr className="bg-white font-bold h-[35px]">
+                        <td colSpan={2} className="border border-gray-300 py-[4px] px-[10px] text-center text-sm">전체 비용 합계</td>
+                        <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-white text-sm">
                           {(Math.round(expenseBreakdown.general + expenseBreakdown.special)).toLocaleString()}
                         </td>
-                        <td className="border border-gray-400 py-[4px] px-2 text-right bg-white text-[14px]">
+                        <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-white text-sm">
                           {latestSum.expenseTotal.toLocaleString()}
                         </td>
-                        <td className="border border-gray-400 py-[4px] px-2 text-right bg-white border-x-2 border-x-gray-500 text-[14px]">
+                        <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-white border-x-2 border-x-gray-500 text-sm">
                           {Math.round(settlement.actual_other_cost || 0).toLocaleString()}
                         </td>
-                        <td className="border border-gray-400 bg-white"></td>
-                        <td className="border border-gray-400 py-[4px] px-2 text-right bg-white text-[14px]">
+                        <td className="border border-gray-300 bg-white text-sm"></td>
+                        <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-white text-sm">
                           {totalSellAdmin.toLocaleString()}
                         </td>
-                        <td className="border border-gray-400 py-[4px] px-2 text-right bg-white text-[14px]">
+                        <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-white text-sm">
                           {totalCost.toLocaleString()}
                         </td>
-                        <td className="border border-gray-400 bg-white"></td>
+                        <td className="border border-gray-300 bg-white text-sm"></td>
                       </tr>
                     );
                   })()}

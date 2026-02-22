@@ -2,11 +2,13 @@
 
 import { useState, use, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, List, Plus, Copy, Save, CheckCircle2, XCircle, Trash2, AlertCircle, Calendar as CalendarIcon, FileSpreadsheet, Download } from "lucide-react";
+import { ArrowLeft, List, Plus, Copy, Save, CheckCircle2, XCircle, Trash2, AlertCircle, HelpCircle, Calendar as CalendarIcon, FileSpreadsheet, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { formatCurrency, formatNumber } from "@/lib/utils/currency";
 import { DatePicker, Dropdown, Button, Input, Select, Badge, Textarea, StatusBadge, useToast } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
+import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -137,6 +139,7 @@ interface VrbData {
 
   // 사업 진행근거 및 기대효과
   businessBasis: string;
+  reviewResult?: string; // 진행(PROCEED), 미진행(STOP)
   uiSettings?: {
     heights?: {
       businessBackground?: number;
@@ -153,16 +156,15 @@ export default function VrbReviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [currentVrbId, setCurrentVrbId] = useState<number | null>(null);
   const [isNewVrb, setIsNewVrb] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [vrbStatus, setVrbStatus] = useState<string>("STANDBY");
   const [rejectionReason, setRejectionReason] = useState<string>("");
-  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
-  const [rejectionReasonInput, setRejectionReasonInput] = useState<string>("");
 
   const { showToast, confirm } = useToast();
 
@@ -262,12 +264,12 @@ export default function VrbReviewPage({
       estimatedRevenueHw: 0,
       estimatedMm: 0,
       estimatedMmItems: [],
-      projectCosts: [],
+      projectCosts: [{ item: "", amount: 0 }],
       otherGoodsItems: [],
       existingSystemLinkage: 0,
       riskCostPercent: 10,
       riskCostBase: "total_revenue",
-      externalPurchasePercent: 30,
+      externalPurchasePercent: 0,
       externalPurchaseBase: "operating_profit",
       externalPurchase2Percent: 0,
       externalPurchase2Base: "operating_profit",
@@ -291,7 +293,7 @@ export default function VrbReviewPage({
       existingSystemLinkage: 0,
       riskCostPercent: 10,
       riskCostBase: "total_revenue",
-      externalPurchasePercent: 30,
+      externalPurchasePercent: 0,
       externalPurchaseBase: "operating_profit",
       externalPurchase2Percent: 0,
       externalPurchase2Base: "operating_profit",
@@ -305,6 +307,7 @@ export default function VrbReviewPage({
       operatingProfitEP2Percent: 0,
     },
     businessBasis: "",
+    reviewResult: "",
     uiSettings: {
       heights: {}
     }
@@ -317,9 +320,11 @@ export default function VrbReviewPage({
         let proj: any = null;
 
         // 기준정보 데이터 가져오기 (고객사, 사용자)
-        const [clientsRes, usersRes] = await Promise.all([
+        // 기준정보 데이터 가져오기 (고객사, 사용자, 내 정보)
+        const [clientsRes, usersRes, meRes] = await Promise.all([
           fetch("/api/clients"),
           fetch("/api/users"),
+          fetch("/api/auth/me"),
         ]);
 
         if (clientsRes.ok) {
@@ -331,6 +336,12 @@ export default function VrbReviewPage({
           const usersData = await usersRes.json();
           setUsers(usersData.users || []);
         }
+
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          setCurrentUser(meData.user);
+        }
+
 
         // 프로젝트 정보 가져오기
         const projectResponse = await fetch(`/api/projects/${id}`);
@@ -344,6 +355,7 @@ export default function VrbReviewPage({
             contractStartDate: projectData.project.contract_start_date,
             contractEndDate: projectData.project.contract_end_date,
             currency: projectData.project.currency || "KRW",
+            salesRepresentativeName: projectData.project.sales_representative_name,
           };
           setProject(proj);
         }
@@ -416,19 +428,19 @@ export default function VrbReviewPage({
               setVrbStatus(review.status || "draft");
               setRejectionReason(review.rejection_reason || "");
 
-              // 저장된 이름으로 검색어 초기화
-              if (review.customer_name) {
-                setCustomerSearch(review.customer_name);
-              }
-              if (review.sales_manager) {
-                setSalesSearch(review.sales_manager);
-              }
+              // 저장된 이름으로 검색어 초기화 (없으면 프로젝트 기본 정보 사용)
+              const customerName = review.customer_name || proj?.customerName || "";
+              setCustomerSearch(customerName);
+
+              const salesName = review.sales_manager || proj?.salesRepresentativeName || "";
+              setSalesSearch(salesName);
+
               if (review.ps_manager) {
                 setPsSearch(review.ps_manager);
               }
 
               setVrbData({
-                customerName: review.customer_name || "",
+                customerName: customerName,
                 projectBudget: review.project_budget || "",
                 winProbability: review.win_probability || "",
                 winDate: review.win_date ? review.win_date.split('T')[0].substring(0, 7) : "",
@@ -436,7 +448,7 @@ export default function VrbReviewPage({
                 partners: review.partners || "",
                 competitors: review.competitors || "",
                 customerInfo: review.customer_info || "",
-                salesManager: review.sales_manager || "",
+                salesManager: salesName,
                 psManager: review.ps_manager || "",
                 expectedStartDate: review.expected_start_date ? review.expected_start_date.split('T')[0].substring(0, 7) : "",
                 expectedEndDate: review.expected_end_date ? review.expected_end_date.split('T')[0].substring(0, 7) : "",
@@ -481,7 +493,7 @@ export default function VrbReviewPage({
                       item: c.item || "",
                       amount: parseFloat(c.amount) || 0,
                     }))
-                    : [],
+                    : [{ item: "", amount: 0 }],
                   otherGoodsItems: (review.worstCase?.otherGoodsItems && review.worstCase.otherGoodsItems.length > 0)
                     ? review.worstCase.otherGoodsItems.map((item: any) => ({
                       item: item.item || "",
@@ -489,9 +501,9 @@ export default function VrbReviewPage({
                     }))
                     : [],
                   existingSystemLinkage: parseFloat(review.worst_existing_system_linkage) || 0,
-                  riskCostPercent: parseFloat(review.worst_risk_cost_percent) || 10,
+                  riskCostPercent: review.worst_risk_cost_percent !== null && review.worst_risk_cost_percent !== undefined ? parseFloat(review.worst_risk_cost_percent) : 10,
                   riskCostBase: review.worst_risk_cost_base || "total_revenue",
-                  externalPurchasePercent: parseFloat(review.worst_external_purchase_percent) || 30,
+                  externalPurchasePercent: review.worst_external_purchase_percent !== null && review.worst_external_purchase_percent !== undefined ? parseFloat(review.worst_external_purchase_percent) : 30,
                   externalPurchaseBase: review.worst_external_purchase_base || "operating_profit",
                   externalPurchase2Percent: parseFloat(review.worst_external_purchase2_percent) || 0,
                   externalPurchase2Base: review.worst_external_purchase2_base || "operating_profit",
@@ -528,9 +540,9 @@ export default function VrbReviewPage({
                     }))
                     : [],
                   existingSystemLinkage: parseFloat(review.best_existing_system_linkage) || 0,
-                  riskCostPercent: parseFloat(review.best_risk_cost_percent) || 10,
+                  riskCostPercent: review.best_risk_cost_percent !== null && review.best_risk_cost_percent !== undefined ? parseFloat(review.best_risk_cost_percent) : 10,
                   riskCostBase: review.best_risk_cost_base || "total_revenue",
-                  externalPurchasePercent: parseFloat(review.best_external_purchase_percent) || 30,
+                  externalPurchasePercent: review.best_external_purchase_percent !== null && review.best_external_purchase_percent !== undefined ? parseFloat(review.best_external_purchase_percent) : 30,
                   externalPurchaseBase: review.best_external_purchase_base || "operating_profit",
                   externalPurchase2Percent: parseFloat(review.best_external_purchase2_percent) || 0,
                   externalPurchase2Base: review.best_external_purchase2_base || "operating_profit",
@@ -544,6 +556,7 @@ export default function VrbReviewPage({
                   operatingProfitEP2Percent: parseFloat(review.best_operating_profit2_percent) || 0,
                 },
                 businessBasis: review.business_basis || "",
+                reviewResult: review.review_result || "",
                 uiSettings: review.ui_settings || { heights: {} },
               });
             }
@@ -554,8 +567,8 @@ export default function VrbReviewPage({
 
             if (proj) {
               // 프로젝트 정보로 초기화 및 검색어 설정
-              const customerName = proj.customer_name || "";
-              const salesName = proj.sales_representative_name || "";
+              const customerName = proj.customerName || "";
+              const salesName = proj.salesRepresentativeName || "";
 
               setCustomerSearch(customerName);
               setSalesSearch(salesName);
@@ -912,10 +925,10 @@ export default function VrbReviewPage({
         user.email.toLowerCase().includes(salesSearch.toLowerCase()))
   );
 
-  // 필터링된 PS 목록 (PM, admin, 또는 역할이 없는 사용자도 포함)
+  // 필터링된 PS 목록 (role_name === 'sales')
   const filteredPs = users.filter(
     (user) =>
-      (user.role_name === "pm" || user.role_name === "admin" || !user.role_name) &&
+      user.role_name === "sales" &&
       (user.name.toLowerCase().includes(psSearch.toLowerCase()) ||
         user.email.toLowerCase().includes(psSearch.toLowerCase()))
   );
@@ -1054,11 +1067,13 @@ export default function VrbReviewPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             project_id: parseInt(id),
+            created_by: currentUser?.id || 1,
           }),
         });
 
         if (!createResponse.ok) {
-          throw new Error("VRB Review 생성에 실패했습니다.");
+          const errorData = await createResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.error || `VRB Review 생성에 실패했습니다. (${createResponse.status})`);
         }
 
         const createData = await createResponse.json();
@@ -1104,6 +1119,7 @@ export default function VrbReviewPage({
           business_scope: vrbData.businessScope,
           risk: vrbData.risk,
           business_basis: vrbData.businessBasis,
+          review_result: vrbData.reviewResult,
           ui_settings: vrbData.uiSettings,
           worst_estimated_revenue_goods: vrbData.worstCase.estimatedRevenueGoods,
           worst_estimated_revenue_services: vrbData.worstCase.estimatedRevenueServices,
@@ -1179,12 +1195,12 @@ export default function VrbReviewPage({
             attendees: a.attendees,
             ui_height: a.ui_height,
           })),
-          status: vrbStatus === 'STANDBY' ? 'IN_PROGRESS' : vrbStatus,
+          status: (vrbStatus === 'STANDBY' || vrbStatus === 'draft') ? 'IN_PROGRESS' : vrbStatus,
         }),
       });
 
       if (updateResponse.ok) {
-        if (vrbStatus === 'STANDBY') {
+        if (vrbStatus === 'STANDBY' || vrbStatus === 'draft') {
           setVrbStatus('IN_PROGRESS');
         }
       }
@@ -1199,7 +1215,7 @@ export default function VrbReviewPage({
         throw new Error(errorData.message || errorData.error || "VRB Review 저장에 실패했습니다.");
       }
 
-      showAlert("VRB Review가 저장되었습니다.", "success");
+      showAlert("VRB가 저장되었습니다.", "success");
     } catch (error: any) {
       console.error("[VRB Save] 저장 에러:", error);
       showAlert(error.message || "VRB Review 저장에 실패했습니다.", "error");
@@ -1208,76 +1224,44 @@ export default function VrbReviewPage({
     }
   }, [id, currentVrbId, isNewVrb, vrbData]);
 
-  // 승인 처리
-  const handleApprove = useCallback(async () => {
+  // 심의 결과 처리 (진행/미진행)
+  const handleReviewDecision = useCallback(async (decision: "PROCEED" | "STOP") => {
     if (!currentVrbId) {
       showAlert("VRB Review를 먼저 저장해주세요.", "warning");
       return;
     }
 
-    try {
-      const response = await fetch(`/api/vrb-reviews/${currentVrbId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          project_id: parseInt(id), // 프로젝트 ID 검증을 위해 포함
-          status: "COMPLETED",
-          rejection_reason: null,
-        }),
-      });
+    const title = decision === "PROCEED" ? "진행" : "미진행";
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "승인 처리에 실패했습니다." }));
-        throw new Error(errorData.error || errorData.message || "승인 처리에 실패했습니다.");
+    confirm({
+      title: `VRB 심의 결과 - ${title}`,
+      message: `심의 결과를 '${title}'으로 확정하시겠습니까?`,
+      confirmText: title,
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/vrb-reviews/${currentVrbId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              project_id: parseInt(id),
+              review_result: decision,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("처리 중 오류가 발생했습니다.");
+          }
+
+          setVrbData(prev => ({ ...prev, reviewResult: decision }));
+          setRejectionReason("");
+          showAlert(`심의 결과가 '${title}'으로 등록되었습니다.`, decision === "PROCEED" ? "success" : "info");
+        } catch (error: any) {
+          showAlert(error.message || "처리 중 오류가 발생했습니다.", "error");
+        }
       }
+    });
 
-      setVrbStatus("COMPLETED");
-      setRejectionReason("");
-      setIsApprovalModalOpen(false);
-      showAlert("VRB Review가 승인되었습니다.", "success");
-    } catch (error: any) {
-      console.error("Error approving VRB review:", error);
-      showAlert(error.message || "승인 처리에 실패했습니다.", "error");
-    }
-  }, [currentVrbId]);
-
-  // 반려 처리
-  const handleReject = useCallback(async () => {
-    if (!currentVrbId) {
-      showAlert("VRB Review를 먼저 저장해주세요.", "warning");
-      return;
-    }
-
-    if (!rejectionReasonInput.trim()) {
-      showAlert("반려 사유를 입력해주세요.", "warning");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/vrb-reviews/${currentVrbId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          project_id: parseInt(id), // 프로젝트 ID 검증을 위해 포함
-          status: "COMPLETED",
-          rejection_reason: rejectionReasonInput,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("반려 처리에 실패했습니다.");
-      }
-
-      setVrbStatus("COMPLETED");
-      setRejectionReason(rejectionReasonInput);
-      setRejectionReasonInput("");
-      setIsRejectionModalOpen(false);
-      showAlert("VRB Review가 반려되었습니다.", "info");
-    } catch (error: any) {
-      console.error("Error rejecting VRB review:", error);
-      showAlert(error.message || "반려 처리에 실패했습니다.", "error");
-    }
-  }, [currentVrbId, rejectionReasonInput]);
+  }, [currentVrbId, id, confirm, showAlert]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!currentVrbId) {
@@ -1310,6 +1294,35 @@ export default function VrbReviewPage({
     }
   };
 
+  // 삭제 처리
+  const handleDelete = async () => {
+    if (!currentVrbId) return;
+
+    confirm({
+      title: "VRB Review 삭제",
+      message: "정말로 이 VRB Review를 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/vrb-reviews/${currentVrbId}`, {
+            method: 'DELETE',
+          });
+
+          if (response.ok) {
+            showAlert("VRB Review가 삭제되었습니다.", "success");
+            // 삭제 후 목록으로 이동하거나 상태 초기화
+            router.push(`/projects/${id}`);
+          } else {
+            const error = await response.json();
+            showAlert(`삭제 실패: ${error.message || '알 수 없는 오류'}`, "error");
+          }
+        } catch (e) {
+          console.error(e);
+          showAlert("삭제 중 오류가 발생했습니다.", "error");
+        }
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1325,1339 +1338,1275 @@ export default function VrbReviewPage({
         <div className="flex items-center gap-4">
           <Link
             href="/vrb-review"
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                 VRB - {project?.name || "프로젝트"}
               </h1>
               <StatusBadge
                 status={vrbStatus || 'STANDBY'}
               />
+              <ProjectPhaseNav projectId={id} />
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-500 font-medium">
               {project?.projectCode} | {project?.customerName}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-
-          <Button
-            variant="secondary"
-            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
-          >
-            <Download className="h-4 w-4" />
-            엑셀
-          </Button>
-
-          <Button
-            variant="primary"
-            onClick={async () => {
-              await handleSave();
-              await handleStatusChange('COMPLETED');
-            }}
-            disabled={isSaving || vrbStatus === 'COMPLETED'}
-            className="flex items-center gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            작성완료
-          </Button>
-        </div>
-      </div>
-
-      {/* 프로젝트 개요 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">프로젝트 개요</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div>
-            <Input
-              type="text"
-              label="사업 예산 (VAT 포함)"
-              value={vrbData.projectBudget}
-              onChange={(e) => setVrbData({ ...vrbData, projectBudget: e.target.value })}
-              placeholder="예: 2.14억"
-              disabled={isReadOnly}
-            />
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700">고객사명</label>
-            <div className="relative mt-1">
-              <input
-                type="text"
-                value={customerSearch}
-                onChange={(e) => {
-                  setCustomerSearch(e.target.value);
-                  setShowCustomerDropdown(true);
-                  if (!e.target.value) {
-                    setVrbData((prev) => ({ ...prev, customerName: "" }));
-                  }
-                }}
-                onFocus={() => setShowCustomerDropdown(true)}
-                placeholder="고객사명 또는 코드로 검색..."
-                disabled={isReadOnly}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-              {showCustomerDropdown && filteredCustomers.length > 0 && (
-                <>
-                  <div
-                    className="fixed inset-0 z-0"
-                    onClick={() => setShowCustomerDropdown(false)}
-                  />
-                  <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                    {filteredCustomers.map((client) => (
-                      <button
-                        key={client.id}
-                        type="button"
-                        onClick={() => handleCustomerSelect(client.id.toString(), client.name)}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      >
-                        <div className="font-medium text-gray-900">{client.name}</div>
-                        {client.code && (
-                          <div className="text-xs text-gray-500">{client.code}</div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="md:col-span-2">
-            <Input
-              type="text"
-              label="고객 정보"
-              value={vrbData.customerInfo}
-              onChange={(e) => setVrbData({ ...vrbData, customerInfo: e.target.value })}
-              placeholder="예: 계통사업처/계통제어부"
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">사업형태</label>
-            <Dropdown
-              value={vrbData.businessType}
-              onChange={(val) => setVrbData({ ...vrbData, businessType: val as string })}
-              options={[
-                { value: "", label: "선택" },
-                { value: "입찰", label: "입찰" },
-                { value: "수의계약", label: "수의계약" }
-              ]}
-              placeholder="선택"
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">수주확률</label>
-            <Dropdown
-              value={vrbData.winProbability}
-              onChange={(val) => setVrbData({ ...vrbData, winProbability: val as string })}
-              options={[
-                { value: "", label: "선택" },
-                { value: "상(90%)", label: "상(90%)" },
-                { value: "중(60%)", label: "중(60%)" },
-                { value: "하(30%)", label: "하(30%)" }
-              ]}
-              placeholder="선택"
-              disabled={isReadOnly}
-            />
-          </div>
-          <DatePicker
-            label="수주시기"
-            date={vrbData.winDate ? new Date(vrbData.winDate + "-01") : undefined}
-            setDate={(date) => setVrbData({ ...vrbData, winDate: date ? format(date, "yyyy-MM") : "" })}
-            disabled={isReadOnly}
-          />
-          <DatePicker
-            label="예상 사업기간 (시작)"
-            date={vrbData.expectedStartDate ? new Date(vrbData.expectedStartDate + "-01") : undefined}
-            setDate={(date) => setVrbData({ ...vrbData, expectedStartDate: date ? format(date, "yyyy-MM") : "" })}
-            disabled={isReadOnly}
-          />
-          <DatePicker
-            label="예상 사업기간 (종료)"
-            date={vrbData.expectedEndDate ? new Date(vrbData.expectedEndDate + "-01") : undefined}
-            setDate={(date) => setVrbData({ ...vrbData, expectedEndDate: date ? format(date, "yyyy-MM") : "" })}
-            disabled={isReadOnly}
-          />
-          <Input
-            label="주사업자"
-            type="text"
-            value={vrbData.mainContractor}
-            onChange={(e) => setVrbData({ ...vrbData, mainContractor: e.target.value })}
-            placeholder="예: (주)위엠비"
-            disabled={isReadOnly}
-          />
-          <Input
-            label="파트너사"
-            type="text"
-            value={vrbData.partners}
-            onChange={(e) => setVrbData({ ...vrbData, partners: e.target.value })}
-            disabled={isReadOnly}
-          />
-          <Input
-            label="파트너사 정보"
-            type="text"
-            value={vrbData.partnerInfo}
-            onChange={(e) => setVrbData({ ...vrbData, partnerInfo: e.target.value })}
-            disabled={isReadOnly}
-          />
-          <Input
-            label="경쟁사"
-            type="text"
-            value={vrbData.competitors}
-            onChange={(e) => setVrbData({ ...vrbData, competitors: e.target.value })}
-            disabled={isReadOnly}
-          />
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700">영업</label>
-            <div className="relative mt-1">
-              <input
-                type="text"
-                value={salesSearch}
-                onChange={(e) => {
-                  setSalesSearch(e.target.value);
-                  setShowSalesDropdown(true);
-                  if (!e.target.value) {
-                    setVrbData((prev) => ({ ...prev, salesManager: "" }));
-                  }
-                }}
-                onFocus={() => setShowSalesDropdown(true)}
-                placeholder="영업대표 이름 또는 이메일로 검색..."
-                disabled={isReadOnly}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-              {showSalesDropdown && filteredSales.length > 0 && (
-                <>
-                  <div
-                    className="fixed inset-0 z-0"
-                    onClick={() => setShowSalesDropdown(false)}
-                  />
-                  <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                    {filteredSales.map((user) => (
-                      <button
-                        key={user.id}
-                        type="button"
-                        onClick={() => handleSalesSelect(user.id.toString(), user.name)}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      >
-                        <div className="font-medium text-gray-900">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700">PS</label>
-            <div className="relative mt-1">
-              <input
-                type="text"
-                value={psSearch}
-                onChange={(e) => {
-                  setPsSearch(e.target.value);
-                  setShowPsDropdown(true);
-                  if (!e.target.value) {
-                    setVrbData((prev) => ({ ...prev, psManager: "" }));
-                  }
-                }}
-                onFocus={() => setShowPsDropdown(true)}
-                placeholder="PS 이름 또는 이메일로 검색..."
-                disabled={isReadOnly}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-              {showPsDropdown && filteredPs.length > 0 && (
-                <>
-                  <div
-                    className="fixed inset-0 z-0"
-                    onClick={() => setShowPsDropdown(false)}
-                  />
-                  <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                    {filteredPs.map((user) => (
-                      <button
-                        key={user.id}
-                        type="button"
-                        onClick={() => handlePsSelect(user.id.toString(), user.name)}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      >
-                        <div className="font-medium text-gray-900">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">주요 도입 솔루션</label>
-            <input
-              type="text"
-              value={vrbData.keySolutions}
-              onChange={(e) => setVrbData({ ...vrbData, keySolutions: e.target.value })}
-              placeholder="예: RENOBIT, TIM"
-              disabled={isReadOnly}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 사업배경 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">사업배경</h2>
-        <textarea
-          value={vrbData.businessBackground}
-          onChange={(e) => setVrbData({ ...vrbData, businessBackground: e.target.value })}
-          onMouseUp={(e: any) => handleHeightChange('businessBackground', e.target.offsetHeight)}
-          style={{ height: vrbData.uiSettings?.heights?.['businessBackground'] ? `${vrbData.uiSettings.heights['businessBackground']}px` : undefined }}
-          rows={4}
-          disabled={isReadOnly}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y transition-all duration-200"
-          placeholder="사업배경을 입력하세요"
-        />
-      </div>
-
-      {/* 사업범위 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">사업범위</h2>
-        <textarea
-          value={vrbData.businessScope}
-          onChange={(e) => setVrbData({ ...vrbData, businessScope: e.target.value })}
-          onMouseUp={(e: any) => handleHeightChange('businessScope', e.target.offsetHeight)}
-          style={{ height: vrbData.uiSettings?.heights?.['businessScope'] ? `${vrbData.uiSettings.heights['businessScope']}px` : undefined }}
-          rows={4}
-          disabled={isReadOnly}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y transition-all duration-200"
-          placeholder="사업범위를 입력하세요"
-        />
-      </div>
-
-      {/* 주요내용 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">주요내용</h2>
-          <button
-            onClick={handleAddContent}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Plus className="h-4 w-4" />
-            내용 추가
-          </button>
-        </div>
-        <div className="space-y-2">
-          {vrbData.keyContents.map((content, index) => (
-            <div
-              key={index}
-              className="flex gap-2 items-start p-1"
+          {/* 상태별 상단 액션 버튼 노출 정의 */}
+          {vrbStatus === 'IN_PROGRESS' && currentVrbId && (
+            <Button
+              variant="secondary"
+              onClick={handleDelete}
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50 border-red-200"
             >
-              <DatePicker
-                date={content.date ? new Date(content.date) : undefined}
-                setDate={(date) => handleContentChange(index, "date", date ? format(date, "yyyy-MM-dd") : "")}
-                disabled={isReadOnly}
-                className="w-40"
-              />
-              <textarea
-                value={content.content}
-                onChange={(e) => handleContentChange(index, "content", e.target.value)}
-                onMouseUp={(e: any) => handleContentHeightChange(index, e.target.offsetHeight)}
-                style={{ height: content.ui_height ? `${content.ui_height}px` : undefined }}
-                rows={3}
-                placeholder="내용을 입력하세요"
-                disabled={isReadOnly}
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y transition-all duration-200"
-              />
-              <button
-                onClick={() => handleRemoveContent(index)}
-                className="mt-2 rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                title="삭제"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          {vrbData.keyContents.length === 0 && (
-            <p className="text-sm text-gray-500">내용이 없습니다. "내용 추가" 버튼을 클릭하여 추가하세요.</p>
+              <Trash2 className="h-4 w-4" />
+              삭제
+            </Button>
           )}
-        </div>
-      </div>
 
-      {/* 주요활동 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">주요활동</h2>
-          <button
-            onClick={handleAddActivity}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Plus className="h-4 w-4" />
-            활동 추가
-          </button>
-        </div>
-        <div className="space-y-2">
-          {vrbData.keyActivities.map((activity, index) => (
-            <div
-              key={index}
-              className="flex gap-2 items-start p-1"
+          {vrbStatus === 'COMPLETED' && (
+            <div className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm border-2 shadow-sm",
+              vrbData.reviewResult === 'PROCEED'
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-red-50 text-red-700 border-red-200"
+            )}>
+              {vrbData.reviewResult === 'PROCEED' ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <XCircle className="h-4 w-4" />
+              )}
+              {vrbData.reviewResult === 'PROCEED' ? '심의 결과 : 진행' : '심의 결과 : 미진행'}
+            </div>
+          )}
+
+          {(vrbStatus === 'IN_PROGRESS' || vrbStatus === 'COMPLETED') && (
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm transition-all"
             >
-              <DatePicker
-                date={activity.date ? new Date(activity.date) : undefined}
-                setDate={(date) => handleActivityChange(index, "date", date ? format(date, "yyyy-MM-dd") : "")}
-                disabled={isReadOnly}
-                className="w-40"
-              />
-              <textarea
-                value={activity.activity}
-                onChange={(e) => handleActivityChange(index, "activity", e.target.value)}
-                onMouseUp={(e: any) => handleActivityHeightChange(index, e.target.offsetHeight)}
-                style={{ height: activity.ui_height ? `${activity.ui_height}px` : undefined }}
-                rows={3}
-                placeholder="활동을 입력하세요"
-                disabled={isReadOnly}
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y transition-all duration-200"
-              />
-              <button
-                onClick={() => handleRemoveActivity(index)}
-                className="mt-2 rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                title="삭제"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          {vrbData.keyActivities.length === 0 && (
-            <p className="text-sm text-gray-500">활동 내역이 없습니다. "활동 추가" 버튼을 클릭하여 추가하세요.</p>
+              <Download className="h-4 w-4" />
+              엑셀
+            </Button>
           )}
+
+          {vrbStatus === 'IN_PROGRESS' && (
+            <Button
+              variant="primary"
+              onClick={async () => {
+                await handleSave();
+                await handleStatusChange('COMPLETED');
+              }}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              작성완료
+            </Button>
+          )}
+
+
         </div>
       </div>
 
-      {/* 리스크 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">리스크</h2>
+      {/* Main Container Card */}
+      <div className="neo-light-card border border-border/40 p-6 space-y-6">
+        {/* 1. 사업개요 */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">1. 사업개요</h2>
+            <div className="flex items-center gap-3">
+              {
+                (vrbStatus !== 'COMPLETED') && (
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" />
+                    저장
+                  </button>
+                )
+              }
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-none">
+            <table className="w-full border-collapse text-sm table-fixed">
+              <colgroup>
+                <col className="w-[11%] bg-blue-50/50" />
+                <col className="w-[22%] bg-white" />
+                <col className="w-[11%] bg-blue-50/50" />
+                <col className="w-[22%] bg-white" />
+                <col className="w-[11%] bg-blue-50/50" />
+                <col className="w-[23%] bg-white" />
+              </colgroup>
+              <tbody>
+                {/* Row 1: Customer Name (2), Business Name (4) */}
+                <tr className="border-b border-gray-300 min-h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">고객사명</th>
+                  <td className="border border-gray-300 p-0 relative h-[35px]">
+                    <div className="relative w-full h-full">
+                      <input
+                        type="text"
+                        value={customerSearch}
+                        onChange={(e) => {
+                          setCustomerSearch(e.target.value);
+                          setShowCustomerDropdown(true);
+                          if (!e.target.value) {
+                            setVrbData((prev) => ({ ...prev, customerName: "" }));
+                          }
+                        }}
+                        onFocus={() => setShowCustomerDropdown(true)}
+                        placeholder="고객사명 또는 코드로 검색..."
+                        disabled={isReadOnly}
+                        className="w-full h-full border-none bg-transparent px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                      />
+                      {showCustomerDropdown && filteredCustomers.length > 0 && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setShowCustomerDropdown(false)} />
+                          <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-none border border-gray-300 bg-white shadow-md">
+                            {filteredCustomers.map((client) => (
+                              <button
+                                key={client.id}
+                                type="button"
+                                onClick={() => handleCustomerSelect(client.id.toString(), client.name)}
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                              >
+                                <div className="font-medium text-gray-900">{client.name}</div>
+                                {client.code && <div className="text-xs text-gray-500">{client.code}</div>}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">사업명</th>
+                  <td className="border border-gray-300 p-0 h-[35px]" colSpan={3}>
+                    <input
+                      type="text"
+                      value={project?.name || ""}
+                      readOnly
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none rounded-none"
+                    />
+                  </td>
+                </tr>
 
-        <textarea
-          value={vrbData.risk}
-          onChange={(e) => setVrbData({ ...vrbData, risk: e.target.value })}
-          onMouseUp={(e: any) => handleHeightChange('risk', e.target.offsetHeight)}
-          style={{ height: vrbData.uiSettings?.heights?.['risk'] ? `${vrbData.uiSettings.heights['risk']}px` : undefined }}
-          rows={4}
-          placeholder="리스크를 입력하세요"
-          disabled={isReadOnly}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y transition-all duration-200"
-        />
-      </div>
+                {/* Row 2: Project Budget (2), Customer Info (4) */}
+                <tr className="border-b border-gray-300 min-h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">사업예산 (VAT포함)</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.projectBudget}
+                      onChange={(e) => setVrbData({ ...vrbData, projectBudget: e.target.value })}
+                      placeholder="예: 2.14억"
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors placeholder-gray-400"
+                    />
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">고객 정보</th>
+                  <td className="border border-gray-300 p-0 h-[35px]" colSpan={3}>
+                    <input
+                      type="text"
+                      value={vrbData.customerInfo}
+                      onChange={(e) => setVrbData({ ...vrbData, customerInfo: e.target.value })}
+                      placeholder="예: 계통사업처/계통제어부"
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors placeholder-gray-400"
+                    />
+                  </td>
+                </tr>
 
-      {/* 사전 수지분석서 요약 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">사전 수지분석서 요약</h2>
+                {/* Row 3: Win Probability (2), Sales (2), PS (2) */}
+                <tr className="border-b border-gray-300 min-h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">수주확률</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <select
+                      value={vrbData.winProbability}
+                      onChange={(e) => setVrbData({ ...vrbData, winProbability: e.target.value })}
+                      disabled={isReadOnly}
+                      className={cn("w-full h-full border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none", vrbData.winProbability === "" ? "text-gray-400" : "text-gray-900")}
+                    >
+                      <option value="">선택</option>
+                      <option value="상(90%)">상(90%)</option>
+                      <option value="중(60%)">중(60%)</option>
+                      <option value="하(30%)">하(30%)</option>
+                    </select>
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">담당영업</th>
+                  <td className="border border-gray-300 p-0 relative h-[35px]">
+                    <div className="relative w-full h-full">
+                      <input
+                        type="text"
+                        value={salesSearch}
+                        onChange={(e) => {
+                          setSalesSearch(e.target.value);
+                          setShowSalesDropdown(true);
+                          if (!e.target.value) setVrbData((prev) => ({ ...prev, salesManager: "" }));
+                        }}
+                        onFocus={() => setShowSalesDropdown(true)}
+                        placeholder="영업대표 검색..."
+                        disabled={isReadOnly}
+                        className="w-full h-full border-none bg-transparent px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                      />
+                      {showSalesDropdown && filteredSales.length > 0 && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setShowSalesDropdown(false)} />
+                          <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-none border border-gray-300 bg-white shadow-md">
+                            {filteredSales.map((user) => (
+                              <button key={user.id} type="button" onClick={() => handleSalesSelect(user.id.toString(), user.name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                <div className="font-bold text-gray-900">{user.name}</div>
+                                <div className="text-xs text-gray-500">{user.email}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">PS</th>
+                  <td className="border border-gray-300 p-0 relative h-[35px]">
+                    <div className="relative w-full h-full">
+                      <input
+                        type="text"
+                        value={psSearch}
+                        onChange={(e) => {
+                          setPsSearch(e.target.value);
+                          setShowPsDropdown(true);
+                          if (!e.target.value) setVrbData((prev) => ({ ...prev, psManager: "" }));
+                        }}
+                        onFocus={() => setShowPsDropdown(true)}
+                        placeholder="PS 검색..."
+                        disabled={isReadOnly}
+                        className="w-full h-full border-none bg-transparent px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                      />
+                      {showPsDropdown && filteredPs.length > 0 && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setShowPsDropdown(false)} />
+                          <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-none border border-gray-300 bg-white shadow-md">
+                            {filteredPs.map((user) => (
+                              <button key={user.id} type="button" onClick={() => handlePsSelect(user.id.toString(), user.name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                <div className="font-bold text-gray-900">{user.name}</div>
+                                <div className="text-xs text-gray-500">{user.email}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
 
-        {/* 기본 필드 표 */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 w-[20%]">항목</th>
-                <th className="px-4 py-3 text-center text-sm font-bold text-white bg-gradient-to-r from-green-600 to-green-500 border-l-4 border-l-green-700 shadow-md w-[40%]">Best Case</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-100 w-[40%]">Worst Case</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {/* 예상 수주 금액 (SW,물품) */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">예상 수주 금액 (SW,물품)</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <input
-                    type="text"
-                    value={numberInputValues["best-estimatedRevenueGoods"] !== undefined
-                      ? numberInputValues["best-estimatedRevenueGoods"]
-                      : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueGoods)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueGoods"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueGoods: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueGoods: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["best-estimatedRevenueGoods"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueGoods);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueGoods"]: currentValue
-                      }));
-                    }}
-                    className="block w-full h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                  />
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <input
-                    type="text"
-                    value={numberInputValues["worst-estimatedRevenueGoods"] !== undefined
-                      ? numberInputValues["worst-estimatedRevenueGoods"]
-                      : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueGoods)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueGoods"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueGoods: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueGoods: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["worst-estimatedRevenueGoods"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueGoods);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueGoods"]: currentValue
-                      }));
-                    }}
-                    className="block w-full h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                  />
-                </td>
-              </tr>
+                {/* Row 4: Win Date (2), Expected Period (4) */}
+                <tr className="border-b border-gray-300 min-h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">수주시기</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <DatePicker
+                      date={vrbData.winDate ? new Date(vrbData.winDate + "-01") : undefined}
+                      setDate={(date) => setVrbData({ ...vrbData, winDate: date ? format(date, "yyyy-MM") : "" })}
+                      disabled={isReadOnly}
+                      className="w-full h-full"
+                      buttonClassName="border-none shadow-none w-full h-full rounded-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 transition-colors justify-start px-[10px]"
+                      mode="month"
+                      dateFormat="yyyy-MM"
+                      placeholder="YYYY-MM"
+                    />
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">예상 사업기간</th>
+                  <td className="border border-gray-300 p-0 h-[35px]" colSpan={3}>
+                    <div className="flex items-center gap-0.5 h-full">
+                      <DatePicker
+                        date={vrbData.expectedStartDate ? new Date(vrbData.expectedStartDate + "-01") : undefined}
+                        setDate={(date) => setVrbData({ ...vrbData, expectedStartDate: date ? format(date, "yyyy-MM") : "" })}
+                        disabled={isReadOnly}
+                        className="h-full w-[90px]"
+                        buttonClassName="border-none shadow-none w-full h-full rounded-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 transition-colors justify-center px-0 text-sm"
+                        mode="month"
+                        dateFormat="yyyy-MM"
+                        placeholder="YYYY-MM"
+                      />
+                      <span className="text-gray-400">~</span>
+                      <DatePicker
+                        date={vrbData.expectedEndDate ? new Date(vrbData.expectedEndDate + "-01") : undefined}
+                        setDate={(date) => setVrbData({ ...vrbData, expectedEndDate: date ? format(date, "yyyy-MM") : "" })}
+                        disabled={isReadOnly}
+                        className="h-full w-[90px]"
+                        buttonClassName="border-none shadow-none w-full h-full rounded-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 transition-colors justify-center px-0 text-sm"
+                        mode="month"
+                        dateFormat="yyyy-MM"
+                        placeholder="YYYY-MM"
+                      />
+                    </div>
+                  </td>
+                </tr>
 
-              {/* 예상 수주 금액 (HW) */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">예상 수주 금액 (HW)</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <input
-                    type="text"
-                    value={numberInputValues["best-estimatedRevenueHw"] !== undefined
-                      ? numberInputValues["best-estimatedRevenueHw"]
-                      : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueHw)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueHw"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueHw: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueHw: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["best-estimatedRevenueHw"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueHw);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueHw"]: currentValue
-                      }));
-                    }}
-                    className="block w-full h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                  />
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <input
-                    type="text"
-                    value={numberInputValues["worst-estimatedRevenueHw"] !== undefined
-                      ? numberInputValues["worst-estimatedRevenueHw"]
-                      : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueHw)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueHw"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueHw: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueHw: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["worst-estimatedRevenueHw"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueHw);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueHw"]: currentValue
-                      }));
-                    }}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-right shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                  />
-                </td>
-              </tr>
+                {/* Row 5: Business Type (2), Main Contractor (2), Key Solutions (2) */}
+                <tr className="border-b border-gray-300 min-h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">사업형태</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <select
+                      value={vrbData.businessType}
+                      onChange={(e) => setVrbData({ ...vrbData, businessType: e.target.value })}
+                      disabled={isReadOnly}
+                      className={cn("w-full h-full border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none", vrbData.businessType === "" ? "text-gray-400" : "text-gray-900")}
+                    >
+                      <option value="">선택</option>
+                      <option value="입찰">입찰</option>
+                      <option value="수의계약">수의계약</option>
+                    </select>
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">주사업자</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.mainContractor}
+                      onChange={(e) => setVrbData({ ...vrbData, mainContractor: e.target.value })}
+                      placeholder="예: (주)위엠비"
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors placeholder-gray-400"
+                    />
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">주요 도입 솔루션</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.keySolutions}
+                      onChange={(e) => setVrbData({ ...vrbData, keySolutions: e.target.value })}
+                      placeholder="예: RENOBIT, TIM"
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors placeholder-gray-400"
+                    />
+                  </td>
+                </tr>
 
-              {/* 예상 수주 금액 (용역) */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">예상 수주 금액 (용역)</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <input
-                    type="text"
-                    value={numberInputValues["best-estimatedRevenueServices"] !== undefined
-                      ? numberInputValues["best-estimatedRevenueServices"]
-                      : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueServices)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueServices"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueServices: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        bestCase: {
-                          ...vrbData.bestCase,
-                          estimatedRevenueServices: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["best-estimatedRevenueServices"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueServices);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["best-estimatedRevenueServices"]: currentValue
-                      }));
-                    }}
-                    className="block w-full h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                  />
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <input
-                    type="text"
-                    value={numberInputValues["worst-estimatedRevenueServices"] !== undefined
-                      ? numberInputValues["worst-estimatedRevenueServices"]
-                      : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueServices)
-                    }
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                      const formattedValue = addCommasToNumber(inputValue);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueServices"]: formattedValue
-                      }));
-                      const numValue = parseNumberFromString(formattedValue);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueServices: numValue,
-                        },
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const numValue = parseNumberFromString(e.target.value);
-                      setVrbData({
-                        ...vrbData,
-                        worstCase: {
-                          ...vrbData.worstCase,
-                          estimatedRevenueServices: numValue,
-                        },
-                      });
-                      setNumberInputValues(prev => {
-                        const newState = { ...prev };
-                        delete newState["worst-estimatedRevenueServices"];
-                        return newState;
-                      });
-                    }}
-                    onFocus={(e) => {
-                      const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueServices);
-                      setNumberInputValues(prev => ({
-                        ...prev,
-                        ["worst-estimatedRevenueServices"]: currentValue
-                      }));
-                    }}
-                    className="block w-full h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                  />
-                </td>
-              </tr>
+                {/* Row 6: Partners (2), Partner Info (2), Competitors (2) */}
+                <tr className="border-b border-gray-300 h-[35px]">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">파트너사</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.partners}
+                      onChange={(e) => setVrbData({ ...vrbData, partners: e.target.value })}
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                    />
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">파트너사 정보</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.partnerInfo}
+                      onChange={(e) => setVrbData({ ...vrbData, partnerInfo: e.target.value })}
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                    />
+                  </td>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">경쟁사</th>
+                  <td className="border border-gray-300 p-0 h-[35px]">
+                    <input
+                      type="text"
+                      value={vrbData.competitors}
+                      onChange={(e) => setVrbData({ ...vrbData, competitors: e.target.value })}
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none bg-transparent px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none hover:bg-blue-50 transition-colors"
+                    />
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-300">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 align-top pt-[10px] leading-tight">사업배경</th>
+                  <td className="border border-gray-300 p-0 h-1" colSpan={5}>
+                    <textarea
+                      value={vrbData.businessBackground}
+                      onChange={(e) => setVrbData({ ...vrbData, businessBackground: e.target.value })}
+                      onMouseUp={(e: any) => handleHeightChange('businessBackground', e.target.offsetHeight)}
+                      style={{ height: vrbData.uiSettings?.heights?.['businessBackground'] ? `${vrbData.uiSettings.heights['businessBackground']}px` : undefined }}
+                      rows={4}
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y text-sm bg-transparent p-[10px] hover:bg-blue-50 transition-colors rounded-none outline-none block"
+                      placeholder="사업배경을 입력하세요"
+                    />
+                  </td>
+                </tr>
 
-              {/* 예상 수주 금액 (합계) */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 text-sm font-semibold text-gray-900">예상 수주 금액</td>
-                <td className="px-4 py-3 bg-gradient-to-r from-green-200 to-green-100 border-l-4 border-l-green-700 shadow-md">
-                  <p className="text-xl font-bold text-green-900 text-right">
+                {/* Row 8 - Business Scope */}
+                <tr className="border-b border-gray-300">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 align-top pt-[10px] leading-tight">사업범위</th>
+                  <td className="border border-gray-300 p-0 h-1" colSpan={5}>
+                    <textarea
+                      value={vrbData.businessScope}
+                      onChange={(e) => setVrbData({ ...vrbData, businessScope: e.target.value })}
+                      onMouseUp={(e: any) => handleHeightChange('businessScope', e.target.offsetHeight)}
+                      style={{ height: vrbData.uiSettings?.heights?.['businessScope'] ? `${vrbData.uiSettings.heights['businessScope']}px` : undefined }}
+                      rows={4}
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y text-sm bg-transparent p-[10px] hover:bg-blue-50 transition-colors rounded-none outline-none block"
+                      placeholder="사업범위를 입력하세요"
+                    />
+                  </td>
+                </tr>
+
+                {/* Row 9 - Major Contents */}
+                <tr className="border-b border-gray-300">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 align-top pt-[10px] leading-tight">주요내용</th>
+                  <td className="border border-gray-300 p-0" colSpan={5}>
+                    <div className="flex flex-col">
+                      {vrbData.keyContents.map((content, index) => (
+                        <div key={index} className="flex items-stretch border-b border-gray-300 last:border-0 min-h-[35px]">
+                          <div className="w-[130px] border-r border-gray-300">
+                            <DatePicker
+                              date={content.date ? new Date(content.date) : undefined}
+                              setDate={(date) => handleContentChange(index, "date", date ? format(date, "yyyy-MM-dd") : "")}
+                              disabled={isReadOnly}
+                              className="w-full h-full"
+                              buttonClassName="border-none shadow-none w-full h-full rounded-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 transition-colors justify-center px-0"
+                              placeholder="YYYY-MM-DD"
+                            />
+                          </div>
+                          <div className="flex-1 relative">
+                            <textarea
+                              value={content.content}
+                              onChange={(e) => handleContentChange(index, "content", e.target.value)}
+                              onMouseUp={(e: any) => handleContentHeightChange(index, e.target.offsetHeight)}
+                              style={{ height: content.ui_height ? `${content.ui_height}px` : '35px' }}
+                              rows={1}
+                              placeholder="내용을 입력하세요"
+                              disabled={isReadOnly}
+                              className="w-full h-full border-none px-[10px] py-[6px] text-sm focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y bg-transparent hover:bg-blue-50 transition-colors rounded-none outline-none leading-relaxed block overflow-hidden"
+                            />
+                          </div>
+                          {!isReadOnly && (
+                            <button
+                              onClick={() => handleRemoveContent(index)}
+                              className="w-[40px] flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {vrbData.keyContents.length === 0 && (
+                        <div className="flex h-[35px] items-center justify-center border-b border-gray-300 text-sm text-gray-400">
+                          내용이 없습니다.
+                        </div>
+                      )}
+                      {!isReadOnly && (
+                        <button
+                          onClick={handleAddContent}
+                          className="w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border-none text-sm rounded-none"
+                        >
+                          <Plus className="h-3 w-3" /> 내용 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Row 10 - Major Activities */}
+                <tr className="border-b border-gray-300">
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 align-top pt-[10px] whitespace-nowrap">주요활동</th>
+                  <td className="border border-gray-300 p-0" colSpan={5}>
+                    <div className="flex flex-col">
+                      {vrbData.keyActivities.map((activity, index) => (
+                        <div key={index} className="flex items-stretch border-b border-gray-300 last:border-0 min-h-[35px]">
+                          <div className="w-[130px] border-r border-gray-300">
+                            <DatePicker
+                              date={activity.date ? new Date(activity.date) : undefined}
+                              setDate={(date) => handleActivityChange(index, "date", date ? format(date, "yyyy-MM-dd") : "")}
+                              disabled={isReadOnly}
+                              className="w-full h-full"
+                              buttonClassName="border-none shadow-none w-full h-full rounded-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 transition-colors justify-center px-0"
+                              placeholder="YYYY-MM-DD"
+                            />
+                          </div>
+                          <div className="flex-1 relative">
+                            <textarea
+                              value={activity.activity}
+                              onChange={(e) => handleActivityChange(index, "activity", e.target.value)}
+                              onMouseUp={(e: any) => handleActivityHeightChange(index, e.target.offsetHeight)}
+                              style={{ height: activity.ui_height ? `${activity.ui_height}px` : '35px' }}
+                              rows={1}
+                              placeholder="활동을 입력하세요"
+                              disabled={isReadOnly}
+                              className="w-full h-full border-none px-[10px] py-[6px] text-sm focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y bg-transparent hover:bg-blue-50 transition-colors rounded-none outline-none leading-relaxed block overflow-hidden"
+                            />
+                          </div>
+                          {!isReadOnly && (
+                            <button
+                              onClick={() => handleRemoveActivity(index)}
+                              className="w-[40px] flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {vrbData.keyActivities.length === 0 && (
+                        <div className="flex h-[35px] items-center justify-center border-b border-gray-300 text-sm text-gray-400">
+                          활동 내역이 없습니다.
+                        </div>
+                      )}
+                      {!isReadOnly && (
+                        <button
+                          onClick={handleAddActivity}
+                          className="w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border-none text-sm rounded-none"
+                        >
+                          <Plus className="h-3 w-3" /> 활동 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Row 11 - Risk */}
+                <tr>
+                  <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 align-top pt-[10px] whitespace-nowrap">Risk</th>
+                  <td className="border border-gray-300 p-0 h-1" colSpan={5}>
+                    <textarea
+                      value={vrbData.risk}
+                      onChange={(e) => setVrbData({ ...vrbData, risk: e.target.value })}
+                      onMouseUp={(e: any) => handleHeightChange('risk', e.target.offsetHeight)}
+                      style={{ height: vrbData.uiSettings?.heights?.['risk'] ? `${vrbData.uiSettings.heights['risk']}px` : undefined }}
+                      rows={3}
+                      placeholder="Risk를 입력하세요"
+                      disabled={isReadOnly}
+                      className="w-full h-full border-none focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y text-sm bg-transparent p-[10px] hover:bg-blue-50 transition-colors rounded-none outline-none block"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 2. 사전 수지분석서 요약 */}
+        <div>
+          <h2 className="mb-4 text-lg font-bold text-gray-900">2. 사전 수지분석서 요약</h2>
+
+          {/* 기본 필드 표 */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse rounded-none shadow-none text-sm table-fixed min-w-[1000px]">
+              <colgroup>
+                <col className="w-[15%]" />
+                <col className="w-[17%]" />
+                <col className="w-[10%]" />
+                <col className="w-[15.5%]" />
+                <col className="w-[17%]" />
+                <col className="w-[10%]" />
+                <col className="w-[15.5%]" />
+              </colgroup>
+              <thead>
+                <tr className="bg-blue-50/50 h-[35px]">
+                  <th className="border border-gray-300 px-[10px] text-left font-bold text-gray-900">항목</th>
+                  <th colSpan={3} className="border-t-2 border-x-2 border-blue-400 border-b border-gray-300 px-[10px] text-center font-bold text-blue-700 bg-blue-50" style={{ borderTopColor: '#60a5fa', borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>Best Case</th>
+                  <th colSpan={3} className="border border-gray-300 px-[10px] text-center font-bold text-gray-700">Worst Case</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {/* 예상 수주 금액 (SW,물품) */}
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">예상 수주 금액 (SW,물품)</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 hover:bg-blue-50/50 transition-colors h-[35px]" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <input
+                      type="text"
+                      value={numberInputValues["best-estimatedRevenueGoods"] !== undefined
+                        ? numberInputValues["best-estimatedRevenueGoods"]
+                        : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueGoods)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueGoods"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueGoods: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueGoods: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["best-estimatedRevenueGoods"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueGoods);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueGoods"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50 rounded-none"
+                    />
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 hover:bg-blue-50/50 transition-colors h-[35px]">
+                    <input
+                      type="text"
+                      value={numberInputValues["worst-estimatedRevenueGoods"] !== undefined
+                        ? numberInputValues["worst-estimatedRevenueGoods"]
+                        : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueGoods)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueGoods"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueGoods: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueGoods: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["worst-estimatedRevenueGoods"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueGoods);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueGoods"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50 rounded-none"
+                    />
+                  </td>
+                </tr>
+
+                {/* 예상 수주 금액 (HW) */}
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">예상 수주 금액 (HW)</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 hover:bg-blue-50/50 transition-colors h-[35px]" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <input
+                      type="text"
+                      value={numberInputValues["best-estimatedRevenueHw"] !== undefined
+                        ? numberInputValues["best-estimatedRevenueHw"]
+                        : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueHw)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueHw"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueHw: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueHw: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["best-estimatedRevenueHw"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueHw);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueHw"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50 rounded-none"
+                    />
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 hover:bg-blue-50/50 transition-colors h-[35px]">
+                    <input
+                      type="text"
+                      value={numberInputValues["worst-estimatedRevenueHw"] !== undefined
+                        ? numberInputValues["worst-estimatedRevenueHw"]
+                        : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueHw)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueHw"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueHw: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueHw: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["worst-estimatedRevenueHw"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueHw);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueHw"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50 rounded-none"
+                    />
+                  </td>
+                </tr>
+
+                {/* 예상 수주 금액 (용역) */}
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">예상 수주 금액 (용역)</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 hover:bg-blue-50/50 transition-colors h-[35px]" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <input
+                      type="text"
+                      value={numberInputValues["best-estimatedRevenueServices"] !== undefined
+                        ? numberInputValues["best-estimatedRevenueServices"]
+                        : formatNumberWithCommas(vrbData.bestCase.estimatedRevenueServices)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueServices"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueServices: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, bestCase: { ...vrbData.bestCase, estimatedRevenueServices: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["best-estimatedRevenueServices"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.bestCase.estimatedRevenueServices);
+                        setNumberInputValues(prev => ({ ...prev, ["best-estimatedRevenueServices"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50 rounded-none"
+                    />
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 hover:bg-blue-50/50 transition-colors h-[35px]">
+                    <input
+                      type="text"
+                      value={numberInputValues["worst-estimatedRevenueServices"] !== undefined
+                        ? numberInputValues["worst-estimatedRevenueServices"]
+                        : formatNumberWithCommas(vrbData.worstCase.estimatedRevenueServices)
+                      }
+                      disabled={isReadOnly}
+                      onChange={(e) => {
+                        const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                        const formattedValue = addCommasToNumber(inputValue);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueServices"]: formattedValue }));
+                        const numValue = parseNumberFromString(formattedValue);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueServices: numValue } });
+                      }}
+                      onBlur={(e) => {
+                        const numValue = parseNumberFromString(e.target.value);
+                        setVrbData({ ...vrbData, worstCase: { ...vrbData.worstCase, estimatedRevenueServices: numValue } });
+                        setNumberInputValues(prev => {
+                          const newState = { ...prev };
+                          delete newState["worst-estimatedRevenueServices"];
+                          return newState;
+                        });
+                      }}
+                      onFocus={() => {
+                        const currentValue = formatNumberWithCommas(vrbData.worstCase.estimatedRevenueServices);
+                        setNumberInputValues(prev => ({ ...prev, ["worst-estimatedRevenueServices"]: currentValue }));
+                      }}
+                      className="block w-full h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50"
+                    />
+                  </td>
+                </tr>
+
+                {/* 예상 수주 금액 (합계) */}
+                <tr className="h-[35px] bg-gray-50/50 font-bold">
+                  <td className="border border-gray-300 px-[10px] text-gray-900 bg-gray-50/50">예상 수주 금액 (합계)</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid px-[10px] text-right text-blue-700 bg-blue-50/20" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
                     {formatCurrency(
                       vrbData.bestCase.estimatedRevenueGoods + vrbData.bestCase.estimatedRevenueServices + vrbData.bestCase.estimatedRevenueHw,
                       "KRW"
                     )}
-                  </p>
-                </td>
-                <td className="px-4 py-3 bg-gray-100">
-                  <p className="text-lg font-semibold text-gray-700 text-right">
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 px-[10px] text-right text-gray-900 bg-gray-50/30">
                     {formatCurrency(
                       vrbData.worstCase.estimatedRevenueGoods + vrbData.worstCase.estimatedRevenueServices + vrbData.worstCase.estimatedRevenueHw,
                       "KRW"
                     )}
-                  </p>
-                </td>
-              </tr>
+                  </td>
+                </tr>
 
-              {/* 타사 상품 매입 */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">타사 상품 매입</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="space-y-2">
-                    {vrbData.bestCase.otherGoodsItems.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          value={item.item}
-                          onChange={(e) =>
-                            handleOtherGoodsChange("best", index, "item", e.target.value)
-                          }
-                          placeholder="항목"
-                          className="flex-1 h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                        />
-                        <input
-                          type="text"
-                          value={numberInputValues[`best-otherGoods-${index}`] !== undefined
-                            ? numberInputValues[`best-otherGoods-${index}`]
-                            : formatNumberWithCommas(item.amount)
-                          }
-                          onChange={(e) => {
-                            const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                            const formattedValue = addCommasToNumber(inputValue);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`best-otherGoods-${index}`]: formattedValue
-                            }));
-                            const numValue = parseNumberFromString(formattedValue);
-                            handleOtherGoodsChange("best", index, "amount", numValue);
-                          }}
-                          onBlur={(e) => {
-                            const numValue = parseNumberFromString(e.target.value);
-                            handleOtherGoodsChange("best", index, "amount", numValue);
-                            setNumberInputValues(prev => {
-                              const newState = { ...prev };
-                              delete newState[`best-otherGoods-${index}`];
-                              return newState;
-                            });
-                          }}
-                          onFocus={(e) => {
-                            const currentValue = formatNumberWithCommas(item.amount);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`best-otherGoods-${index}`]: currentValue
-                            }));
-                          }}
-                          placeholder="금액"
-                          className="w-48 h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                        />
-                        <button
-                          onClick={() => handleOtherGoodsRemove("best", index)}
-                          className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                          title="삭제"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => handleOtherGoodsAdd("best")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.bestCase.otherGoodsItems.length > 0 && (
-                      <p className="text-sm font-bold text-green-900 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.bestCase.otherGoodsItems.reduce((sum, item) => sum + item.amount, 0),
-                          "KRW"
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="space-y-2">
-                    {vrbData.worstCase.otherGoodsItems.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          value={item.item}
-                          onChange={(e) =>
-                            handleOtherGoodsChange("worst", index, "item", e.target.value)
-                          }
-                          placeholder="항목"
-                          className="flex-1 h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                        />
-                        <input
-                          type="text"
-                          value={numberInputValues[`worst-otherGoods-${index}`] !== undefined
-                            ? numberInputValues[`worst-otherGoods-${index}`]
-                            : formatNumberWithCommas(item.amount)
-                          }
-                          onChange={(e) => {
-                            const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                            const formattedValue = addCommasToNumber(inputValue);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`worst-otherGoods-${index}`]: formattedValue
-                            }));
-                            const numValue = parseNumberFromString(formattedValue);
-                            handleOtherGoodsChange("worst", index, "amount", numValue);
-                          }}
-                          onBlur={(e) => {
-                            const numValue = parseNumberFromString(e.target.value);
-                            handleOtherGoodsChange("worst", index, "amount", numValue);
-                            setNumberInputValues(prev => {
-                              const newState = { ...prev };
-                              delete newState[`worst-otherGoods-${index}`];
-                              return newState;
-                            });
-                          }}
-                          onFocus={(e) => {
-                            const currentValue = formatNumberWithCommas(item.amount);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`worst-otherGoods-${index}`]: currentValue
-                            }));
-                          }}
-                          placeholder="금액"
-                          className="w-48 h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                        />
-                        <button
-                          onClick={() => handleOtherGoodsRemove("worst", index)}
-                          className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                          title="삭제"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => handleOtherGoodsAdd("worst")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.worstCase.otherGoodsItems.length > 0 && (
-                      <p className="text-sm font-bold text-gray-900 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.worstCase.otherGoodsItems.reduce((sum, item) => sum + item.amount, 0),
-                          "KRW"
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </td>
-              </tr>
-
-              {/* 프로젝트 수행 비용 */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">프로젝트 수행 비용</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="space-y-2">
-                    {vrbData.bestCase.projectCosts.map((cost, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          value={cost.item}
-                          onChange={(e) =>
-                            handleProjectCostChange("best", index, "item", e.target.value)
-                          }
-                          placeholder="항목"
-                          className="flex-1 h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                        />
-                        <input
-                          type="text"
-                          value={numberInputValues[`best-projectCost-${index}`] !== undefined
-                            ? numberInputValues[`best-projectCost-${index}`]
-                            : formatNumberWithCommas(cost.amount)
-                          }
-                          onChange={(e) => {
-                            const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                            const formattedValue = addCommasToNumber(inputValue);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`best-projectCost-${index}`]: formattedValue
-                            }));
-                            const numValue = parseNumberFromString(formattedValue);
-                            handleProjectCostChange("best", index, "amount", numValue);
-                          }}
-                          onBlur={(e) => {
-                            const numValue = parseNumberFromString(e.target.value);
-                            handleProjectCostChange("best", index, "amount", numValue);
-                            setNumberInputValues(prev => {
-                              const newState = { ...prev };
-                              delete newState[`best-projectCost-${index}`];
-                              return newState;
-                            });
-                          }}
-                          onFocus={(e) => {
-                            const currentValue = formatNumberWithCommas(cost.amount);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`best-projectCost-${index}`]: currentValue
-                            }));
-                          }}
-                          placeholder="금액"
-                          className="w-48 h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                        />
-                        <button
-                          onClick={() => handleRemoveProjectCost("best", index)}
-                          className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                          title="삭제"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => handleAddProjectCost("best")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.bestCase.projectCosts.length > 0 && (
-                      <p className="text-sm font-bold text-green-900 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.bestCase.projectCosts.reduce((sum, cost) => sum + cost.amount, 0),
-                          "KRW"
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="space-y-2">
-                    {vrbData.worstCase.projectCosts.map((cost, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          value={cost.item}
-                          onChange={(e) =>
-                            handleProjectCostChange("worst", index, "item", e.target.value)
-                          }
-                          placeholder="항목"
-                          className="flex-1 h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                        />
-                        <input
-                          type="text"
-                          value={numberInputValues[`worst-projectCost-${index}`] !== undefined
-                            ? numberInputValues[`worst-projectCost-${index}`]
-                            : formatNumberWithCommas(cost.amount)
-                          }
-                          onChange={(e) => {
-                            const inputValue = e.target.value.replace(/[^0-9,]/g, "");
-                            const formattedValue = addCommasToNumber(inputValue);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`worst-projectCost-${index}`]: formattedValue
-                            }));
-                            const numValue = parseNumberFromString(formattedValue);
-                            handleProjectCostChange("worst", index, "amount", numValue);
-                          }}
-                          onBlur={(e) => {
-                            const numValue = parseNumberFromString(e.target.value);
-                            handleProjectCostChange("worst", index, "amount", numValue);
-                            setNumberInputValues(prev => {
-                              const newState = { ...prev };
-                              delete newState[`worst-projectCost-${index}`];
-                              return newState;
-                            });
-                          }}
-                          onFocus={(e) => {
-                            const currentValue = formatNumberWithCommas(cost.amount);
-                            setNumberInputValues(prev => ({
-                              ...prev,
-                              [`worst-projectCost-${index}`]: currentValue
-                            }));
-                          }}
-                          placeholder="금액"
-                          className="w-48 h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-right shadow-sm focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all duration-300"
-                        />
-                        <button
-                          onClick={() => handleRemoveProjectCost("worst", index)}
-                          className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                          title="삭제"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => handleAddProjectCost("worst")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.worstCase.projectCosts.length > 0 && (
-                      <p className="text-sm font-medium text-gray-600 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.worstCase.projectCosts.reduce((sum, cost) => sum + cost.amount, 0),
-                          "KRW"
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </td>
-              </tr>
-
-              {/* 예상 M/M */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">예상 M/M</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="space-y-2">
-                    {vrbData.bestCase.estimatedMmItems.length === 0 && vrbData.bestCase.estimatedMm === 0 && (
-                      <div className="flex items-center gap-2 text-amber-600 mb-2">
-                        <p className="text-sm">M/D 산정을 먼저 진행해주세요.</p>
-                        <Link
-                          href={`/projects/${id}/md-estimation`}
-                          className="text-sm font-medium underline hover:text-amber-700"
-                        >
-                          M/D 산정으로 이동
-                        </Link>
-                      </div>
-                    )}
-                    {vrbData.bestCase.estimatedMmItems.map((mmItem, index) => {
-                      return (
-                        <div key={index} className="flex gap-2 items-center">
+                {/* 타사 상품 매입 */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">타사 상품 매입</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 align-top" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <div className="flex flex-col w-full">
+                      {vrbData.bestCase.otherGoodsItems.map((item, index) => (
+                        <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
                           <input
                             type="text"
-                            value={mmItem.item}
-                            onChange={(e) => handleEstimatedMmChange("best", index, "item", e.target.value)}
-                            className="flex-1 h-11 rounded-xl border-2 border-green-400 bg-white px-4 py-2 text-sm font-bold shadow-sm focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-300"
-                            placeholder="항목명"
+                            value={item.item}
+                            onChange={(e) => handleOtherGoodsChange("best", index, "item", e.target.value)}
+                            placeholder="항목"
+                            className="flex-1 h-full border-none bg-white px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
                           />
+                          <div className="w-[1px] h-full bg-gray-300"></div>
                           <input
                             type="text"
-                            value={mmInputValues[`best-${index}`] !== undefined
-                              ? mmInputValues[`best-${index}`]
-                              : mmItem.mm.toFixed(2)
+                            value={numberInputValues[`best-otherGoods-${index}`] !== undefined
+                              ? numberInputValues[`best-otherGoods-${index}`]
+                              : formatNumberWithCommas(item.amount)
                             }
                             onChange={(e) => {
-                              const inputValue = e.target.value.replace(/[^0-9.]/g, "");
-
-                              // 입력 중간 상태 저장
-                              setMmInputValues(prev => ({
-                                ...prev,
-                                [`best-${index}`]: inputValue
-                              }));
-
-                              // 빈 값인 경우
-                              if (inputValue === "") {
-                                handleEstimatedMmChange("best", index, "mm", 0);
-                                return;
-                              }
-
-                              // 소수점만 있는 경우
-                              if (inputValue === ".") {
-                                handleEstimatedMmChange("best", index, "mm", 0);
-                                return;
-                              }
-
-                              // 소수점이 여러 개인 경우 첫 번째 소수점만 유지
-                              const firstDotIndex = inputValue.indexOf(".");
-                              let normalizedValue = inputValue;
-                              if (firstDotIndex !== -1) {
-                                const beforeDot = inputValue.substring(0, firstDotIndex + 1);
-                                const afterDot = inputValue.substring(firstDotIndex + 1).replace(/\./g, "");
-                                normalizedValue = beforeDot + afterDot;
-                              }
-
-                              // 숫자로 변환 가능한 경우에만 저장
-                              const value = parseFloat(normalizedValue);
-                              if (!isNaN(value)) {
-                                handleEstimatedMmChange("best", index, "mm", value);
-                              }
+                              const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                              const formattedValue = addCommasToNumber(inputValue);
+                              setNumberInputValues(prev => ({ ...prev, [`best-otherGoods-${index}`]: formattedValue }));
+                              const numValue = parseNumberFromString(formattedValue);
+                              handleOtherGoodsChange("best", index, "amount", numValue);
                             }}
-                            onBlur={(e) => {
-                              const value = parseFloat(e.target.value) || 0;
-                              const formattedValue = parseFloat(value.toFixed(2));
-                              handleEstimatedMmChange("best", index, "mm", formattedValue);
-                              // 포커스를 잃으면 입력 중간 상태 제거
-                              setMmInputValues(prev => {
+                            onBlur={() => {
+                              setNumberInputValues(prev => {
                                 const newState = { ...prev };
-                                delete newState[`best-${index}`];
+                                delete newState[`best-otherGoods-${index}`];
                                 return newState;
                               });
                             }}
-                            onFocus={(e) => {
-                              // 포커스를 받으면 현재 값을 입력 중간 상태로 설정
-                              const currentValue = mmItem.mm.toFixed(2);
-                              setMmInputValues(prev => ({
-                                ...prev,
-                                [`best-${index}`]: currentValue
-                              }));
+                            onFocus={() => {
+                              const currentValue = formatNumberWithCommas(item.amount);
+                              setNumberInputValues(prev => ({ ...prev, [`best-otherGoods-${index}`]: currentValue }));
                             }}
-                            className="w-24 rounded-md border-2 border-green-400 bg-white px-3 py-2 text-sm font-medium text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                            placeholder="M/M"
+                            placeholder="금액"
+                            className="w-32 h-full border-none bg-white px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
                           />
-                          <span className="text-sm text-gray-500">M/M</span>
-                          <button
-                            onClick={() => handleRemoveEstimatedMm("best", index)}
-                            className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                            title="삭제"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                          {!isReadOnly && (
+                            <button onClick={() => handleOtherGoodsRemove("best", index)} className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
-                      );
-                    })}
-                    <button
-                      onClick={() => handleAddEstimatedMm("best")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.bestCase.estimatedMmItems.length > 0 && (
-                      <p className="text-sm font-bold text-green-900 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.bestCase.estimatedMmItems.reduce((sum, item) => sum + (item.mm * 10000000), 0),
-                          "KRW"
-                        )} <span className="text-gray-500">(M/M당 10,000,000원으로 계산)</span>
-                      </p>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="space-y-2">
-                    {vrbData.worstCase.estimatedMmItems.length === 0 ? (
-                      <p className="text-sm text-gray-400">-</p>
-                    ) : (
-                      vrbData.worstCase.estimatedMmItems.map((mmItem, index) => {
+                      ))}
+                      {!isReadOnly && (
+                        <button onClick={() => handleOtherGoodsAdd("best")} className="w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border-none text-sm rounded-none">
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 align-top">
+                    <div className="flex flex-col w-full">
+                      {vrbData.worstCase.otherGoodsItems.map((item, index) => (
+                        <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
+                          <input
+                            type="text"
+                            value={item.item}
+                            onChange={(e) => handleOtherGoodsChange("worst", index, "item", e.target.value)}
+                            placeholder="항목"
+                            className="flex-1 h-full border-none bg-transparent px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          <div className="w-[1px] h-full bg-gray-300"></div>
+                          <input
+                            type="text"
+                            value={numberInputValues[`worst-otherGoods-${index}`] !== undefined
+                              ? numberInputValues[`worst-otherGoods-${index}`]
+                              : formatNumberWithCommas(item.amount)
+                            }
+                            onChange={(e) => {
+                              const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                              const formattedValue = addCommasToNumber(inputValue);
+                              setNumberInputValues(prev => ({ ...prev, [`worst-otherGoods-${index}`]: formattedValue }));
+                              const numValue = parseNumberFromString(formattedValue);
+                              handleOtherGoodsChange("worst", index, "amount", numValue);
+                            }}
+                            onBlur={() => {
+                              setNumberInputValues(prev => {
+                                const newState = { ...prev };
+                                delete newState[`worst-otherGoods-${index}`];
+                                return newState;
+                              });
+                            }}
+                            onFocus={() => {
+                              const currentValue = formatNumberWithCommas(item.amount);
+                              setNumberInputValues(prev => ({ ...prev, [`worst-otherGoods-${index}`]: currentValue }));
+                            }}
+                            placeholder="금액"
+                            className="w-32 h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          {!isReadOnly && (
+                            <button onClick={() => handleOtherGoodsRemove("worst", index)} className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {!isReadOnly && (
+                        <button onClick={() => handleOtherGoodsAdd("worst")} className="w-full h-[35px] flex items-center justify-center gap-1 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors border-none text-sm rounded-none">
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+
+                {/* 프로젝트 수행 비용 */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">프로젝트 수행 비용</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 align-top" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <div className="flex flex-col w-full">
+                      {vrbData.bestCase.projectCosts.map((cost, index) => (
+                        <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
+                          <input
+                            type="text"
+                            value={cost.item}
+                            onChange={(e) => handleProjectCostChange("best", index, "item", e.target.value)}
+                            placeholder="항목"
+                            className="flex-1 h-full border-none bg-transparent px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          <div className="w-[1px] h-full bg-gray-300"></div>
+                          <input
+                            type="text"
+                            value={numberInputValues[`best-projectCost-${index}`] !== undefined
+                              ? numberInputValues[`best-projectCost-${index}`]
+                              : formatNumberWithCommas(cost.amount)
+                            }
+                            onChange={(e) => {
+                              const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                              const formattedValue = addCommasToNumber(inputValue);
+                              setNumberInputValues(prev => ({ ...prev, [`best-projectCost-${index}`]: formattedValue }));
+                              const numValue = parseNumberFromString(formattedValue);
+                              handleProjectCostChange("best", index, "amount", numValue);
+                            }}
+                            onBlur={() => {
+                              setNumberInputValues(prev => {
+                                const newState = { ...prev };
+                                delete newState[`best-projectCost-${index}`];
+                                return newState;
+                              });
+                            }}
+                            onFocus={() => {
+                              const currentValue = formatNumberWithCommas(cost.amount);
+                              setNumberInputValues(prev => ({ ...prev, [`best-projectCost-${index}`]: currentValue }));
+                            }}
+                            placeholder="금액"
+                            className="w-32 h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          {!isReadOnly && (
+                            <button onClick={() => handleRemoveProjectCost("best", index)} className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {!isReadOnly && (
+                        <button onClick={() => handleAddProjectCost("best")} className="w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border-none text-sm rounded-none">
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 align-top">
+                    <div className="flex flex-col w-full">
+                      {vrbData.worstCase.projectCosts.map((cost, index) => (
+                        <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
+                          <input
+                            type="text"
+                            value={cost.item}
+                            onChange={(e) => handleProjectCostChange("worst", index, "item", e.target.value)}
+                            placeholder="항목"
+                            className="flex-1 h-full border-none bg-transparent px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          <div className="w-[1px] h-full bg-gray-300"></div>
+                          <input
+                            type="text"
+                            value={numberInputValues[`worst-projectCost-${index}`] !== undefined
+                              ? numberInputValues[`worst-projectCost-${index}`]
+                              : formatNumberWithCommas(cost.amount)
+                            }
+                            onChange={(e) => {
+                              const inputValue = e.target.value.replace(/[^0-9,]/g, "");
+                              const formattedValue = addCommasToNumber(inputValue);
+                              setNumberInputValues(prev => ({ ...prev, [`worst-projectCost-${index}`]: formattedValue }));
+                              const numValue = parseNumberFromString(formattedValue);
+                              handleProjectCostChange("worst", index, "amount", numValue);
+                            }}
+                            onBlur={() => {
+                              setNumberInputValues(prev => {
+                                const newState = { ...prev };
+                                delete newState[`worst-projectCost-${index}`];
+                                return newState;
+                              });
+                            }}
+                            onFocus={() => {
+                              const currentValue = formatNumberWithCommas(cost.amount);
+                              setNumberInputValues(prev => ({ ...prev, [`worst-projectCost-${index}`]: currentValue }));
+                            }}
+                            placeholder="금액"
+                            className="w-32 h-full border-none bg-transparent px-[10px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                          />
+                          {!isReadOnly && (
+                            <button onClick={() => handleRemoveProjectCost("worst", index)} className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {!isReadOnly && (
+                        <button onClick={() => handleAddProjectCost("worst")} className="w-full h-[35px] flex items-center justify-center gap-1 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors border-none text-sm rounded-none">
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+
+                {/* 예상 M/M */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-sm font-medium text-gray-700 bg-gray-50/30">예상 M/M</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 border-solid p-0 align-top" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
+                    <div className="flex flex-col w-full">
+                      {vrbData.bestCase.estimatedMmItems.length === 0 && vrbData.bestCase.estimatedMm === 0 && (
+                        <div className="flex items-center gap-2 text-amber-600 h-[35px] px-[10px] border-b border-gray-300 bg-gray-50/30">
+                          <AlertCircle className="h-4 w-4" />
+                          <p className="text-sm">M/D 산정을 먼저 진행해주세요.</p>
+                          <Link
+                            href={`/projects/${id}/md-estimation`}
+                            className="text-sm font-medium underline hover:text-amber-700"
+                          >
+                            M/D 산정으로 이동
+                          </Link>
+                        </div>
+                      )}
+                      {vrbData.bestCase.estimatedMmItems.map((mmItem, index) => {
                         return (
-                          <div key={index} className="flex gap-2 items-center">
+                          <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
                             <input
                               type="text"
                               value={mmItem.item}
-                              onChange={(e) => handleEstimatedMmChange("worst", index, "item", e.target.value)}
-                              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                              placeholder="항목명"
+                              onChange={(e) => handleEstimatedMmChange("best", index, "item", e.target.value)}
+                              className="flex-1 h-full border-none bg-white px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                              placeholder="항목"
+                              spellCheck={false}
                             />
-                            <input
-                              type="text"
-                              value={mmInputValues[`worst-${index}`] !== undefined
-                                ? mmInputValues[`worst-${index}`]
-                                : mmItem.mm.toFixed(2)
-                              }
-                              onChange={(e) => {
-                                const inputValue = e.target.value.replace(/[^0-9.]/g, "");
-
-                                // 입력 중간 상태 저장
-                                setMmInputValues(prev => ({
-                                  ...prev,
-                                  [`worst-${index}`]: inputValue
-                                }));
-
-                                // 빈 값인 경우
-                                if (inputValue === "") {
-                                  handleEstimatedMmChange("worst", index, "mm", 0);
-                                  return;
+                            <div className="w-[1px] h-full bg-gray-300"></div>
+                            <div className="relative w-32 h-full shrink-0">
+                              <input
+                                type="text"
+                                value={mmInputValues[`best-${index}`] !== undefined
+                                  ? mmInputValues[`best-${index}`]
+                                  : mmItem.mm.toFixed(2)
                                 }
-
-                                // 소수점만 있는 경우
-                                if (inputValue === ".") {
-                                  handleEstimatedMmChange("worst", index, "mm", 0);
-                                  return;
-                                }
-
-                                // 소수점이 여러 개인 경우 첫 번째 소수점만 유지
-                                const firstDotIndex = inputValue.indexOf(".");
-                                let normalizedValue = inputValue;
-                                if (firstDotIndex !== -1) {
-                                  const beforeDot = inputValue.substring(0, firstDotIndex + 1);
-                                  const afterDot = inputValue.substring(firstDotIndex + 1).replace(/\./g, "");
-                                  normalizedValue = beforeDot + afterDot;
-                                }
-
-                                // 숫자로 변환 가능한 경우에만 저장
-                                const value = parseFloat(normalizedValue);
-                                if (!isNaN(value)) {
-                                  handleEstimatedMmChange("worst", index, "mm", value);
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = parseFloat(e.target.value) || 0;
-                                const formattedValue = parseFloat(value.toFixed(2));
-                                handleEstimatedMmChange("worst", index, "mm", formattedValue);
-                                // 포커스를 잃으면 입력 중간 상태 제거
-                                setMmInputValues(prev => {
-                                  const newState = { ...prev };
-                                  delete newState[`worst-${index}`];
-                                  return newState;
-                                });
-                              }}
-                              onFocus={(e) => {
-                                // 포커스를 받으면 현재 값을 입력 중간 상태로 설정
-                                const currentValue = mmItem.mm.toFixed(2);
-                                setMmInputValues(prev => ({
-                                  ...prev,
-                                  [`worst-${index}`]: currentValue
-                                }));
-                              }}
-                              className="w-24 rounded-md border border-gray-300 px-3 py-2 text-sm text-right shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                              placeholder="M/M"
-                            />
-                            <span className="text-sm text-gray-500">M/M</span>
-                            <button
-                              onClick={() => handleRemoveEstimatedMm("worst", index)}
-                              className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50"
-                              title="삭제"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                                onChange={(e) => {
+                                  const inputValue = e.target.value.replace(/[^0-9.]/g, "");
+                                  setMmInputValues(prev => ({
+                                    ...prev,
+                                    [`best-${index}`]: inputValue
+                                  }));
+                                  if (inputValue === "" || inputValue === ".") {
+                                    handleEstimatedMmChange("best", index, "mm", 0);
+                                    return;
+                                  }
+                                  const firstDotIndex = inputValue.indexOf(".");
+                                  let normalizedValue = inputValue;
+                                  if (firstDotIndex !== -1) {
+                                    const beforeDot = inputValue.substring(0, firstDotIndex + 1);
+                                    const afterDot = inputValue.substring(firstDotIndex + 1).replace(/\./g, "");
+                                    normalizedValue = beforeDot + afterDot;
+                                  }
+                                  const value = parseFloat(normalizedValue);
+                                  if (!isNaN(value)) {
+                                    handleEstimatedMmChange("best", index, "mm", value);
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = parseFloat(e.target.value) || 0;
+                                  const formattedValue = parseFloat(value.toFixed(2));
+                                  handleEstimatedMmChange("best", index, "mm", formattedValue);
+                                  setMmInputValues(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[`best-${index}`];
+                                    return newState;
+                                  });
+                                }}
+                                onFocus={() => {
+                                  const currentValue = mmItem.mm.toFixed(2);
+                                  setMmInputValues(prev => ({
+                                    ...prev,
+                                    [`best-${index}`]: currentValue
+                                  }));
+                                }}
+                                className="w-full h-full border-none bg-white pl-[10px] pr-[42px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                                placeholder="M/M"
+                              />
+                              <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">M/M</span>
+                            </div>
+                            {!isReadOnly && (
+                              <button
+                                onClick={() => handleRemoveEstimatedMm("best", index)}
+                                className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors"
+                                title="삭제"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
                         );
-                      })
-                    )}
-                    <button
-                      onClick={() => handleAddEstimatedMm("worst")}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      항목 추가
-                    </button>
-                    {vrbData.worstCase.estimatedMmItems.length > 0 && (
-                      <p className="text-sm font-medium text-gray-600 text-right mt-1">
-                        합계: {formatCurrency(
-                          vrbData.worstCase.estimatedMmItems.reduce((sum, item) => sum + (item.mm * 10000000), 0),
-                          "KRW"
-                        )} <span className="text-gray-500">(M/M당 10,000,000원으로 계산)</span>
-                      </p>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                      })}
+                      {!isReadOnly && (
+                        <button
+                          onClick={() => handleAddEstimatedMm("best")}
+                          className="w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border-b border-gray-300 last:border-0 text-sm rounded-none"
+                        >
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                      {vrbData.bestCase.estimatedMmItems.length > 0 && (
+                        <div className="bg-gray-50/50 h-[35px] px-[10px] flex items-center justify-end">
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm text-gray-900">
+                              합계: {formatCurrency(
+                                vrbData.bestCase.estimatedMmItems.reduce((sum, item) => sum + (item.mm * 10000000), 0),
+                                "KRW"
+                              )}
+                            </p>
+                            <div className="group relative">
+                              <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                              <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-normal">
+                                1 M/M당 1,000만원으로 산정된 예상치입니다.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 p-0 align-top">
+                    <div className="flex flex-col w-full">
+                      {vrbData.worstCase.estimatedMmItems.length === 0 ? (
+                        <div className="flex h-[35px] items-center justify-center text-sm text-gray-400 border-b border-gray-300">-</div>
+                      ) : (
+                        vrbData.worstCase.estimatedMmItems.map((mmItem, index) => {
+                          return (
+                            <div key={index} className="flex items-center border-b border-gray-300 last:border-0 h-[35px]">
+                              <input
+                                type="text"
+                                value={mmItem.item}
+                                onChange={(e) => handleEstimatedMmChange("worst", index, "item", e.target.value)}
+                                className="flex-1 h-full border-none bg-transparent px-[10px] py-0 text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                                placeholder="항목명"
+                                spellCheck={false}
+                              />
+                              <div className="w-[1px] h-full bg-gray-300"></div>
+                              <div className="relative w-32 h-full shrink-0">
+                                <input
+                                  type="text"
+                                  value={mmInputValues[`worst-${index}`] !== undefined
+                                    ? mmInputValues[`worst-${index}`]
+                                    : mmItem.mm.toFixed(2)
+                                  }
+                                  onChange={(e) => {
+                                    const inputValue = e.target.value.replace(/[^0-9.]/g, "");
+                                    setMmInputValues(prev => ({
+                                      ...prev,
+                                      [`worst-${index}`]: inputValue
+                                    }));
+                                    if (inputValue === "" || inputValue === ".") {
+                                      handleEstimatedMmChange("worst", index, "mm", 0);
+                                      return;
+                                    }
+                                    const firstDotIndex = inputValue.indexOf(".");
+                                    let normalizedValue = inputValue;
+                                    if (firstDotIndex !== -1) {
+                                      const beforeDot = inputValue.substring(0, firstDotIndex + 1);
+                                      const afterDot = inputValue.substring(firstDotIndex + 1).replace(/\./g, "");
+                                      normalizedValue = beforeDot + afterDot;
+                                    }
+                                    const value = parseFloat(normalizedValue);
+                                    if (!isNaN(value)) {
+                                      handleEstimatedMmChange("worst", index, "mm", value);
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const value = parseFloat(e.target.value) || 0;
+                                    const formattedValue = parseFloat(value.toFixed(2));
+                                    handleEstimatedMmChange("worst", index, "mm", formattedValue);
+                                    setMmInputValues(prev => {
+                                      const newState = { ...prev };
+                                      delete newState[`worst-${index}`];
+                                      return newState;
+                                    });
+                                  }}
+                                  onFocus={(e) => {
+                                    const currentValue = mmItem.mm.toFixed(2);
+                                    setMmInputValues(prev => ({
+                                      ...prev,
+                                      [`worst-${index}`]: currentValue
+                                    }));
+                                  }}
+                                  className="w-full h-full border-none bg-transparent pl-[10px] pr-[42px] py-0 text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
+                                  placeholder="M/M"
+                                />
+                                <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">M/M</span>
+                              </div>
+                              {!isReadOnly && (
+                                <button
+                                  onClick={() => handleRemoveEstimatedMm("worst", index)}
+                                  className="w-[35px] h-full flex items-center justify-center border-l border-gray-300 text-gray-400 hover:text-red-600 transition-colors"
+                                  title="삭제"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                      {!isReadOnly && (
+                        <button
+                          onClick={() => handleAddEstimatedMm("worst")}
+                          className="w-full h-[35px] flex items-center justify-center gap-1 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors border-b border-gray-300 last:border-0 text-sm rounded-none"
+                        >
+                          <Plus className="h-3 w-3" /> 항목 추가
+                        </button>
+                      )}
+                      {vrbData.worstCase.estimatedMmItems.length > 0 && (
+                        <div className="bg-gray-50/50 h-[35px] px-[10px] flex items-center justify-end">
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm text-gray-900">
+                              합계: {formatCurrency(
+                                vrbData.worstCase.estimatedMmItems.reduce((sum, item) => sum + (item.mm * 10000000), 0),
+                                "KRW"
+                              )}
+                            </p>
+                            <div className="group relative">
+                              <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                              <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-normal">
+                                1 M/M당 1,000만원으로 산정된 예상치입니다.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
 
-              {/* 리스크 비용 */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">리스크 비용</td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
+                {/* 리스크 비용 */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">리스크 비용</td>
+                  <td className="border-l-2 border-y border-blue-400 border-solid p-0" style={{ borderLeftColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <select
                       value={vrbData.bestCase.riskCostBase}
-                      onChange={(val) =>
+                      onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           bestCase: {
                             ...vrbData.bestCase,
-                            riskCostBase: val as string,
+                            riskCostBase: e.target.value,
                           },
                         })
                       }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                      ]}
                       disabled={isReadOnly}
-                      variant="standard"
-                      className="w-[220px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className="w-full h-[35px] border-none px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none"
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                    </select>
+                  </td>
+                  <td className="border-y border-gray-300 p-0 group">
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.bestCase.riskCostPercent}
@@ -2671,51 +2620,51 @@ export default function VrbReviewPage({
                           })
                         }
                         disabled={isReadOnly}
-                        className="w-14 rounded-md border-2 border-green-400 bg-white px-2 py-1.5 text-sm font-medium text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className="text-sm text-gray-500 px-1">%</span>
                     </div>
-                    <span className="text-sm font-bold text-green-900 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className="border-r-2 border-y border-blue-400 border-solid px-[10px] text-right bg-gray-50/20" style={{ borderRightColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <span className="text-sm text-gray-900">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.bestCase.estimatedRevenueGoods + vrbData.bestCase.estimatedRevenueServices + vrbData.bestCase.estimatedRevenueHw;
                           if (vrbData.bestCase.riskCostBase === "revenue_sw") baseValue = vrbData.bestCase.estimatedRevenueGoods;
                           else if (vrbData.bestCase.riskCostBase === "revenue_hw") baseValue = vrbData.bestCase.estimatedRevenueHw;
                           else if (vrbData.bestCase.riskCostBase === "revenue_service") baseValue = vrbData.bestCase.estimatedRevenueServices;
-                          else if (vrbData.bestCase.riskCostBase === "operating_profit") baseValue = 0;
+                          else if (vrbData.bestCase.riskCostBase === "operating_profit") baseValue = 0; // TBD logic
                           return (baseValue * vrbData.bestCase.riskCostPercent) / 100;
                         })(),
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <select
                       value={vrbData.worstCase.riskCostBase}
-                      onChange={(val) =>
+                      onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           worstCase: {
                             ...vrbData.worstCase,
-                            riskCostBase: val as string,
+                            riskCostBase: e.target.value,
                           },
                         })
                       }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                      ]}
                       disabled={isReadOnly}
-                      variant="standard"
-                      className="w-[180px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className="w-full h-[35px] border-none px-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none"
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                    </select>
+                  </td>
+                  <td className="border border-gray-300 p-0 group">
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.worstCase.riskCostPercent}
@@ -2729,12 +2678,14 @@ export default function VrbReviewPage({
                           })
                         }
                         disabled={isReadOnly}
-                        className="w-14 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-right shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400"
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className="text-sm text-gray-500 px-1">%</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-600 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className="border border-gray-300 px-[10px] text-right bg-gray-50/20">
+                    <span className="text-sm text-gray-900">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.worstCase.estimatedRevenueGoods + vrbData.worstCase.estimatedRevenueServices + vrbData.worstCase.estimatedRevenueHw;
@@ -2747,64 +2698,69 @@ export default function VrbReviewPage({
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
 
-              {/* 외부 매입1 */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <span>외부 매입1</span>
-                    <input
-                      type="checkbox"
-                      checked={vrbData.bestCase.includeExternalPurchase}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setVrbData({
-                          ...vrbData,
-                          bestCase: {
-                            ...vrbData.bestCase,
-                            includeExternalPurchase: isChecked,
-                            includeExternalPurchase2: isChecked ? vrbData.bestCase.includeExternalPurchase2 : false,
-                          },
-                          worstCase: {
-                            ...vrbData.worstCase,
-                            includeExternalPurchase: isChecked,
-                            includeExternalPurchase2: isChecked ? vrbData.worstCase.includeExternalPurchase2 : false,
-                          },
-                        });
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    />
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
+                {/* 외부 매입1 */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium h-[35px] bg-gray-50/30">
+                    <div className="flex items-center gap-2 h-full">
+                      <span>외부 매입1</span>
+                      <input
+                        type="checkbox"
+                        checked={vrbData.bestCase.includeExternalPurchase}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          setVrbData({
+                            ...vrbData,
+                            bestCase: {
+                              ...vrbData.bestCase,
+                              includeExternalPurchase: isChecked,
+                              includeExternalPurchase2: isChecked ? vrbData.bestCase.includeExternalPurchase2 : false,
+                            },
+                            worstCase: {
+                              ...vrbData.worstCase,
+                              includeExternalPurchase: isChecked,
+                              includeExternalPurchase2: isChecked ? vrbData.worstCase.includeExternalPurchase2 : false,
+                            },
+                          });
+                        }}
+                        disabled={isReadOnly}
+                        className={cn(
+                          "h-4 w-4 rounded-none border-gray-300 text-blue-600 focus:ring-blue-500",
+                          isReadOnly ? "opacity-50 cursor-default" : ""
+                        )}
+                      />
+                    </div>
+                  </td>
+                  <td className={`border-l-2 border-y border-blue-400 border-solid p-0 ${!vrbData.bestCase.includeExternalPurchase ? 'bg-gray-50' : ''}`} style={{ borderLeftColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <select
                       value={vrbData.bestCase.externalPurchaseBase}
-                      onChange={(val) =>
+                      onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           bestCase: {
                             ...vrbData.bestCase,
-                            externalPurchaseBase: val as string,
+                            externalPurchaseBase: e.target.value,
                           },
                         })
                       }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                        { value: "operating_profit_ep1", label: "영업이익(외부매입1 반영)" },
-                      ]}
                       disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase}
-                      variant="standard"
-                      className="w-[220px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className={cn(
+                        "w-full h-[35px] border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none disabled:opacity-100",
+                        vrbData.bestCase.includeExternalPurchase ? "text-gray-900 font-medium" : "text-gray-400"
+                      )}
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                      <option value="operating_profit_ep1">영업이익(외부매입1 반영)</option>
+                    </select>
+                  </td>
+                  <td className={`border-y border-gray-300 p-0 group ${!vrbData.bestCase.includeExternalPurchase ? 'bg-gray-50' : ''}`}>
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.bestCase.externalPurchasePercent}
@@ -2813,17 +2769,22 @@ export default function VrbReviewPage({
                             ...vrbData,
                             bestCase: {
                               ...vrbData.bestCase,
-                              externalPurchasePercent: parseFloat(e.target.value) || 0,
+                              externalPurchasePercent: (parseFloat(e.target.value) || 0) + 0,
                             },
                           })
                         }
                         disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase}
-                        className="w-14 rounded-md border-2 border-green-400 bg-white px-2 py-1.5 text-sm font-medium text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className={cn(
+                          "w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400 disabled:bg-transparent disabled:opacity-100",
+                          vrbData.bestCase.includeExternalPurchase ? "text-gray-900 font-medium" : "text-gray-400"
+                        )}
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className={cn("text-sm px-1", vrbData.bestCase.includeExternalPurchase ? "text-gray-700" : "text-gray-400")}>%</span>
                     </div>
-                    <span className="text-sm font-bold text-green-900 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className={`border-r-2 border-y border-blue-400 border-solid px-[10px] text-right ${!vrbData.bestCase.includeExternalPurchase ? 'bg-gray-50' : 'bg-gray-50/20'}`} style={{ borderRightColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <span className="text-sm text-gray-900 font-bold">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.bestCase.operatingProfit1;
@@ -2840,34 +2801,35 @@ export default function VrbReviewPage({
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
+                  </td>
+                  <td className={`border border-gray-300 p-0 ${!vrbData.worstCase.includeExternalPurchase ? 'bg-gray-50' : ''}`}>
+                    <select
                       value={vrbData.worstCase.externalPurchaseBase}
-                      onChange={(val) =>
+                      onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           worstCase: {
                             ...vrbData.worstCase,
-                            externalPurchaseBase: val as string,
+                            externalPurchaseBase: e.target.value,
                           },
                         })
                       }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                        { value: "operating_profit_ep1", label: "영업이익(외부매입1 반영)" },
-                      ]}
                       disabled={isReadOnly || !vrbData.worstCase.includeExternalPurchase}
-                      variant="standard"
-                      className="w-[220px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className={cn(
+                        "w-full h-[35px] border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none disabled:opacity-100",
+                        vrbData.worstCase.includeExternalPurchase ? "text-gray-900 font-medium" : "text-gray-400"
+                      )}
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                      <option value="operating_profit_ep1">영업이익(외부매입1 반영)</option>
+                    </select>
+                  </td>
+                  <td className={`border border-gray-300 p-0 group ${!vrbData.worstCase.includeExternalPurchase ? 'bg-gray-50' : ''}`}>
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.worstCase.externalPurchasePercent}
@@ -2876,17 +2838,22 @@ export default function VrbReviewPage({
                             ...vrbData,
                             worstCase: {
                               ...vrbData.worstCase,
-                              externalPurchasePercent: parseFloat(e.target.value) || 0,
+                              externalPurchasePercent: (parseFloat(e.target.value) || 0) + 0,
                             },
                           })
                         }
                         disabled={isReadOnly || !vrbData.worstCase.includeExternalPurchase}
-                        className="w-14 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-right shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className={cn(
+                          "w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400 disabled:bg-transparent disabled:opacity-100",
+                          vrbData.worstCase.includeExternalPurchase ? "text-gray-900 font-medium" : "text-gray-400"
+                        )}
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className={cn("text-sm px-1", vrbData.worstCase.includeExternalPurchase ? "text-gray-700" : "text-gray-400")}>%</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-600 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className={`border border-gray-300 px-[10px] text-right ${!vrbData.worstCase.includeExternalPurchase ? 'bg-gray-50' : 'bg-gray-50/20'}`}>
+                    <span className="text-sm text-gray-900 font-bold">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.worstCase.operatingProfit1;
@@ -2903,63 +2870,67 @@ export default function VrbReviewPage({
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
 
-              {/* 외부 매입2 */}
-              <tr>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <span>외부 매입2</span>
-                    <input
-                      type="checkbox"
-                      checked={vrbData.bestCase.includeExternalPurchase2}
+                {/* 외부 매입2 */}
+                <tr>
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium h-[35px] bg-gray-50/30">
+                    <div className="flex items-center gap-2 h-full">
+                      <span>외부 매입2</span>
+                      <input
+                        type="checkbox"
+                        checked={vrbData.bestCase.includeExternalPurchase2}
+                        onChange={(e) =>
+                          setVrbData({
+                            ...vrbData,
+                            bestCase: {
+                              ...vrbData.bestCase,
+                              includeExternalPurchase2: e.target.checked,
+                            },
+                            worstCase: {
+                              ...vrbData.worstCase,
+                              includeExternalPurchase2: e.target.checked,
+                            },
+                          })
+                        }
+                        className={cn(
+                          "h-4 w-4 rounded-none border-gray-300 text-blue-600 focus:ring-blue-500",
+                          isReadOnly ? "opacity-50 cursor-default" : (!vrbData.bestCase.includeExternalPurchase ? "opacity-50 cursor-not-allowed" : "")
+                        )}
+                        disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase}
+                        title={(!isReadOnly && !vrbData.bestCase.includeExternalPurchase) ? "외부 매입1을 먼저 선택해야 합니다." : ""}
+                      />
+                    </div>
+                  </td>
+                  <td className={`border-l-2 border-y border-blue-400 border-solid p-0 ${(!vrbData.bestCase.includeExternalPurchase || !vrbData.bestCase.includeExternalPurchase2) ? 'bg-gray-50' : ''}`} style={{ borderLeftColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <select
+                      value={vrbData.bestCase.externalPurchase2Base}
                       onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           bestCase: {
                             ...vrbData.bestCase,
-                            includeExternalPurchase2: e.target.checked,
-                          },
-                          worstCase: {
-                            ...vrbData.worstCase,
-                            includeExternalPurchase2: e.target.checked,
+                            externalPurchase2Base: e.target.value,
                           },
                         })
                       }
-                      className={`h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 ${!vrbData.bestCase.includeExternalPurchase ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={!vrbData.bestCase.includeExternalPurchase}
-                      title={!vrbData.bestCase.includeExternalPurchase ? "외부 매입1을 먼저 선택해야 합니다." : ""}
-                    />
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-green-100 border-l-4 border-l-green-600 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
-                      value={vrbData.bestCase.externalPurchase2Base}
-                      onChange={(val) =>
-                        setVrbData({
-                          ...vrbData,
-                          bestCase: {
-                            ...vrbData.bestCase,
-                            externalPurchase2Base: val as string,
-                          },
-                        })
-                      }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                        { value: "operating_profit_ep1", label: "영업이익(외부매입1 반영)" },
-                      ]}
                       disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase || !vrbData.bestCase.includeExternalPurchase2}
-                      variant="standard"
-                      className="w-[220px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className={cn(
+                        "w-full h-[35px] border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none disabled:opacity-100",
+                        vrbData.bestCase.includeExternalPurchase2 ? "text-gray-900 font-medium" : "text-gray-400"
+                      )}
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                      <option value="operating_profit_ep1">영업이익(외부매입1 반영)</option>
+                    </select>
+                  </td>
+                  <td className={`border-y border-gray-300 p-0 group ${(!vrbData.bestCase.includeExternalPurchase || !vrbData.bestCase.includeExternalPurchase2) ? 'bg-gray-50' : ''}`}>
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.bestCase.externalPurchase2Percent}
@@ -2968,17 +2939,22 @@ export default function VrbReviewPage({
                             ...vrbData,
                             bestCase: {
                               ...vrbData.bestCase,
-                              externalPurchase2Percent: parseFloat(e.target.value) || 0,
+                              externalPurchase2Percent: (parseFloat(e.target.value) || 0) + 0,
                             },
                           })
                         }
                         disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase || !vrbData.bestCase.includeExternalPurchase2}
-                        className="w-14 rounded-md border-2 border-green-400 bg-white px-2 py-1.5 text-sm font-medium text-right shadow-sm focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className={cn(
+                          "w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400 disabled:bg-transparent disabled:opacity-100",
+                          vrbData.bestCase.includeExternalPurchase2 ? "text-gray-900 font-medium" : "text-gray-400"
+                        )}
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className={cn("text-sm px-1", vrbData.bestCase.includeExternalPurchase2 ? "text-gray-700" : "text-gray-500")}>%</span>
                     </div>
-                    <span className="text-sm font-bold text-green-900 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className={`border-r-2 border-y border-blue-400 border-solid px-[10px] text-right ${(!vrbData.bestCase.includeExternalPurchase || !vrbData.bestCase.includeExternalPurchase2) ? 'bg-gray-50' : 'bg-gray-50/20'}`} style={{ borderRightColor: '#60a5fa', borderTopColor: '#d1d5db', borderBottomColor: '#d1d5db' }}>
+                    <span className="text-sm text-gray-900 font-bold">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.bestCase.operatingProfit1;
@@ -2992,34 +2968,35 @@ export default function VrbReviewPage({
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 bg-gray-50">
-                  <div className="flex items-center gap-2">
-                    <Dropdown
+                  </td>
+                  <td className={`border border-gray-300 p-0 ${(!vrbData.worstCase.includeExternalPurchase || !vrbData.worstCase.includeExternalPurchase2) ? 'bg-gray-50' : ''}`}>
+                    <select
                       value={vrbData.worstCase.externalPurchase2Base}
-                      onChange={(val) =>
+                      onChange={(e) =>
                         setVrbData({
                           ...vrbData,
                           worstCase: {
                             ...vrbData.worstCase,
-                            externalPurchase2Base: val as string,
+                            externalPurchase2Base: e.target.value,
                           },
                         })
                       }
-                      options={[
-                        { value: "total_revenue", label: "전체 사업비" },
-                        { value: "revenue_sw", label: "예상 수주 금액 (SW)" },
-                        { value: "revenue_hw", label: "예상 수주 금액 (HW)" },
-                        { value: "revenue_service", label: "예상 수주 금액 (용역)" },
-                        { value: "operating_profit", label: "영업이익" },
-                        { value: "operating_profit_ep1", label: "영업이익(외부매입1 반영)" },
-                      ]}
                       disabled={isReadOnly || !vrbData.worstCase.includeExternalPurchase || !vrbData.worstCase.includeExternalPurchase2}
-                      variant="standard"
-                      className="w-[220px]"
-                    />
-                    <div className="flex items-center gap-1">
+                      className={cn(
+                        "w-full h-[35px] border-none px-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-none bg-transparent hover:bg-blue-50 transition-colors appearance-none disabled:opacity-100",
+                        vrbData.worstCase.includeExternalPurchase2 ? "text-gray-900 font-medium" : "text-gray-400"
+                      )}
+                    >
+                      <option value="total_revenue">전체 사업비</option>
+                      <option value="revenue_sw">예상 수주 금액 (SW)</option>
+                      <option value="revenue_hw">예상 수주 금액 (HW)</option>
+                      <option value="revenue_service">예상 수주 금액 (용역)</option>
+                      <option value="operating_profit">영업이익</option>
+                      <option value="operating_profit_ep1">영업이익(외부매입1 반영)</option>
+                    </select>
+                  </td>
+                  <td className={`border border-gray-300 p-0 group ${(!vrbData.worstCase.includeExternalPurchase || !vrbData.worstCase.includeExternalPurchase2) ? 'bg-gray-50' : ''}`}>
+                    <div className="flex h-[35px] items-center">
                       <input
                         type="number"
                         value={vrbData.worstCase.externalPurchase2Percent}
@@ -3028,17 +3005,22 @@ export default function VrbReviewPage({
                             ...vrbData,
                             worstCase: {
                               ...vrbData.worstCase,
-                              externalPurchase2Percent: parseFloat(e.target.value) || 0,
+                              externalPurchase2Percent: (parseFloat(e.target.value) || 0) + 0,
                             },
                           })
                         }
                         disabled={isReadOnly || !vrbData.worstCase.includeExternalPurchase || !vrbData.worstCase.includeExternalPurchase2}
-                        className="w-14 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-right shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-100 disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className={cn(
+                          "w-full h-full border-none bg-white px-[10px] text-sm text-right focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 hover:bg-blue-50 focus:bg-blue-50 transition-colors rounded-none placeholder-gray-400 disabled:bg-transparent disabled:opacity-100",
+                          vrbData.worstCase.includeExternalPurchase2 ? "text-gray-900 font-medium" : "text-gray-400"
+                        )}
                         placeholder="%"
                       />
-                      <span className="text-xs text-gray-500 w-3">%</span>
+                      <span className={cn("text-sm px-1", vrbData.worstCase.includeExternalPurchase2 ? "text-gray-700" : "text-gray-500")}>%</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-600 ml-auto whitespace-nowrap">
+                  </td>
+                  <td className={`border border-gray-300 px-[10px] text-right ${(!vrbData.worstCase.includeExternalPurchase || !vrbData.worstCase.includeExternalPurchase2) ? 'bg-gray-50' : 'bg-gray-50/20'}`}>
+                    <span className="text-sm text-gray-900 font-bold">
                       {formatCurrency(
                         (() => {
                           let baseValue = vrbData.worstCase.operatingProfit1;
@@ -3052,107 +3034,199 @@ export default function VrbReviewPage({
                         "KRW"
                       )}
                     </span>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
 
-              {/* 영업이익 (외부매입 미반영) */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 text-sm font-semibold text-gray-900">영업이익</td>
-                <td className="px-4 py-3 bg-gradient-to-r from-green-200 to-green-100 border-l-4 border-l-green-700 shadow-md">
-                  <p className="text-xl font-bold text-green-900 text-right">
+                {/* 영업이익 (외부매입 미반영) */}
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">영업이익</td>
+                  <td colSpan={3} className="border-x-2 border-blue-400 border-b border-gray-300 px-[10px] text-right font-bold text-gray-900 bg-yellow-50" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#d1d5db' }}>
                     {formatCurrency(vrbData.bestCase.operatingProfit1, "KRW")}
-                  </p>
-                </td>
-                <td className="px-4 py-3 bg-gray-100">
-                  <p className="text-lg font-semibold text-gray-700 text-right">
+                  </td>
+                  <td colSpan={3} className="border border-gray-300 px-[10px] text-right font-bold text-gray-900 bg-red-50">
                     {formatCurrency(vrbData.worstCase.operatingProfit1, "KRW")}
-                  </p>
-                </td>
-              </tr>
-
-              {/* 영업이익률 (외부매입 미반영) */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 text-sm font-semibold text-gray-900">영업이익률</td>
-                <td className="px-4 py-3 bg-gradient-to-r from-green-200 to-green-100 border-l-4 border-l-green-700 shadow-md">
-                  <p className="text-xl font-bold text-green-900 text-right">
-                    {vrbData.bestCase.operatingProfit1Percent.toFixed(2)}%
-                  </p>
-                </td>
-                <td className="px-4 py-3 bg-gray-100">
-                  <p className="text-lg font-semibold text-gray-700 text-right">
-                    {vrbData.worstCase.operatingProfit1Percent.toFixed(2)}%
-                  </p>
-                </td>
-              </tr>
-
-              {/* 영업이익 (외부매입1 반영) - 체크박스가 체크된 경우에만 표시 */}
-              {vrbData.bestCase.includeExternalPurchase && (
-                <tr className="bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-semibold text-gray-900 border-l-4 border-l-blue-400">영업이익 (외부매입1 반영)</td>
-                  <td className="px-4 py-3 bg-blue-50 border-l-4 border-l-blue-600 shadow-sm">
-                    <p className="text-xl font-bold text-blue-900 text-right">
-                      {formatCurrency(vrbData.bestCase.operatingProfitEP1, "KRW")}
-                    </p>
-                    <p className="text-sm font-medium text-blue-700 text-right">
-                      {vrbData.bestCase.operatingProfitEP1Percent.toFixed(2)}%
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 bg-gray-50">
-                    <p className="text-lg font-semibold text-gray-700 text-right">
-                      {formatCurrency(vrbData.worstCase.operatingProfitEP1, "KRW")}
-                    </p>
-                    <p className="text-sm text-gray-500 text-right">
-                      {vrbData.worstCase.operatingProfitEP1Percent.toFixed(2)}%
-                    </p>
                   </td>
                 </tr>
-              )}
 
-              {/* 영업이익 (외부매입2 반영) - 체크박스가 체크된 경우에만 표시 */}
-              {vrbData.bestCase.includeExternalPurchase2 && (
-                <tr className="bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-semibold text-gray-900 border-l-4 border-l-purple-400">영업이익 (외부매입1,2 반영)</td>
-                  <td className="px-4 py-3 bg-purple-50 border-l-4 border-l-purple-600 shadow-sm">
-                    <p className="text-xl font-bold text-purple-900 text-right">
-                      {formatCurrency(vrbData.bestCase.operatingProfitEP2, "KRW")}
-                    </p>
-                    <p className="text-sm font-medium text-purple-700 text-right">
-                      {vrbData.bestCase.operatingProfitEP2Percent.toFixed(2)}%
-                    </p>
+                {/* 영업이익률 (외부매입 미반영) */}
+                <tr className="h-[35px]">
+                  <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">영업이익률</td>
+                  <td
+                    colSpan={3}
+                    className={`border-x-2 border-blue-400 px-[10px] text-right font-bold text-gray-900 bg-yellow-50 ${!vrbData.bestCase.includeExternalPurchase ? 'border-b-2' : 'border-b border-gray-300'}`}
+                    style={{
+                      borderLeftColor: '#60a5fa',
+                      borderRightColor: '#60a5fa',
+                      borderBottomColor: !vrbData.bestCase.includeExternalPurchase ? '#60a5fa' : '#d1d5db'
+                    }}
+                  >
+                    {(vrbData.bestCase.operatingProfit1Percent + 0).toFixed(2)}%
                   </td>
-                  <td className="px-4 py-3 bg-gray-50">
-                    <p className="text-lg font-semibold text-gray-700 text-right">
-                      {formatCurrency(vrbData.worstCase.operatingProfitEP2, "KRW")}
-                    </p>
-                    <p className="text-sm text-gray-500 text-right">
-                      {vrbData.worstCase.operatingProfitEP2Percent.toFixed(2)}%
-                    </p>
+                  <td colSpan={3} className={`border border-gray-300 px-[10px] text-right font-bold text-gray-900 bg-red-50 ${!vrbData.worstCase.includeExternalPurchase ? 'border-b' : ''}`}>
+                    {(vrbData.worstCase.operatingProfit1Percent + 0).toFixed(2)}%
                   </td>
                 </tr>
-              )}
 
-              {/* 최종 영업이익 안내 (외부매입이 하나라도 체크된 경우 요약으로 한 번 더 강조 가능하지만, 위에서 각각 보여주므로 생략 가능) */}
-              {/* 만약 외부매입이 아예 없는 경우는 기본 영업이익만 표시됨. */}
-            </tbody>
-          </table>
+                {/* 영업이익 (외부매입1 반영) - 체크박스가 체크된 경우에만 표시 */}
+                {vrbData.bestCase.includeExternalPurchase && (
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">영업이익 (외부매입1 반영)</td>
+                    <td
+                      colSpan={3}
+                      className={`border-x-2 border-blue-400 px-[10px] text-right text-gray-900 bg-yellow-100 ${!vrbData.bestCase.includeExternalPurchase2 ? 'border-b-2' : 'border-b border-gray-300'}`}
+                      style={{
+                        borderLeftColor: '#60a5fa',
+                        borderRightColor: '#60a5fa',
+                        borderBottomColor: !vrbData.bestCase.includeExternalPurchase2 ? '#60a5fa' : '#d1d5db'
+                      }}
+                    >
+                      <span className="font-bold">{formatCurrency(vrbData.bestCase.operatingProfitEP1, "KRW")}</span>
+                      <span className="ml-2 text-sm text-gray-500">({(vrbData.bestCase.operatingProfitEP1Percent + 0).toFixed(2)}%)</span>
+                    </td>
+                    <td colSpan={3} className={`border border-gray-300 px-[10px] text-right font-bold text-gray-900 bg-red-100 ${!vrbData.worstCase.includeExternalPurchase2 ? 'border-b' : ''}`}>
+                      <span>{formatCurrency(vrbData.worstCase.operatingProfitEP1, "KRW")}</span>
+                      <span className="ml-2 text-sm text-gray-500">({(vrbData.worstCase.operatingProfitEP1Percent + 0).toFixed(2)}%)</span>
+                    </td>
+                  </tr>
+                )}
+
+                {/* 영업이익 (외부매입2 반영) - 체크박스가 체크된 경우에만 표시 */}
+                {vrbData.bestCase.includeExternalPurchase2 && (
+                  <tr className="h-[35px]">
+                    <td className="border border-gray-300 px-[10px] text-gray-700 font-medium bg-gray-50/30">영업이익 (외부매입1,2 반영)</td>
+                    <td colSpan={3} className="border-x-2 border-b-2 border-blue-400 px-[10px] text-right text-gray-900 bg-yellow-200" style={{ borderLeftColor: '#60a5fa', borderRightColor: '#60a5fa', borderBottomColor: '#60a5fa' }}>
+                      <span className="font-bold">{formatCurrency(vrbData.bestCase.operatingProfitEP2, "KRW")}</span>
+                      <span className="ml-2 text-sm text-gray-500">({(vrbData.bestCase.operatingProfitEP2Percent + 0).toFixed(2)}%)</span>
+                    </td>
+                    <td colSpan={3} className="border-x border-b border-gray-300 px-[10px] text-right text-gray-900 bg-red-200">
+                      <span className="font-bold">{formatCurrency(vrbData.worstCase.operatingProfitEP2, "KRW")}</span>
+                      <span className="ml-2 text-sm text-gray-500">({(vrbData.worstCase.operatingProfitEP2Percent + 0).toFixed(2)}%)</span>
+                    </td>
+                  </tr>
+                )}
+
+                {/* 최종 영업이익 안내 (외부매입이 하나라도 체크된 경우 요약으로 한 번 더 강조 가능하지만, 위에서 각각 보여주므로 생략 가능) */}
+                {/* 만약 외부매입이 아예 없는 경우는 기본 영업이익만 표시됨. */}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* 사업 진행근거 및 기대효과 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">사업 진행근거 및 기대효과</h2>
-        <textarea
-          value={vrbData.businessBasis}
-          onChange={(e) => setVrbData({ ...vrbData, businessBasis: e.target.value })}
-          onMouseUp={(e: any) => handleHeightChange('businessBasis', e.target.offsetHeight)}
-          style={{ height: vrbData.uiSettings?.heights?.['businessBasis'] ? `${vrbData.uiSettings.heights['businessBasis']}px` : undefined }}
-          rows={6}
-          disabled={isReadOnly}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y"
-          placeholder="사업 진행근거 및 기대효과를 입력하세요"
-        />
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 content-stretch">
+          {/* 3. 사업진행 및 근거 효과 */}
+          <div className="lg:col-span-3 flex flex-col">
+            <h2 className="mb-4 text-lg font-bold text-gray-900">3. 사업진행 및 근거 효과</h2>
+            <div className="flex-1 overflow-hidden border border-gray-300 rounded-none bg-white">
+              <table className="w-full h-full border-collapse text-sm table-fixed">
+                <colgroup>
+                  <col className="w-[20%] bg-yellow-50" />
+                  <col className="w-[80%] bg-white" />
+                </colgroup>
+                <tbody>
+                  {/* Row 1 - Basis & Effects */}
+                  <tr className="h-full">
+                    <th className="border-r border-gray-300 px-4 py-2 text-left font-bold text-gray-900 align-middle bg-yellow-50">사업 진행근거 및 기대효과</th>
+                    <td className="p-0 h-full">
+                      <textarea
+                        value={vrbData.businessBasis}
+                        onChange={(e) => setVrbData({ ...vrbData, businessBasis: e.target.value })}
+                        onMouseUp={(e: any) => handleHeightChange('businessBasis', e.target.offsetHeight)}
+                        style={{ height: vrbData.uiSettings?.heights?.['businessBasis'] ? `${vrbData.uiSettings.heights['businessBasis']}px` : '100%' }}
+                        rows={4}
+                        disabled={isReadOnly}
+                        className="w-full h-full border-none focus:ring-2 focus:ring-inset focus:ring-blue-500 resize-y text-sm bg-transparent p-[10px] hover:bg-blue-50 transition-colors rounded-none outline-none block min-h-[120px]"
+                        placeholder="사업 진행근거 및 기대효과를 입력하세요"
+                        spellCheck={false}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 4. 심의 결과 */}
+          <div className="lg:col-span-1 flex flex-col">
+            <h2 className="mb-4 text-lg font-bold text-gray-900">4. 심의 결과</h2>
+            <div className="flex-1 flex flex-col gap-3">
+              <label
+                className={cn(
+                  "flex-1 flex items-center gap-4 px-6 border-2 transition-all rounded-none group relative overflow-hidden",
+                  vrbData.reviewResult === "PROCEED"
+                    ? "bg-blue-50/50 border-blue-500 shadow-sm"
+                    : "bg-white border-gray-200",
+                  isReadOnly
+                    ? "cursor-default pointer-events-none"
+                    : "cursor-pointer hover:border-blue-200 hover:bg-blue-50/30"
+                )}
+              >
+                <input
+                  type="radio"
+                  name="reviewResult"
+                  value="PROCEED"
+                  checked={vrbData.reviewResult === "PROCEED"}
+                  onChange={(e) => setVrbData({ ...vrbData, reviewResult: e.target.value })}
+                  disabled={isReadOnly}
+                  className="sr-only"
+                />
+                <div className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                  vrbData.reviewResult === "PROCEED" ? "bg-blue-500 text-white" : "bg-blue-50 text-blue-500 group-hover:bg-blue-100"
+                )}>
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+                <div className="flex flex-col">
+                  <span className={cn("text-lg font-bold", vrbData.reviewResult === "PROCEED" ? "text-blue-700" : "text-gray-900")}>진행</span>
+                  <span className="text-xs text-gray-500 font-medium">Proceed</span>
+                </div>
+                {vrbData.reviewResult === "PROCEED" && (
+                  <div className="absolute top-0 right-0 w-8 h-8 bg-blue-500 [clip-path:polygon(100%_0,0_0,100%_100%)]">
+                    <CheckCircle2 className="absolute top-1 right-1 h-3 w-3 text-white" />
+                  </div>
+                )}
+              </label>
+
+              <label
+                className={cn(
+                  "flex-1 flex items-center gap-4 px-6 border-2 transition-all rounded-none group relative overflow-hidden",
+                  vrbData.reviewResult === "STOP"
+                    ? "bg-red-50/50 border-red-500 shadow-sm"
+                    : "bg-white border-gray-200",
+                  isReadOnly
+                    ? "cursor-default pointer-events-none"
+                    : "cursor-pointer hover:border-red-200 hover:bg-red-50/30"
+                )}
+              >
+                <input
+                  type="radio"
+                  name="reviewResult"
+                  value="STOP"
+                  checked={vrbData.reviewResult === "STOP"}
+                  onChange={(e) => setVrbData({ ...vrbData, reviewResult: e.target.value })}
+                  disabled={isReadOnly}
+                  className="sr-only"
+                />
+                <div className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                  vrbData.reviewResult === "STOP" ? "bg-red-500 text-white" : "bg-red-50 text-red-500 group-hover:bg-red-100"
+                )}>
+                  <XCircle className="h-6 w-6" />
+                </div>
+                <div className="flex flex-col">
+                  <span className={cn("text-lg font-bold", vrbData.reviewResult === "STOP" ? "text-red-700" : "text-gray-900")}>미진행</span>
+                  <span className="text-xs text-gray-500 font-medium">Stop</span>
+                </div>
+                {vrbData.reviewResult === "STOP" && (
+                  <div className="absolute top-0 right-0 w-8 h-8 bg-red-500 [clip-path:polygon(100%_0,0_0,100%_100%)]">
+                    <XCircle className="absolute top-1 right-1 h-3 w-3 text-white" />
+                  </div>
+                )}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div >
+
 
       {/* 반려 사유 표시 */}
       {
@@ -3169,109 +3243,9 @@ export default function VrbReviewPage({
         )
       }
 
-      {/* 하단 저장 버튼 */}
-      {
-        (vrbStatus !== 'COMPLETED') && (
-          <div className="flex items-center justify-end gap-3 pb-6">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              저장
-            </button>
-          </div>
-        )
-      }
 
-      {/* 승인/반려 버튼 */}
-      <div className="flex items-center justify-end gap-3">
-        <button
-          onClick={() => setIsRejectionModalOpen(true)}
-          disabled={vrbStatus === 'COMPLETED'}
-          className="inline-flex items-center gap-2 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <XCircle className="h-4 w-4" />
-          반려
-        </button>
-        <button
-          onClick={() => setIsApprovalModalOpen(true)}
-          disabled={vrbStatus === 'COMPLETED'}
-          className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <CheckCircle2 className="h-4 w-4" />
-          승인
-        </button>
-      </div>
 
-      {/* 승인 확인 모달 */}
-      {
-        isApprovalModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">VRB Review 승인</h3>
-              <p className="text-sm text-gray-600 mb-6">
-                이 VRB Review를 승인하시겠습니까?
-              </p>
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  onClick={() => setIsApprovalModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleApprove}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
-                >
-                  승인
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
 
-      {/* 반려 모달 */}
-      {
-        isRejectionModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">VRB Review 반려</h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  반려 사유 <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={rejectionReasonInput}
-                  onChange={(e) => setRejectionReasonInput(e.target.value)}
-                  rows={4}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                  placeholder="반려 사유를 입력해주세요"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setIsRejectionModalOpen(false);
-                    setRejectionReasonInput("");
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleReject}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                >
-                  반려
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </div >
+    </div>
   );
 }

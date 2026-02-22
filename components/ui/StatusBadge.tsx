@@ -39,10 +39,6 @@ export const StatusBadge = ({ status, label, className, showIcon = true }: Statu
 
             // 완료 (COMPLETED)
             "COMPLETED": { variant: "success", text: "완료", icon: <CheckCircle2 className="h-3 w-3" />, colorClass: "bg-green-50 text-green-700 ring-green-200" },
-            "APPROVED": { variant: "success", text: "승인", icon: <CheckCircle2 className="h-3 w-3" />, colorClass: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
-
-            // 반려 (REJECTED)
-            "REJECTED": { variant: "error", text: "반려", icon: <XCircle className="h-3 w-3" />, colorClass: "bg-red-50 text-red-700 ring-red-200" },
         };
 
         if (statusMap[normalizedStatus]) {

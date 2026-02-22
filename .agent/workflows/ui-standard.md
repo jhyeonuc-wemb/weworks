@@ -20,6 +20,7 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 1. **Neo-Modern Light:** 밝고 공기가 잘 통하는(Airy) 느낌을 지향합니다.
 2. **Backdrop Blur:** 모달, 카드, 헤더에 `backdrop-blur`를 적극 활용하여 깊이감을 줍니다.
 3. **Rounded Corners:** 기본적으로 `rounded-xl` 이상을 사용하며, 버튼과 입력창에는 `rounded-2xl`을 권장합니다.
+4. **Exception (예외):** 상세 데이터 그리드(엑셀 스타일) 사용 시 라운드를 제거하고 직각(sharp) 모서리를 사용하여 전문적인 느낌을 줍니다.
 
 ## 주요 디자인 토큰
 - **Primary Color:** `oklch(0.55 0.15 250)` (Tech Blue)
@@ -48,26 +49,54 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 - **컨테이너:** `neo-light-card` 내부에 위치, `overflow-hidden border border-border/40`.
 - **헤더:** `bg-muted/30`, `px-8 py-3 text-sm font-bold`.
 - **행 스타일:** `h-[52px]` 기준 (내부 패딩 `px-8 py-3`).
+- **데이터 행 폰트:**
+    - **기본 텍스트:** `text-sm text-foreground/80` (일반 정보).
+    - **강조 항목(예: 프로젝트명):** `text-sm font-bold text-foreground tracking-tight`.
+    - **데이터 성격(코드, 수치, 날짜):** `font-mono` 적용.
+    - **상태/배지:** `text-xs font-bold`.
 - **인터랙션:** `hover:bg-primary/[0.02] cursor-pointer`.
 - **푸터:** 페이지네이션 포함, `min-h-[56px]`.
 
 #### 3.2 상세/입력형 테이블 (Detail/Input Tables)
-기준: **수지분석서 프로젝트 경비 탭**
+기준: **수지분석서 프로젝트 경비 탭, M/D 산정 난이도 탭**
+- **구조 및 레이아웃:**
+  - **테두리(Border):** `border-collapse`를 사용하며, 테이블 요소(`table`) 자체에는 테두리를 적용하지 않습니다. (컨테이너 div에도 테두리 없음)
+  - **셀 테두리:** 모든 셀(`th`, `td`)에 `border border-gray-300`을 적용하여 **1px 두께**의 실선 그리드를 구현합니다. (Tailwind 기본 `border` 클래스 사용)
+  - **둥글기(Radius):** 컨테이너와 내부 요소 모두 **`rounded-none`** (직각)을 사용하여 엑셀과 같은 전문적인 느낌을 줍니다.
+  - **그림자(Shadow):** **`shadow-none`** (그림자 없음)을 원칙으로 합니다.
+  - **인터랙션(Interaction):**
+    - **행 호버 효과 제거:** 데이터 입력의 집중도를 위해 행 전체 호버 효과는 제거합니다.
+  - 셀 호버 효과:** 데이터 입력이 가능한 셀(Input/Select)에는 `hover:bg-blue-50/50`을 적용하여 상호작용 가능함을 표시합니다.
 - **헤더 및 세션 구분:**
   - 헤더 배경: `bg-blue-50/50` (또는 `bg-slate-50/50`).
-  - 행 높이: **`h-[42px]`**를 고정 높이로 사용합니다.
-  - 테두리: 모든 셀에 실선 테두리(`border border-gray-300`)를 적용하여 엑셀 스타일의 그리드를 유지합니다.
+  - **행 및 셀 높이:** `tr`뿐만 아니라 **입력 필드가 포함된 `td`에도 `h-[35px]`를 명시**하여, 내부 `h-full` 요소가 정확한 높이를 가지도록 합니다.
+  - **셀 패딩:** 
+    - 일반 텍스트 셀: `px-[10px] py-1`.
+    - **입력 셀 (Input/Select):** **`p-0`를 필수 적용**하여 입력 필드가 셀 전체를 채우도록 합니다. (내부 `input`에는 `px-[10px]` 적용)
 - **폰트 및 텍스트:**
   - 기본 텍스트: `text-sm` (Pretendard).
   - 수치/금액: `text-sm text-right` (천 단위 콤마 필수).
-- **입력 필드 스타일 (Inline Input): [표준화 진행 중]**
-  - 현재 기존 테이블(수지분석 등) 작업을 통해 최적의 스타일을 선정 중입니다.
-  - 선정 전까지는 기존 시스템 코드를 참고하되, 결정 후 이 가이드를 업데이트합니다.
-  - (예정: 테두리 최소화, 호버 시 강조, 포커스 시 배경색 변경 등)
-
-- **특화 레이아웃:** 
-  - 좌측 구분 컬럼은 `bg-gray-50/50 font-bold` 처리하여 시각적 위계를 줍니다.
-
+- **선택 열 (Selection Column):**
+  - **헤더:** `w-12`, `text-center`, `text-sm font-bold`.
+  - **데이터 셀:** `p-0`, `text-center`.
+  - **UI:** 라디오 버튼 형태의 직관적인 선택 UI 사용 (`rounded-full`, 선택 시 색상 변경).
+- **작업/삭제 열 (Action Column):**
+  - **헤더:** 타이틀 **"작업"** 사용, `w-12`, `text-center`.
+  - **데이터 셀:** `p-0`, `text-center` (아이콘 버튼 배치).
+  - **입력 컴포넌트 (Interactive Elements):**
+    > ※ 주의: 이 섹션의 스타일은 **테이블 내부**에만 적용됩니다. 일반적인 폼 입력은 **[8. 폼 입력 컴포넌트 표준]**을 따르십시오.
+  - **Dropdown:** 
+    - 높이: `h-[35px]`, 패딩: `p-0` (셀 내부 꽉 채움).
+    - 스타일: `border-none`, `bg-transparent`, `rounded-none`.
+    - 목록 팝업: `listClassName="rounded-none border-gray-300 shadow-md"`를 적용하여 직각 스타일 및 일관된 테두리 유지.
+  - **Input/Select:** 
+    - 기본: `border-none`, `bg-transparent`, `h-full`, `w-full`, `rounded-none`, `p-0`.
+    - 패딩 및 폰트: `px-[10px]`, `text-sm` (기본 사이즈 유지).
+    - 포커스: `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50`.
+  - **행 추가 버튼 (Add Row):**
+    - 위치: `tbody`의 최하단에 별도 `tr`로 구성.
+    - 스타일: `w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors`.
+    - 테두리: `border-none` (셀 내부 `p-0` 및 통합).
 
 ### 4. 상태 배지 (Badge)
 - `@/components/ui/Badge.tsx` 사용
@@ -246,8 +275,3 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
     onConfirm={handleSave}
   />
   ```
-
-## 작업 시 주의사항
-- 인라인 스타일보다는 Tailwind CSS 클래스를 우선 사용합니다.
-- `oklch` 색상 체계를 깨지 않도록 주의합니다.
-- 하드코딩된 색상보다는 CSS 변수(`--primary`, `--border` 등)를 사용합니다.

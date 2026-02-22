@@ -2,6 +2,7 @@
 
 import { Save } from "lucide-react";
 import { useStandardExpenses } from "@/hooks/useStandardExpenses";
+import { useToast } from "@/components/ui";
 
 interface StandardExpenseTabProps {
   projectId: number;
@@ -13,14 +14,16 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
   const { expenses, loading, saving, updateExpense, saveExpenses } =
     useStandardExpenses(projectId);
 
+  const { showToast } = useToast();
+
   const handleSave = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     try {
       await saveExpenses();
-      alert("기준-경비가 저장되었습니다.");
+      showToast("기준-경비가 저장되었습니다.", "success");
       if (onSave) onSave();
     } catch (error) {
-      alert("기준-경비 저장에 실패했습니다.");
+      showToast("기준-경비 저장에 실패했습니다.", "error");
     }
   };
 

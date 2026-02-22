@@ -9,6 +9,7 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
+import { useToast } from "@/components/ui";
 
 // 임시 수지분석서 데이터
 const profitabilityData = {
@@ -37,32 +38,42 @@ export default function ProfitabilityReviewPage({
     "pending" | "approved" | "rejected" | null
   >(null);
 
+  const { showToast, confirm } = useToast();
+
   const handleApprove = async () => {
-    if (window.confirm("수지분석서를 승인하시겠습니까?")) {
-      setIsSubmitting(true);
-      // TODO: API 호출
-      setTimeout(() => {
-        setReviewStatus("approved");
-        setIsSubmitting(false);
-        alert("수지분석서가 승인되었습니다.");
-      }, 1000);
-    }
+    confirm({
+      title: "수지분석서 승인",
+      message: "수지분석서를 승인하시겠습니까?",
+      onConfirm: async () => {
+        setIsSubmitting(true);
+        // TODO: API 호출
+        setTimeout(() => {
+          setReviewStatus("approved");
+          setIsSubmitting(false);
+          showToast("수지분석서가 승인되었습니다.", "success");
+        }, 1000);
+      }
+    });
   };
 
   const handleReject = async () => {
     if (!comments.trim()) {
-      alert("반려 사유를 입력해주세요.");
+      showToast("반려 사유를 입력해주세요.", "error");
       return;
     }
-    if (window.confirm("수지분석서를 반려하시겠습니까?")) {
-      setIsSubmitting(true);
-      // TODO: API 호출
-      setTimeout(() => {
-        setReviewStatus("rejected");
-        setIsSubmitting(false);
-        alert("수지분석서가 반려되었습니다.");
-      }, 1000);
-    }
+    confirm({
+      title: "수지분석서 반려",
+      message: "수지분석서를 반려하시겠습니까?",
+      onConfirm: async () => {
+        setIsSubmitting(true);
+        // TODO: API 호출
+        setTimeout(() => {
+          setReviewStatus("rejected");
+          setIsSubmitting(false);
+          showToast("수지분석서가 반려되었습니다.", "info");
+        }, 1000);
+      }
+    });
   };
 
   return (

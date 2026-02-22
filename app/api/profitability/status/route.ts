@@ -38,9 +38,9 @@ export async function PUT(request: NextRequest) {
         // 수지분석서가 완료되면 프로젝트 단계를 'settlement'로 변경
         if (status === 'COMPLETED') {
             try {
-                console.log(`Updating project ${projectId} phase to settlement`);
+                console.log(`Updating project ${projectId} phase to project_in_progress`);
                 const updateRes = await query(
-                    "UPDATE we_projects SET current_phase = 'settlement', status = 'profitability_completed' WHERE id = $1",
+                    "UPDATE we_projects SET current_phase = 'project_in_progress', status = 'project_in_progress' WHERE id = $1",
                     [projectId]
                 );
                 console.log(`Project phase update result: ${updateRes.rowCount}`);

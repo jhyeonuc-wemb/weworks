@@ -241,7 +241,7 @@ export default function SettlementListPage() {
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계획 매출</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">실행 매출</TableHead>
@@ -249,13 +249,12 @@ export default function SettlementListPage() {
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">실행 이익</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">이익 증감</TableHead>
                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-24 text-center border-none">
+                  <TableCell colSpan={9} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                       <p className="text-sm text-muted-foreground font-medium">데이터를 불러오고 있습니다...</p>
@@ -264,7 +263,7 @@ export default function SettlementListPage() {
                 </TableRow>
               ) : sortedSettlements.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-24 text-center border-none">
+                  <TableCell colSpan={9} className="py-24 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-4 opacity-40">
                       <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                         <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
@@ -287,54 +286,52 @@ export default function SettlementListPage() {
                       onClick={() => router.push(`/projects/${s.project_id}/settlement`)}
                     >
                       <TableCell align="center" className="px-8 py-3">
-                        <span className="text-[11px] font-black text-foreground/40 font-mono tracking-wider">{s.project_code || "-"}</span>
+                        <span className="text-sm text-foreground/80 font-mono">
+                          {s.project_code || "-"}
+                        </span>
                       </TableCell>
                       <TableCell align="left" className="px-8 py-3">
-                        <div className="space-y-0.5">
-                          <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1">{s.project_name}</div>
-                          <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">SET-ID: {s.id}</div>
+                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                          {s.project_name}
                         </div>
                       </TableCell>
                       <TableCell align="center" className="px-8 py-3">
-                        <span className="text-sm font-bold text-muted-foreground/80">{s.customer_name || "-"}</span>
+                        <span className="text-sm text-foreground/80">
+                          {s.customer_name || "-"}
+                        </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
-                        <span className="text-sm font-black text-foreground/40 font-mono italic tracking-tighter">{formatCurrency(s.planned_revenue * 1000, "KRW")}</span>
+                      <TableCell align="right" className="px-8 py-3">
+                        <span className="text-sm text-foreground/40 font-mono italic">
+                          {formatCurrency(s.planned_revenue * 1000, "KRW", false)}
+                        </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
-                        <span className="text-sm font-black text-foreground font-mono">{formatCurrency(s.actual_revenue * 1000, "KRW")}</span>
+                      <TableCell align="right" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80 font-mono">
+                          {formatCurrency(s.actual_revenue * 1000, "KRW", false)}
+                        </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
-                        <span className="text-sm font-black text-foreground/40 font-mono italic tracking-tighter">{formatCurrency(s.planned_profit * 1000, "KRW")}</span>
+                      <TableCell align="right" className="px-8 py-3">
+                        <span className="text-sm text-foreground/40 font-mono italic">
+                          {formatCurrency(s.planned_profit * 1000, "KRW", false)}
+                        </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
-                        <span className="text-sm font-black text-foreground font-mono">{formatCurrency(actualProfit * 1000, "KRW")}</span>
-                      </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
-                        <span className={cn(
-                          "text-xs font-black font-mono px-2 py-1 rounded-md",
-                          s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-                        )}>
-                          {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW")}
+                      <TableCell align="right" className="px-8 py-3">
+                        <span className="text-sm text-foreground/80 font-mono">
+                          {formatCurrency(actualProfit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-8 py-3">
-                        <Badge variant={s.status === "COMPLETED" ? "success" : s.status === "IN_PROGRESS" ? "warning" : "info"} className="rounded-xl px-3 py-1 font-bold text-[10px] shadow-sm">
+                        <span className={cn(
+                          "text-xs font-bold font-mono px-2 py-1 rounded-md",
+                          s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                        )}>
+                          {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW", false)}
+                        </span>
+                      </TableCell>
+                      <TableCell align="center" className="px-8 py-3">
+                        <Badge variant={s.status === "COMPLETED" ? "success" : s.status === "IN_PROGRESS" ? "warning" : "info"} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                           {s.status === "COMPLETED" ? "완료" : s.status === "IN_PROGRESS" ? "작성중" : "대기"}
                         </Badge>
-                      </TableCell>
-                      <TableCell align="right" className="px-8 py-3">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/projects/${s.project_id}/settlement`);
-                            }}
-                            className="px-3 py-1.5 rounded-2xl bg-muted/60 text-[10px] font-black text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all uppercase tracking-widest"
-                          >
-                            정산검토
-                          </button>
-                        </div>
                       </TableCell>
                     </TableRow>
                   );

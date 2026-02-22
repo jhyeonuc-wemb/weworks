@@ -235,24 +235,21 @@ export default function ProfitabilityListPage() {
                         <TableHeader className="bg-muted/30">
                             <TableRow>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트 코드</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">프로젝트명</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">버전</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">매출(천원)</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">영업이익(천원)</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">이익률</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">수주합계(원)</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">손익(원)</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">손익률</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">당사 M/M</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">타사 M/M</TableHead>
+                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">버전</TableHead>
                                 <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">작성자</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">작성일</TableHead>
-                                <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={12} className="py-24 text-center border-none">
+                                    <TableCell colSpan={10} className="py-24 text-center border-none">
                                         <div className="flex flex-col items-center justify-center gap-4">
                                             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                                             <p className="text-sm text-muted-foreground font-medium">데이터를 불러오고 있습니다...</p>
@@ -261,7 +258,7 @@ export default function ProfitabilityListPage() {
                                 </TableRow>
                             ) : sortedProfitabilities.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={12} className="py-24 text-center border-none">
+                                    <TableCell colSpan={10} className="py-24 text-center border-none">
                                         <div className="flex flex-col items-center justify-center gap-4 opacity-40">
                                             <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                                                 <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
@@ -281,72 +278,57 @@ export default function ProfitabilityListPage() {
                                         onClick={() => router.push(`/projects/${p.project_id}/profitability`)}
                                     >
                                         <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-xs font-bold text-foreground/40 font-mono italic">{p.project_code || "-"}</span>
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                {p.project_code || "-"}
+                                            </span>
                                         </TableCell>
                                         <TableCell align="left" className="px-8 py-3">
-                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1">{p.project_name}</div>
+                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                                                {p.project_name}
+                                            </div>
                                         </TableCell>
                                         <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-bold text-muted-foreground/80">{p.customer_name || "-"}</span>
+                                            <span className="text-sm text-foreground/80">
+                                                {p.customer_name || "-"}
+                                            </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="px-2 py-0.5 rounded-md bg-muted/50 text-[10px] font-black text-muted-foreground/60">v{p.version}</span>
+                                        <TableCell align="right" className="px-8 py-3">
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                {formatCurrency((p.total_revenue || 0) * 1000, "KRW", false)}
+                                            </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-black text-foreground font-mono">{formatCurrency((p.total_revenue || 0) * 1000, "KRW")}</span>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-black text-foreground font-mono">{formatCurrency((p.operating_profit || 0) * 1000, "KRW")}</span>
+                                        <TableCell align="right" className="px-8 py-3">
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                {formatCurrency((p.operating_profit || 0) * 1000, "KRW", false)}
+                                            </span>
                                         </TableCell>
                                         <TableCell align="center" className="px-8 py-3">
                                             <span className={cn(
-                                                "text-xs font-black font-mono px-2 py-1 rounded-md",
-                                                (p.operating_profit_rate || 0) >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                                                "text-sm font-bold font-mono",
+                                                (p.operating_profit_rate || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
                                             )}>
                                                 {formatPercent(p.operating_profit_rate || 0)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-black text-foreground/60 font-mono italic">{Number(p.our_mm || 0).toFixed(2)}</span>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-black text-foreground/60 font-mono italic">{Number(p.others_mm || 0).toFixed(2)}</span>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <Badge variant={getStatusVariant(p.status)} className="rounded-xl px-3 py-1 font-bold text-[10px]">
-                                                {getStatusLabel(p.status)}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-sm font-bold text-foreground/60">{p.creator_name || "-"}</span>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-8 py-3">
-                                            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-tighter">
-                                                {new Date(p.created_at).toLocaleDateString()}
+                                        <TableCell align="right" className="px-8 py-3">
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                {Number(p.our_mm || 0).toFixed(2)}
                                             </span>
                                         </TableCell>
                                         <TableCell align="right" className="px-8 py-3">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        router.push(`/projects/${p.project_id}/profitability`);
-                                                    }}
-                                                    className="px-3 py-1.5 rounded-2xl bg-muted/50 text-[10px] font-black text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all uppercase tracking-widest"
-                                                >
-                                                    Analysis
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(p.id);
-                                                    }}
-                                                    disabled={deletingId === p.id}
-                                                    className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            </div>
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                {Number(p.others_mm || 0).toFixed(2)}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell align="center" className="px-8 py-3">
+                                            <span className="text-sm text-foreground/80 font-mono">
+                                                V{p.version}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell align="center" className="px-8 py-3">
+                                            <Badge variant={getStatusVariant(p.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
+                                                {getStatusLabel(p.status)}
+                                            </Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))

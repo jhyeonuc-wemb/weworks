@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Save, Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency, type Currency } from "@/lib/utils/currency";
-import { DatePicker, Button, Input, Textarea, Badge } from "@/components/ui";
+import { DatePicker, Button, Input, Textarea, Badge, useToast } from "@/components/ui";
 import { calculateProfitabilitySummary } from "@/lib/utils/calculations";
 import { cn } from "@/lib/utils";
 import type {
@@ -132,6 +132,8 @@ export function OrderProposalTab({
   const srvSum = summary.srv;
   const prdSum = summary.prd;
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -154,11 +156,11 @@ export function OrderProposalTab({
         netProfit: summary.netProfit,
         profitRate: summary.profitRate
       }, profitabilityId);
-      alert("수주품의 데이터가 저장되었습니다.");
+      showToast("수주품의 데이터가 저장되었습니다.", "success");
       if (onSave) onSave();
     } catch (error) {
       console.error("Error saving order proposal:", error);
-      alert("저장에 실패했습니다.");
+      showToast("저장에 실패했습니다.", "error");
     } finally {
       setSaving(false);
     }

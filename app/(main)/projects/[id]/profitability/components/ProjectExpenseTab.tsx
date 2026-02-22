@@ -6,8 +6,7 @@ import { format } from "date-fns";
 import { useProjectExpense } from "@/hooks/useProjectExpense";
 import type { Project, StandardExpense, ManpowerPlanItem } from "@/types/profitability";
 import { Currency } from "@/lib/utils/currency";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { MonthPicker } from "@/components/ui/MonthPicker";
+import { DatePicker, MonthPicker, useToast } from "@/components/ui";
 
 interface ProjectExpenseTabProps {
     projectId: number;
@@ -30,7 +29,7 @@ export function ProjectExpenseTab({
     onSave,
     profitabilityId,
 }: ProjectExpenseTabProps) {
-    const isReadOnly = status === "completed" || status === "approved" || status === "review";
+    const isReadOnly = status === "completed" || status === "COMPLETED" || status === "approved" || status === "APPROVED" || status === "review";
     const {
         items,
         loading,
@@ -47,21 +46,27 @@ export function ProjectExpenseTab({
         mmSummary,
     } = useProjectExpense(projectId, project, manpowerPlanItems, standardExpenses, profitabilityId);
 
+    const { showToast, confirm: showConfirm } = useToast();
+
     const handleSave = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         try {
             await saveExpensePlan();
-            alert("프로젝트 경비 계획이 저장되었습니다.");
+            showToast("프로젝트 경비 계획이 저장되었습니다.", "success");
             if (onSave) onSave();
         } catch (error) {
-            alert("경비 계획 저장에 실패했습니다.");
+            showToast("경비 계획 저장에 실패했습니다.", "error");
         }
     };
 
     const handleRecalculate = () => {
-        if (confirm("인력 계획과 기준경비의 최신 데이터를 반영하여 재계산하시겠습니까?\n수동으로 입력한 값은 유지되지만, 자동 계산 항목은 업데이트됩니다.")) {
-            recalculateData();
-        }
+        showConfirm({
+            title: "데이터 갱신",
+            message: "인력 계획과 기준경비의 최신 데이터를 반영하여 재계산하시겠습니까?\n수동으로 입력한 값은 유지되지만, 자동 계산 항목은 업데이트됩니다.",
+            onConfirm: () => {
+                recalculateData();
+            }
+        });
     };
 
     // 렌더링을 위한 데이터 준비
@@ -77,7 +82,7 @@ export function ProjectExpenseTab({
         const groups: { [year: number]: { label: string; count: number } } = {};
         const ms: { key: string; label: string }[] = [];
 
-        let current = new Date(start);
+        const current = new Date(start);
         while (current <= end) {
             const year = current.getFullYear();
             if (!groups[year]) {

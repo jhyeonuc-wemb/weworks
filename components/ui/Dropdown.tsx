@@ -45,10 +45,10 @@ export const Dropdown = ({
             const rect = buttonRef.current.getBoundingClientRect();
             const spaceBelow = window.innerHeight - rect.bottom;
             const spaceAbove = rect.top;
-            const dropdownHeight = Math.min(options.length * 40 + 10, 240); // Estimate max height (matches css max-h-60)
+            const dropdownHeight = Math.min(options.length * 40 + 10, 320); // Estimate max height (matches css max-h-80)
 
             let top = rect.bottom + 4; // Add a little gap
-            let maxHeight = 240;
+            const maxHeight = 320;
 
             // Decide whether to open up or down
             if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
@@ -172,10 +172,10 @@ export const Dropdown = ({
                 className={cn(
                     "relative flex items-center w-full transition-all duration-200 focus:outline-none h-10 px-3 text-sm rounded-xl border border-gray-300 bg-white",
                     "text-gray-900 hover:bg-slate-50 hover:border-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0",
+                    className,
                     isOpen && "border-gray-900 ring-2 ring-gray-900 ring-offset-0",
-                    disabled && "bg-gray-50 text-gray-400 cursor-not-allowed",
-                    !isPremium && "justify-between",
-                    className
+                    disabled && "bg-transparent text-gray-900 border-none cursor-default hover:bg-transparent shadow-none",
+                    !isPremium && "justify-between"
                 )}
             >
                 <span className={cn(
@@ -184,13 +184,15 @@ export const Dropdown = ({
                 )}>
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
-                <ChevronDown
-                    size={16}
-                    className={cn(
-                        "text-gray-400 flex-shrink-0 ml-2 transition-transform duration-200",
-                        isOpen && "rotate-180"
-                    )}
-                />
+                {!disabled && (
+                    <ChevronDown
+                        size={16}
+                        className={cn(
+                            "text-gray-400 flex-shrink-0 ml-2 transition-transform duration-200",
+                            isOpen && "rotate-180"
+                        )}
+                    />
+                )}
             </button>
 
             {isOpen && position && createPortal(
@@ -209,7 +211,7 @@ export const Dropdown = ({
                         )
                     }}
                 >
-                    <div className="overflow-y-auto custom-scrollbar max-h-60">
+                    <div className="overflow-y-auto custom-scrollbar max-h-80">
                         {options.length > 0 ? (
                             options.map((option) => (
                                 <button

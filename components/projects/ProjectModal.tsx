@@ -12,6 +12,7 @@ interface User {
     name: string;
     email: string;
     role_name: string;
+    roles?: { id: number; name: string; is_primary: boolean }[];
 }
 
 interface Client {
@@ -154,7 +155,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     actualEndDate: project.actual_end_date || "",
                     currency: (project.currency || "KRW") as Currency,
                     expectedAmount: project.expected_amount?.toString() || "",
-                    processStatus: project.process_status || "",
+                    processStatus: project.process_status?.toLowerCase() || "",
                     riskLevel: project.risk_level || "",
                 });
 
@@ -234,7 +235,14 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     // 필터링 로직
     const filteredCustomers = clients.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
     const filteredOrderers = clients.filter(c => c.name.toLowerCase().includes(ordererSearch.toLowerCase()));
-    const filteredPms = users.filter(u => (u.role_name?.toLowerCase() === "pm" || u.role_name?.toLowerCase() === "admin") && u.name.toLowerCase().includes(pmSearch.toLowerCase()));
+    const filteredPms = users.filter(u => {
+        // Check roles array first (for multi-role support), fallback to role_name
+        const hasPmRole = u.roles && u.roles.length > 0
+            ? u.roles.some(r => r.name.toLowerCase().includes("pm"))
+            : (u.role_name?.toLowerCase().includes("pm") || false);
+
+        return hasPmRole && u.name.toLowerCase().includes(pmSearch.toLowerCase());
+    });
     const filteredSales = users.filter(u => u.role_name?.toLowerCase() === "sales" && u.name.toLowerCase().includes(salesSearch.toLowerCase()));
 
     const selectedCustomer = clients.find(c => c.id.toString() === formData.customerId);
@@ -550,7 +558,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                         <Dropdown
                             value={formData.processStatus}
                             onChange={(val) => setFormData(prev => ({ ...prev, processStatus: val as string }))}
-                            options={phases.map(phase => ({ value: phase.code, label: phase.name }))}
+                            options={phases.map(phase => ({ value: phase.code.toLowerCase(), label: phase.name }))}
                             placeholder="단계를 선택하세요"
                             variant="standard"
                         />

@@ -94,7 +94,7 @@ export function SummaryTab({
 
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">수익률</p>
+            <p className="text-sm font-medium text-gray-500">손익률</p>
             <BarChart3
               className={`h-5 w-5 ${profitRate >= 0 ? "text-green-500" : "text-red-500"
                 }`}

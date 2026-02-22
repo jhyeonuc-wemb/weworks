@@ -33,6 +33,7 @@ import { ProjectModal } from "@/components/projects/ProjectModal";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
+import { ProjectAiAnalysis } from "./components/ProjectAiAnalysis";
 
 interface Project {
   id: number;
@@ -681,7 +682,8 @@ export default function ProjectDetailPage({
         ))}
       </div>
 
-
+      {/* 프로젝트 진단 AI 분석 섹션 */}
+      <ProjectAiAnalysis projectId={id} projectData={project} />
 
       {/* 편집 모달 - ProjectModal 사용 */}
       <ProjectModal

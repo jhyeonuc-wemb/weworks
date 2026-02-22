@@ -190,7 +190,7 @@ function DepartmentsContent() {
                 let current: Department | undefined = target;
                 while (current && current.parent_department_id) {
                     newExpanded.add(current.parent_department_id);
-                    // eslint-disable-next-line no-loop-func
+                     
                     current = departments.find(d => d.id === current?.parent_department_id);
                 }
                 setExpandedIds(newExpanded);
