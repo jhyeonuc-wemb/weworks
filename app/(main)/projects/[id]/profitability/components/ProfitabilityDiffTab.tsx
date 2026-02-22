@@ -91,7 +91,7 @@ export function ProfitabilityDiffTab({
     costExternal: srvSum.external.cost,
     delayCostInternal: srvSum.internal.delay,
     delayCostExternal: srvSum.external.delay,
-    profitInternal: srvSum.internal.proposal - (srvSum.internal.cost + srvSum.internal.delay + srvSum.internal.special + srvSum.internal.general),
+    profitInternal: srvSum.internal.proposal - srvSum.internal.cost - srvSum.internal.delay,
     profitExternal: srvSum.external.proposal - (srvSum.external.cost + srvSum.external.delay),
     expGeneral: srvSum.internal.general,
     expSpecial: srvSum.internal.special,
