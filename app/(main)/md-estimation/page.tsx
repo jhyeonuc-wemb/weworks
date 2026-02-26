@@ -224,10 +224,10 @@ export default function MdEstimationListPage() {
               <TableRow>
                 <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">가중치</TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">총 투입(M/M)</TableHead>
-                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                <TableHead className="w-[160px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">가중치</TableHead>
+                <TableHead className="w-[120px] px-4 py-3 text-sm text-slate-900 text-center">총 투입(M/M)</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -261,32 +261,32 @@ export default function MdEstimationListPage() {
                     className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                     onClick={() => router.push(`/projects/${estimation.project_id}/md-estimation`)}
                   >
-                    <TableCell align="center" className="px-4 py-3">
+                    <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80 font-mono">
                         {estimation.project_code || "-"}
                       </span>
                     </TableCell>
                     <TableCell align="left" className="px-4 py-3">
-                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2">
+                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2 leading-snug">
                         {estimation.project_name}
                       </div>
                     </TableCell>
-                    <TableCell align="center" className="px-4 py-3">
+                    <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80">
                         {estimation.customer_name || "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="center" className="px-4 py-3">
+                    <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80 font-mono">
                         {estimation.project_difficulty ? Number(estimation.project_difficulty).toFixed(3) : "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="right" className="px-4 py-3">
+                    <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80 font-mono">
                         {estimation.total_mm ? Number(estimation.total_mm).toFixed(2) : "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="center" className="px-4 py-3">
+                    <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <Badge variant={getStatusVariant(estimation.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                         {getStatusLabel(estimation.status)}
                       </Badge>

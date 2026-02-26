@@ -182,10 +182,10 @@ export default function ContractListPage() {
                             <TableRow>
                                 <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
                                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-left whitespace-nowrap">프로젝트명</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
-                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계약 금액</TableHead>
-                                <TableHead className="w-[180px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계약 기간</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
+                                <TableHead className="w-[150px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
+                                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계약 금액</TableHead>
+                                <TableHead className="w-[200px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계약 기간</TableHead>
+                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -218,13 +218,13 @@ export default function ContractListPage() {
                                         className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                                         onClick={() => router.push(`/projects/${contract.project_id}`)}
                                     >
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {contract.project_code || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="left" className="px-4 py-3">
-                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2">
+                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2 leading-snug">
                                                 {contract.project_name}
                                             </div>
                                         </TableCell>
@@ -243,7 +243,7 @@ export default function ContractListPage() {
                                                 {contract.contract_start_date ? `${contract.contract_start_date} ~ ${contract.contract_end_date}` : "-"}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <Badge variant={getStatusVariant(contract.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                                                 {getStatusLabel(contract.status)}
                                             </Badge>

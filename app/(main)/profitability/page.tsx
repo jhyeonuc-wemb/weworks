@@ -236,14 +236,14 @@ export default function ProfitabilityListPage() {
                             <TableRow>
                                 <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
                                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                                <TableHead className="w-[120px] px-4 py-3 text-sm text-slate-900 text-center">수주합계(원)</TableHead>
-                                <TableHead className="w-[120px] px-4 py-3 text-sm text-slate-900 text-center">손익(원)</TableHead>
-                                <TableHead className="w-[70px] px-4 py-3 text-sm text-slate-900 text-center">손익률</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">당사 M/M</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">타사 M/M</TableHead>
-                                <TableHead className="w-[60px] px-4 py-3 text-sm text-slate-900 text-center">버전</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                                <TableHead className="w-[150px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">수주합계(원)</TableHead>
+                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">손익(원)</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">손익률</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">당사 M/M</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">타사 M/M</TableHead>
+                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">버전</TableHead>
+                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -277,17 +277,17 @@ export default function ProfitabilityListPage() {
                                         className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                                         onClick={() => router.push(`/projects/${p.project_id}/profitability`)}
                                     >
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {p.project_code || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="left" className="px-4 py-3">
-                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2">
+                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2 leading-snug">
                                                 {p.project_name}
                                             </div>
                                         </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80">
                                                 {p.customer_name || "-"}
                                             </span>
@@ -297,12 +297,12 @@ export default function ProfitabilityListPage() {
                                                 {formatCurrency((p.total_revenue || 0) * 1000, "KRW", false)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="right" className="px-4 py-3">
+                                        <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {formatCurrency((p.operating_profit || 0) * 1000, "KRW", false)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className={cn(
                                                 "text-sm font-bold font-mono",
                                                 (p.operating_profit_rate || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
@@ -310,22 +310,22 @@ export default function ProfitabilityListPage() {
                                                 {formatPercent(p.operating_profit_rate || 0)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="right" className="px-4 py-3">
+                                        <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {Number(p.our_mm || 0).toFixed(2)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="right" className="px-4 py-3">
+                                        <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {Number(p.others_mm || 0).toFixed(2)}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 V{p.version}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
+                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <Badge variant={getStatusVariant(p.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                                                 {getStatusLabel(p.status)}
                                             </Badge>
