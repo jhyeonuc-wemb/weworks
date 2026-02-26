@@ -133,6 +133,11 @@ const items = [
         label: "M/D 산정 항목",
         icon: FileText,
       },
+      {
+        href: "/settings/holidays",
+        label: "휴일",
+        icon: Calendar,
+      },
     ],
   },
 ];
