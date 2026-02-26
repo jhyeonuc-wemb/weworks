@@ -233,9 +233,11 @@ export const ProjectPhaseTab = forwardRef<ProjectPhaseTabHandle>((_, ref) => {
                                                     ? "bg-blue-50 text-blue-700 border border-blue-100"
                                                     : phase.phase_group === 'maintenance'
                                                         ? "bg-purple-50 text-purple-700 border border-purple-100"
-                                                        : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                                        : phase.phase_group === 'closure'
+                                                            ? "bg-orange-50 text-orange-700 border border-orange-100"
+                                                            : "bg-emerald-50 text-emerald-700 border border-emerald-100"
                                             )}>
-                                                {phase.phase_group === 'sales_ps' ? '영업/PS' : phase.phase_group === 'maintenance' ? '유지보수' : '프로젝트'}
+                                                {phase.phase_group === 'sales_ps' ? '영업/PS' : phase.phase_group === 'maintenance' ? '유지보수' : phase.phase_group === 'closure' ? '종료' : '프로젝트'}
                                             </span>
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap px-8 py-3">
@@ -338,6 +340,7 @@ export const ProjectPhaseTab = forwardRef<ProjectPhaseTabHandle>((_, ref) => {
                                     { value: 'sales_ps', label: '영업/PS' },
                                     { value: 'project', label: '프로젝트' },
                                     { value: 'maintenance', label: '유지보수' },
+                                    { value: 'closure', label: '종료' },
                                 ]}
                                 placeholder="그룹 선택"
                                 variant="standard"

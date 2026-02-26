@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS project_phases (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
-    phase_group VARCHAR(50) NOT NULL CHECK (phase_group IN ('sales_ps', 'project', 'maintenance')),
+    phase_group VARCHAR(50) NOT NULL CHECK (phase_group IN ('sales_ps', 'project', 'maintenance', 'closure')),
     path VARCHAR(255),
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
@@ -27,7 +27,8 @@ INSERT INTO project_phases (code, name, phase_group, path, display_order, descri
 ('in_progress', '프로젝트 진행', 'project', '', 7, '프로젝트 수행'),
 ('settlement', '수지정산', 'project', '/settlement', 8, '종료 및 정산'),
 ('warranty', '하자보증', 'project', '/warranty', 9, '무상 유지보수'),
-('paid_maintenance', '유상유지보수', 'project', '/maintenance', 10, '유상 유지보수')
+('paid_maintenance', '유상유지보수', 'project', '/maintenance', 10, '유상 유지보수'),
+('closure', '종료', 'closure', '', 11, '프로젝트 종료')
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,
     phase_group = EXCLUDED.phase_group,
