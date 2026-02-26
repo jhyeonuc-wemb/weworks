@@ -120,7 +120,7 @@ export const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
         colSpan={colSpan}
         rowSpan={rowSpan}
         className={cn(
-          "whitespace-nowrap px-3 py-4 text-sm text-gray-500",
+          "overflow-hidden px-3 py-4 text-sm text-gray-500",
           alignStyles[align],
           className
         )}
