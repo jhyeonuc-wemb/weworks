@@ -134,7 +134,7 @@ export default function ContractListPage() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-[1920px]">
             {/* 헤더 */}
             <div className="flex items-center justify-between px-2">
                 <div>
@@ -223,7 +223,7 @@ export default function ContractListPage() {
                                                 {contract.project_code || "-"}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="left" className="px-8 py-3 whitespace-nowrap">
+                                        <TableCell align="left" className="px-8 py-3">
                                             <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
                                                 {contract.project_name}
                                             </div>

@@ -191,7 +191,7 @@ export default function SettlementListPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-[1920px]">
       {/* 헤더 */}
       <div className="flex items-center justify-between px-2">
         <div>
