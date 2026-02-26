@@ -26,11 +26,11 @@ interface ScoreMap {
 
 // ── 난이도 레벨 ───────────────────────────────────────────────────────────────
 const DIFFICULTY_LEVELS = [
-    { min: 1.0, max: 3.0, label: "매우 낮음", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
-    { min: 3.1, max: 5.0, label: "낮음", color: "text-green-700", bg: "bg-green-50", border: "border-green-200" },
-    { min: 5.1, max: 7.0, label: "보통", color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200" },
-    { min: 7.1, max: 8.5, label: "높음", color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200" },
-    { min: 8.6, max: 10.0, label: "매우 높음", color: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
+    { min: 1.0, max: 3.0, label: "매우 낮음", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", activeBg: "bg-emerald-600" },
+    { min: 3.1, max: 5.0, label: "낮음", color: "text-green-700", bg: "bg-green-50", border: "border-green-200", activeBg: "bg-green-600" },
+    { min: 5.1, max: 7.0, label: "보통", color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200", activeBg: "bg-yellow-500" },
+    { min: 7.1, max: 8.5, label: "높음", color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200", activeBg: "bg-orange-500" },
+    { min: 8.6, max: 10.0, label: "매우 높음", color: "text-red-700", bg: "bg-red-50", border: "border-red-200", activeBg: "bg-red-600" },
 ];
 
 function getDifficultyLevel(score: number | null) {
@@ -70,22 +70,30 @@ function ScoreSelector({
 }) {
     return (
         <div className="flex items-center gap-1">
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                <button
-                    key={n}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => onChange(n)}
-                    className={cn(
-                        "w-7 h-7 rounded-lg text-sm font-bold transition-all duration-150 border",
-                        value === n
-                            ? "bg-gray-900 text-white border-gray-900 shadow-sm"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:text-gray-900 hover:bg-gray-50"
-                    )}
-                >
-                    {n}
-                </button>
-            ))}
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+                const level = getDifficultyLevel(n);
+                const isActive = value === n;
+
+                return (
+                    <button
+                        key={n}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => onChange(n)}
+                        className={cn(
+                            "w-7 h-7 rounded-lg text-sm font-bold transition-all duration-150 border",
+                            isActive
+                                ? cn(level?.activeBg || "bg-gray-900", "text-white border-transparent shadow-md scale-110 z-10")
+                                : cn(
+                                    "bg-white text-gray-500 border-gray-300 hover:text-gray-900",
+                                    level && `hover:${level.bg} hover:${level.border}`
+                                )
+                        )}
+                    >
+                        {n}
+                    </button>
+                );
+            })}
         </div>
     );
 }
@@ -150,7 +158,7 @@ function CategoryAccordion({
             {/* Accordion Body */}
             {isOpen && (
                 <div className="border-t border-gray-100 px-5 pt-4 pb-5 bg-gray-50/30">
-                    <div className="overflow-x-auto border border-gray-200 bg-white">
+                    <div className="overflow-x-auto bg-white shadow-sm">
                         <table className="min-w-full" style={{ borderCollapse: "collapse" }}>
                             <colgroup>
                                 <col style={{ width: "36px" }} />

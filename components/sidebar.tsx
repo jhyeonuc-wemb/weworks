@@ -128,6 +128,11 @@ const items = [
         label: "난이도 체크리스트",
         icon: CheckCircle2,
       },
+      {
+        href: "/settings/md-estimation",
+        label: "M/D 산정 항목",
+        icon: FileText,
+      },
     ],
   },
 ];

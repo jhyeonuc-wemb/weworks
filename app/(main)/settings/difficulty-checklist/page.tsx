@@ -276,7 +276,7 @@ export default function DifficultyChecklistPage() {
                                 {saving ? "저장 중..." : "저장"}
                             </button>
                         </div>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto shadow-sm">
                             <table className="min-w-full" style={{ borderCollapse: "collapse" }}>
                                 <colgroup>
                                     <col style={{ width: "40px" }} />
@@ -405,12 +405,7 @@ export default function DifficultyChecklistPage() {
                         </div>
                         {/* 섹션 1: 종합 평가 가중치 구성 */}
                         <section className="space-y-3">
-                            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
-                                [ 종합 평가 가중치 구성 ]
-                                <span className="text-xs text-gray-400 font-normal">각 카테고리의 종합 가중치를 확인합니다. (합계 100%)</span>
-                            </h3>
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto shadow-sm">
                                 <table className="min-w-full" style={{ borderCollapse: "collapse" }}>
                                     <thead>
                                         <tr className="h-[35px]">
