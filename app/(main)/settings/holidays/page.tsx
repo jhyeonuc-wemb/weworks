@@ -235,11 +235,11 @@ export default function HolidaysPage() {
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[150px]">날짜</TableHead>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[200px]">휴일 이름</TableHead>
-                                <TableHead className="px-8 py-3 text-center text-sm text-slate-900 w-[100px]">매년 반복</TableHead>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">설명</TableHead>
-                                <TableHead className="px-8 py-3 text-right text-sm text-slate-900 w-[120px]">작업</TableHead>
+                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[150px] whitespace-nowrap">날짜</TableHead>
+                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[200px] whitespace-nowrap">휴일 이름</TableHead>
+                                <TableHead className="px-8 py-3 text-center text-sm text-slate-900 w-[100px] whitespace-nowrap">매년 반복</TableHead>
+                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 whitespace-nowrap">설명</TableHead>
+                                <TableHead className="px-8 py-3 text-right text-sm text-slate-900 w-[120px] whitespace-nowrap">작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
