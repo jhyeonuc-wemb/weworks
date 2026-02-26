@@ -19,7 +19,6 @@ import {
   Save,
   X,
   Folder,
-  XCircle,
   Handshake,
   Lightbulb,
   Wrench,
@@ -97,141 +96,44 @@ const PHASE_ICONS: Record<string, any> = {
   paid_maintenance: Wrench,
 };
 
-// Legacy Status -> Phase Code Mapping
-const LEGACY_STATUS_TO_PHASE: Record<string, string> = {
-  sales_opportunity: 'lead',
-  sales: 'opportunity',
-  md_estimation: 'md_estimation',
-  md_estimated: 'vrb',
-  vrb_review: 'vrb',
-  vrb_approved: 'contract',
-  vrb_rejected: 'vrb',
-  team_allocation: 'profitability',
-  profitability_analysis: 'profitability',
-  profitability_completed: 'profitability',
-  profitability_review: 'profitability',
-  profitability_approved: 'in_progress',
-  profitability_rejected: 'profitability',
-  in_progress: 'in_progress',
-  on_hold: 'in_progress',
-  completed: 'settlement',
-  settlement: 'settlement',
-  settlement_completed: 'settlement',
-  settlement_review: 'settlement',
-  settlement_approved: 'warranty',
-  settlement_rejected: 'settlement',
-  warranty: 'warranty',
-  warranty_completed: 'warranty',
-  cancelled: 'lead',
-};
+// Legacy Status → Phase Code Mapping (삭제됨 - phase-status API 사용)
 
-function getCurrentStepIndex(phases: any[], currentPhaseCode: string, status: string): number {
+function getCurrentStepIndex(phases: any[], currentPhaseCode: string): number {
   if (!phases || phases.length === 0) return 0;
-
-  // 1. Try exact match with currentPhaseCode
-  let index = phases.findIndex(p => p.code === currentPhaseCode);
-  if (index !== -1) return index;
-
-  // 2. Try legacy mapping
-  const mappedPhase = LEGACY_STATUS_TO_PHASE[status];
-  if (mappedPhase) {
-    index = phases.findIndex(p => p.code === mappedPhase);
-  }
-
+  const index = phases.findIndex(p => p.code === currentPhaseCode);
   return index !== -1 ? index : 0;
 }
 
-function getStepStatus(
-  stepIndex: number,
-  currentStepIndex: number,
-  status: string,
-  stepCode: string
-): "completed" | "current" | "pending" | "rejected" {
-  // VRB 단계에서 반려된 경우
-  if (stepCode === "vrb" && status === "vrb_rejected") {
-    return "rejected";
-  }
 
-  if (stepIndex < currentStepIndex) {
-    return "completed";
-  }
-  if (stepIndex === currentStepIndex) {
-    return "current";
-  }
-  return "pending";
+/** phaseProgress의 status → 스테퍼 표시 상태 변환 */
+function toStepperStatus(phaseStatus: string): "completed" | "current" | "pending" {
+  if (phaseStatus === 'COMPLETED') return 'completed';
+  if (phaseStatus === 'IN_PROGRESS') return 'current';
+  return 'pending';
 }
 
-function getNextAction(status: string, currentPhase: string, projectId: string, phases: any[]) {
-  // 1. VRB 반려 시 프로세스 동결
-  if (status === "vrb_rejected") return null;
 
-  // 2. 현재 단계(currentPhase) 기반 다음 액션 매핑
-  // DB의 current_phase 컬럼 값을 우선으로 하되, status가 상세 상태(완료/승인 등)를 나타내면 이를 반영
-
-  // 수지분석 승인됨 -> 프로젝트 진행 중
-  if (status === "profitability_approved" || currentPhase === "in_progress") {
-    return {
-      label: "수지정산서 작성",
-      href: `/projects/${projectId}/settlement`,
-      action: "settlement",
-    };
+function getNextAction(currentPhase: string, projectId: string) {
+  switch (currentPhase) {
+    case 'lead':
+    case 'opportunity':
+      return { label: 'VRB 심의', href: `/projects/${projectId}/vrb-review` };
+    case 'vrb':
+      return { label: 'VRB 작성', href: `/projects/${projectId}/vrb-review` };
+    case 'contract':
+    case 'profitability':
+      return { label: '수지분석서 작성', href: `/projects/${projectId}/profitability` };
+    case 'in_progress':
+      return { label: '수지정산서 작성', href: `/projects/${projectId}/settlement` };
+    case 'settlement':
+      return { label: '수지정산서 승인 요청', href: `/projects/${projectId}/settlement/review` };
+    case 'warranty':
+      return { label: '하자보증 관리', href: '#' };
+    default:
+      return null;
   }
-
-  // 수지분석 완료됨 -> 승인 요청 대기
-  if (status === "profitability_completed") {
-    return {
-      label: "수지분석서 승인 요청",
-      href: `/projects/${projectId}/profitability/review`,
-      action: "profitability_review",
-    };
-  }
-
-  // VRB 승인됨 or 계약 단계 -> 수지분석 작성
-  if (status === "vrb_approved" || currentPhase === "contract" || currentPhase === "profitability") {
-    return {
-      label: "수지분석서 작성",
-      href: `/projects/${projectId}/profitability`,
-      action: "profitability_analysis",
-    };
-  }
-
-  // M/D 산정 완료됨 -> VRB 작성
-  if (status === "md_estimated" || currentPhase === "vrb") {
-    return {
-      label: "VRB 작성",
-      href: `/projects/${projectId}/vrb-review`,
-      action: "vrb_review",
-    };
-  }
-
-  // 리드/영업기회 단계 -> M/D 산정
-  if (currentPhase === "lead" || currentPhase === "opportunity" || currentPhase === "md_estimation" || status === "sales" || status === "sales_opportunity") {
-    return {
-      label: "M/D 산정",
-      href: `/projects/${projectId}/md-estimation`,
-      action: "md_estimation",
-    };
-  }
-
-  // 정산 단계 관련
-  if (status === "settlement_completed" || status === "settlement") {
-    return {
-      label: "수지정산서 승인 요청",
-      href: `/projects/${projectId}/settlement/review`,
-      action: "settlement_review",
-    };
-  }
-
-  if (status === "settlement_approved" || currentPhase === "warranty") {
-    return {
-      label: "하자보증 관리",
-      href: "#",
-      action: "warranty",
-    };
-  }
-
-  return null;
 }
+
 
 // 날짜 포맷팅 함수 (YYYY-MM-DD 형식으로 통일)
 const formatDate = (dateString: string | null | undefined): string => {
@@ -277,24 +179,27 @@ export default function ProjectDetailPage({
     }
   };
 
-  // 편집 모달 데이터
-  const [phases, setPhases] = useState<any[]>([]);
+  // 단계별 진행 상태 (we_project_phase_progress 기반)
+  const [phaseProgress, setPhaseProgress] = useState<any[]>([]);
+  const [currentPhaseCode, setCurrentPhaseCode] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPhases();
-  }, []);
+    if (id) fetchPhaseProgress();
+  }, [id]);
 
-  const fetchPhases = async () => {
+  const fetchPhaseProgress = async () => {
     try {
-      const response = await fetch("/api/settings/phases", { cache: "no-store" });
+      const response = await fetch(`/api/projects/${id}/phase-status`, { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
-        setPhases(data.phases?.filter((p: any) => p.is_active) || []);
+        setPhaseProgress(data.phases || []);
+        setCurrentPhaseCode(data.currentPhaseCode);
       }
     } catch (error) {
-      console.error("Error fetching phases:", error);
+      console.error('Error fetching phase progress:', error);
     }
   };
+
 
   useEffect(() => {
     fetchProject();
@@ -389,8 +294,8 @@ export default function ProjectDetailPage({
     );
   }
 
-  const currentStepIndex = getCurrentStepIndex(phases, project.current_phase || project.process_status || "", project.status);
-  const nextAction = getNextAction(project.status, project.current_phase || "", id, phases);
+  const currentStepIndex = getCurrentStepIndex(phaseProgress, currentPhaseCode || project.current_phase || '');
+  const nextAction = getNextAction(currentPhaseCode || project.current_phase || '', id);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-1000">
@@ -437,41 +342,32 @@ export default function ProjectDetailPage({
 
 
           <div className="relative flex items-center justify-between gap-4">
-            {phases.map((step, index) => {
+            {phaseProgress.map((step: any, index: number) => {
               const Icon = PHASE_ICONS[step.code] || FileText;
-              const stepStatus = getStepStatus(index, currentStepIndex, project.status, step.code);
-              const isLast = index === phases.length - 1;
-              const isVrbStep = step.code === "vrb";
-              const isVrbApproved = isVrbStep && project.status === "vrb_approved";
-              const isVrbRejected = isVrbStep && project.status === "vrb_rejected";
-              const isBlocked = isVrbRejected && index > currentStepIndex;
+              const stepStatus = toStepperStatus(step.status);
+              const isLast = index === phaseProgress.length - 1;
 
               const statusConfigs: Record<string, { ring: string, bg: string, text: string, iconColor: string }> = {
-                rejected: { ring: "ring-red-100", bg: "bg-red-50", text: "text-red-700", iconColor: "text-red-500" },
                 completed: { ring: "ring-emerald-100", bg: "bg-emerald-50", text: "text-emerald-700", iconColor: "text-emerald-500" },
                 current: { ring: "ring-blue-100", bg: "bg-blue-600", text: "text-blue-900", iconColor: "text-white" },
                 pending: { ring: "ring-gray-100", bg: "bg-gray-50", text: "text-gray-400", iconColor: "text-gray-300" },
-                blocked: { ring: "ring-gray-50", bg: "bg-gray-50/50", text: "text-gray-200", iconColor: "text-gray-200" }
               };
 
-              let currentConfig = statusConfigs[stepStatus];
-              if (isVrbRejected) currentConfig = statusConfigs.rejected;
-              if (isVrbApproved) currentConfig = statusConfigs.completed;
-              if (isBlocked) currentConfig = statusConfigs.blocked;
+              const currentConfig = statusConfigs[stepStatus];
 
-              const showGroupLabel = index === 0 || phases[index - 1].phase_group !== step.phase_group;
-              const groupLabel = step.phase_group === 'sales_ps' ? '영업/PS' : step.phase_group === 'maintenance' ? '유지보수' : '프로젝트';
+              const showGroupLabel = index === 0 || phaseProgress[index - 1].phaseGroup !== step.phaseGroup;
+              const groupLabel = step.phaseGroup === 'sales_ps' ? '영업/PS' : step.phaseGroup === 'maintenance' ? '유지보수' : '프로젝트';
 
               return (
-                <div key={step.id} className="flex-1 relative flex flex-col items-center group/step mt-12">
+                <div key={step.code} className="flex-1 relative flex flex-col items-center group/step mt-12">
                   {/* Phase Group Label */}
                   {showGroupLabel && (
                     <div className="absolute -top-10 left-0 right-0 flex justify-center">
                       <span className={cn(
                         "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border",
-                        step.phase_group === 'sales_ps'
+                        step.phaseGroup === 'sales_ps'
                           ? "bg-blue-50 text-blue-600 border-blue-100"
-                          : step.phase_group === 'maintenance'
+                          : step.phaseGroup === 'maintenance'
                             ? "bg-purple-50 text-purple-600 border-purple-100"
                             : "bg-emerald-50 text-emerald-600 border-emerald-100"
                       )}>
@@ -495,10 +391,9 @@ export default function ProjectDetailPage({
 
                   <div className="relative z-10 flex flex-col items-center">
                     {(() => {
+
                       const getStepUrl = (code: string) => {
                         switch (code) {
-                          case 'md_estimation':
-                            return `/projects/${id}/md-estimation`;
                           case 'vrb':
                             return `/projects/${id}/vrb-review`;
                           case 'profitability':
@@ -522,9 +417,7 @@ export default function ProjectDetailPage({
                             stepStatus === "current" && "shadow-xl shadow-blue-200 animate-pulse-slow",
                             isClickable && "cursor-pointer hover:scale-110"
                           )}>
-                            {stepStatus === "rejected" || isVrbRejected ? (
-                              <XCircle size={22} strokeWidth={2.5} className={currentConfig.iconColor} />
-                            ) : stepStatus === "completed" || isVrbApproved ? (
+                            {stepStatus === "completed" ? (
                               <CheckCircle2 size={22} strokeWidth={2.5} className={currentConfig.iconColor} />
                             ) : stepStatus === "current" ? (
                               <div className="relative">
@@ -583,11 +476,6 @@ export default function ProjectDetailPage({
                 <Edit size={16} strokeWidth={3} />
                 <div className="absolute inset-0 bg-white/10 -translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
               </Link>
-            ) : project.status === "vrb_rejected" ? (
-              <div className="flex items-center gap-3 px-8 py-4 bg-red-50 border border-red-100 rounded-2xl text-red-700">
-                <XCircle size={20} strokeWidth={3} />
-                <span className="text-sm font-black italic">VRB 심의 반려로 인해 프로세스가 동결되었습니다</span>
-              </div>
             ) : (
               <div className="flex items-center gap-3 px-8 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700">
                 <CheckCircle2 size={20} strokeWidth={3} />

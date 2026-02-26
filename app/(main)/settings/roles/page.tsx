@@ -11,7 +11,9 @@ import {
   TableCell,
   Button,
   DraggablePanel,
+  useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface LaborCategory {
@@ -23,6 +25,14 @@ interface LaborCategory {
 }
 
 export default function RolesPage() {
+  const { showToast, confirm } = useToast();
+  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+    if (type === "confirm") {
+      confirm({ message, title, onConfirm: onConfirm! });
+    } else {
+      showToast(message, type as any, title);
+    }
+  };
   const [roles, setRoles] = useState<LaborCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,21 +91,19 @@ export default function RolesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("인력구분을 삭제하시겠습니까?")) {
+    showAlert("인력구분을 삭제하시겠습니까?", "confirm", "삭제 확인", async () => {
       try {
-        const response = await fetch(`/api/labor-categories/${id}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(`/api/labor-categories/${id}`, { method: "DELETE" });
         if (response.ok) {
           await fetchCategories();
         } else {
-          alert("삭제에 실패했습니다.");
+          showToast("삭제에 실패했습니다.", "error");
         }
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert("삭제에 실패했습니다.");
+        showToast("삭제에 실패했습니다.", "error");
       }
-    }
+    });
   };
 
   const handleSave = async () => {
@@ -117,7 +125,7 @@ export default function RolesPage() {
             setIsAddModalOpen(false);
             setFormData({ id: "", name: "", description: "" });
           } else {
-            alert("추가에 실패했습니다.");
+            showToast("추가에 실패했습니다.", "error");
           }
         }
       } else if (isEditModalOpen && editingRole) {
@@ -136,12 +144,12 @@ export default function RolesPage() {
           setEditingRole(null);
           setFormData({ id: "", name: "", description: "" });
         } else {
-          alert("수정에 실패했습니다.");
+          showToast("수정에 실패했습니다.", "error");
         }
       }
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("저장에 실패했습니다.");
+      showToast("저장에 실패했습니다.", "error");
     }
   };
 

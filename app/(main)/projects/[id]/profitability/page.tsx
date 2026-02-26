@@ -486,21 +486,19 @@ export default function ProfitabilityPage({
               variant="standard"
               align="center"
             />
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleCreateNewVersion}
-              disabled={isCreatingVersion || (versions.length > 0 && status !== 'COMPLETED' && status !== 'APPROVED')}
-              className="flex items-center gap-1 ml-1 px-3"
-              title={
-                versions.length > 0 && status !== 'COMPLETED' && status !== 'APPROVED'
-                  ? "현재 버전이 완료되어야 새 버전을 생성할 수 있습니다"
-                  : "새 버전 생성"
-              }
-            >
-              <Plus className="h-4 w-4" />
-              V{versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1}
-            </Button>
+            {(status === 'COMPLETED' || status === 'APPROVED') && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleCreateNewVersion}
+                disabled={isCreatingVersion}
+                className="flex items-center gap-1 ml-1 px-3"
+                title="새 버전 생성"
+              >
+                <Plus className="h-4 w-4" />
+                V{versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1}
+              </Button>
+            )}
           </div>
 
           {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'APPROVED') && (

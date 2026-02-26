@@ -13,7 +13,9 @@ import {
   Button,
   SearchInput,
   DraggablePanel,
+  useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 import { Save, X } from "lucide-react";
 
 export interface Product {
@@ -39,6 +41,14 @@ export function ProductMaster({
   externalNewTrigger,
   externalTriggerRect
 }: ProductMasterProps) {
+  const { showToast, confirm } = useToast();
+  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+    if (type === "confirm") {
+      confirm({ message, title, onConfirm: onConfirm! });
+    } else {
+      showToast(message, type as any, title);
+    }
+  };
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -143,7 +153,7 @@ export function ProductMaster({
 
   const handleSave = async () => {
     if (!form.companyName || !form.productName) {
-      alert("업체명과 제품명을 입력해 주세요.");
+      showToast("업체명과 제품명을 입력해 주세요.", "error");
       return;
     }
 
@@ -152,7 +162,7 @@ export function ProductMaster({
         ? 0
         : Number(unitPriceInput.replace(/,/g, ""));
     if (Number.isNaN(parsedUnitPrice) || parsedUnitPrice < 0) {
-      alert("단가(천원)는 0 이상 숫자로 입력해 주세요.");
+      showToast("단가(천원)는 0 이상 숫자로 입력해 주세요.", "error");
       return;
     }
 
@@ -174,42 +184,40 @@ export function ProductMaster({
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         console.error("Failed to save product", data);
-        alert("제품/상품 저장에 실패했습니다.");
+        showToast("제품/상품 저장에 실패했습니다.", "error");
         return;
       }
       await fetchProducts();
       closeForm();
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("제품/상품 저장 중 오류가 발생했습니다.");
+      showToast("제품/상품 저장 중 오류가 발생했습니다.", "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (product: Product) => {
-    if (
-      !window.confirm(
-        `제품/상품을 삭제하시겠습니까?\n\n${product.companyName} - ${product.productName}`
-      )
-    ) {
-      return;
-    }
-    try {
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        console.error("Failed to delete product", data);
-        alert("제품/상품 삭제에 실패했습니다.");
-        return;
+    showAlert(
+      `제품/상품을 삭제하시겠습니까?\n${product.companyName} - ${product.productName}`,
+      "confirm",
+      "삭제 확인",
+      async () => {
+        try {
+          const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            console.error("Failed to delete product", data);
+            showToast("제품/상품 삭제에 실패했습니다.", "error");
+            return;
+          }
+          await fetchProducts();
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          showToast("제품/상품 삭제 중 오류가 발생했습니다.", "error");
+        }
       }
-      await fetchProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      alert("제품/상품 삭제 중 오류가 발생했습니다.");
-    }
+    );
   };
 
   const content = (

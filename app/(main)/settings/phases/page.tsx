@@ -13,7 +13,9 @@ import {
     Button,
     DraggablePanel,
     Dropdown,
+    useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface ProjectPhase {
@@ -28,6 +30,14 @@ interface ProjectPhase {
 }
 
 export default function ProjectPhasesPage() {
+    const { showToast, confirm } = useToast();
+    const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+        if (type === "confirm") {
+            confirm({ message, title, onConfirm: onConfirm! });
+        } else {
+            showToast(message, type as any, title);
+        }
+    };
     const [phases, setPhases] = useState<ProjectPhase[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -107,22 +117,20 @@ export default function ProjectPhasesPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (window.confirm("정말 이 단계를 삭제하시겠습니까? 프로젝트에 영향이 있을 수 있습니다.")) {
+        showAlert("정말 이 단계를 삭제하시겠습니까? 프로젝트에 영향이 있을 수 있습니다.", "confirm", "단계 삭제", async () => {
             try {
-                const response = await fetch(`/api/settings/phases?id=${id}`, {
-                    method: "DELETE",
-                });
+                const response = await fetch(`/api/settings/phases?id=${id}`, { method: "DELETE" });
                 if (response.ok) {
                     await fetchPhases();
                 } else {
                     const error = await response.json();
-                    alert(`삭제 실패: ${error.error || "알 수 없는 오류"}`);
+                    showToast(`삭제 실패: ${error.error || "알 수 없는 오류"}`, "error");
                 }
             } catch (error) {
                 console.error("Error deleting phase:", error);
-                alert("삭제에 실패했습니다.");
+                showToast("삭제에 실패했습니다.", "error");
             }
-        }
+        });
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -148,7 +156,7 @@ export default function ProjectPhasesPage() {
                     setIsModalOpen(false);
                 } else {
                     const error = await response.json();
-                    alert(`수정 실패: ${error.error}`);
+                    showToast(`수정 실패: ${error.error}`, "error");
                 }
             } else {
                 // 추가
@@ -162,12 +170,12 @@ export default function ProjectPhasesPage() {
                     setIsModalOpen(false);
                 } else {
                     const error = await response.json();
-                    alert(`추가 실패: ${error.error}`);
+                    showToast(`추가 실패: ${error.error}`, "error");
                 }
             }
         } catch (error) {
             console.error("Error saving phase:", error);
-            alert("저장에 실패했습니다.");
+            showToast("저장에 실패했습니다.", "error");
         }
     };
 

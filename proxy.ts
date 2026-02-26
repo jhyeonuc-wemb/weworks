@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     // 로그인 페이지나 API 요청, 정적 파일은 검사에서 제외
     if (
         request.nextUrl.pathname.startsWith('/login') ||

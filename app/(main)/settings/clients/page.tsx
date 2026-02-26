@@ -21,6 +21,8 @@ import { ProjectPhaseTab, ProjectPhaseTabHandle } from "@/components/ProjectPhas
 import { SearchInput, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, DraggablePanel } from "@/components/ui";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 
 interface Client {
   id: number;
@@ -46,6 +48,15 @@ function ClientsPageContent() {
   const [activeTab, setActiveTab] = useState<"phases" | "unit-price-labor" | "unit-price-product" | "clients" | "labor">("phases");
   const projectPhaseRef = useRef<ProjectPhaseTabHandle>(null);
   const unitPriceLaborRef = useRef<UnitPriceLaborTabHandle>(null);
+
+  const { showToast, confirm } = useToast();
+  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+    if (type === "confirm") {
+      confirm({ message, title, onConfirm: onConfirm! });
+    } else {
+      showToast(message, type as any, title);
+    }
+  };
 
   // 공통 트리거 위치 상태
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
@@ -211,40 +222,35 @@ function ClientsPageContent() {
       if (response.ok) {
         handleCloseClientModal();
         fetchClients();
-        alert(isEditClientMode ? "클라이언트가 수정되었습니다." : "클라이언트가 생성되었습니다.");
+        showToast(isEditClientMode ? "클라이언트가 수정되었습니다." : "클라이언트가 생성되었습니다.", "success");
       } else {
         const error = await response.json();
-        alert(`오류: ${error.message || "알 수 없는 오류"}`);
+        showToast(`오류: ${error.message || "알 수 없는 오류"}`, "error");
       }
     } catch (error: any) {
       console.error("Error saving client:", error);
-      alert(`저장 실패: ${error.message}`);
+      showToast(`저장 실패: ${error.message}`, "error");
     } finally {
       setIsSubmittingClient(false);
     }
   };
 
   const handleDeleteClient = async (id: number, name: string) => {
-    if (!window.confirm(`정말 "${name}"을(를) 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/clients/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchClients();
-        alert("클라이언트가 삭제되었습니다.");
-      } else {
-        const error = await response.json();
-        alert(`삭제 실패: ${error.message || "알 수 없는 오류"}`);
+    showAlert(`정말 "${name}"을(를) 삭제하시겠습니까?`, "confirm", "고객사 삭제", async () => {
+      try {
+        const response = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+        if (response.ok) {
+          fetchClients();
+          showToast("클라이언트가 삭제되었습니다.", "success");
+        } else {
+          const error = await response.json();
+          showToast(`삭제 실패: ${error.message || "알 수 없는 오류"}`, "error");
+        }
+      } catch (error: any) {
+        console.error("Error deleting client:", error);
+        showToast(`삭제 실패: ${error.message}`, "error");
       }
-    } catch (error: any) {
-      console.error("Error deleting client:", error);
-      alert(`삭제 실패: ${error.message}`);
-    }
+    });
   };
 
   // 인력구분 관리 핸들러
@@ -266,21 +272,19 @@ function ClientsPageContent() {
   };
 
   const handleDeleteLabor = async (id: number) => {
-    if (window.confirm("인력구분을 삭제하시겠습니까?")) {
+    showAlert("인력구분을 삭제하시겠습니까?", "confirm", "삭제 확인", async () => {
       try {
-        const response = await fetch(`/api/labor-categories/${id}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(`/api/labor-categories/${id}`, { method: "DELETE" });
         if (response.ok) {
           await fetchLaborCategories();
         } else {
-          alert("삭제에 실패했습니다.");
+          showToast("삭제에 실패했습니다.", "error");
         }
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert("삭제에 실패했습니다.");
+        showToast("삭제에 실패했습니다.", "error");
       }
-    }
+    });
   };
 
   const handleSaveLabor = async () => {
@@ -301,7 +305,7 @@ function ClientsPageContent() {
             setIsAddLaborModalOpen(false);
             setLaborFormData({ id: "", name: "", description: "" });
           } else {
-            alert("추가에 실패했습니다.");
+            showToast("추가에 실패했습니다.", "error");
           }
         }
       } else if (isEditLaborModalOpen && editingLabor) {
@@ -319,12 +323,12 @@ function ClientsPageContent() {
           setEditingLabor(null);
           setLaborFormData({ id: "", name: "", description: "" });
         } else {
-          alert("수정에 실패했습니다.");
+          showToast("수정에 실패했습니다.", "error");
         }
       }
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("저장에 실패했습니다.");
+      showToast("저장에 실패했습니다.", "error");
     }
   };
 

@@ -93,9 +93,29 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: "Missing phase ID" }, { status: 400 });
         }
 
-        // Try to delete; if fails due to FK, maybe soft delete?
-        // For now, let's try hard delete and catch error.
+        // 삭제 전 phase_group 파악
+        const phaseResult = await pool.query(
+            "SELECT phase_group FROM project_phases WHERE id = $1",
+            [id]
+        );
+        const phaseGroup = phaseResult.rows[0]?.phase_group;
+
+        // 삭제 실행
         await pool.query("DELETE FROM project_phases WHERE id = $1", [id]);
+
+        // 동일 phase_group 내 남은 단계들 display_order를 1부터 재정렬
+        if (phaseGroup) {
+            const remaining = await pool.query(
+                "SELECT id FROM project_phases WHERE phase_group = $1 ORDER BY display_order ASC, id ASC",
+                [phaseGroup]
+            );
+            for (let i = 0; i < remaining.rows.length; i++) {
+                await pool.query(
+                    "UPDATE project_phases SET display_order = $1 WHERE id = $2",
+                    [i + 1, remaining.rows[i].id]
+                );
+            }
+        }
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

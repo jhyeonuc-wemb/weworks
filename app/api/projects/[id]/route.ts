@@ -20,45 +20,28 @@ export async function GET(
         u2.name as sales_representative_name,
         u2.id as sales_representative_id,
         prof.status as profitability_status,
-        -- 동적으로 current_phase 계산
+        -- 동적으로 computed_phase 계산 (current_phase 우선 사용)
         CASE
-          -- DB에 명시적으로 설정된 최종 단계 우선 처리
-          WHEN p.status = 'completed' OR p.current_phase = 'completed' THEN 'completed'
-          WHEN p.status = 'in_progress' OR p.current_phase = 'in_progress' THEN 'in_progress'
-          -- 수지정산 단계
-          WHEN settle.status IS NOT NULL THEN 'settlement'
-          WHEN p.status = 'profitability_completed' THEN 'settlement'
-          -- 수지분석 단계
-          WHEN prof.status IS NOT NULL THEN 'profitability'
-          WHEN p.status IN ('vrb_completed', 'vrb_approved') THEN 'profitability'
-          -- VRB 단계
-          WHEN vrb.status IS NOT NULL THEN 'vrb'
-          WHEN p.status = 'md_estimation_completed' THEN 'vrb'
-          WHEN md.status = 'COMPLETED' THEN 'vrb'
-          -- MD 산정 단계
-          WHEN md.status = 'IN_PROGRESS' THEN 'md_estimation'
+          WHEN p.current_phase = 'completed' THEN 'completed'
+          WHEN p.current_phase = 'settlement' OR settle.status IS NOT NULL THEN 'settlement'
+          WHEN p.current_phase = 'in_progress' THEN 'in_progress'
+          WHEN p.current_phase = 'profitability' OR prof.status IS NOT NULL THEN 'profitability'
+          WHEN p.current_phase = 'vrb' OR vrb.status IS NOT NULL THEN 'vrb'
+          WHEN p.current_phase = 'md_estimation' OR md.status IS NOT NULL THEN 'md_estimation'
           ELSE COALESCE(p.current_phase, 'md_estimation')
         END as computed_phase,
-        -- 동적으로 current_status 계산 (현재 단계의 실제 데이터 상태 반영)
+        -- 동적으로 computed_status 계산 (현재 단계의 모듈 테이블 실제 상태 반영)
         CASE
-          -- DB에 명시적으로 설정된 최종 상태 우선 처리
-          WHEN p.status = 'completed' OR p.current_phase = 'completed' THEN 'COMPLETED'
-          WHEN p.status = 'in_progress' OR p.current_phase = 'in_progress' THEN 'PROGRESSING'
-          WHEN p.status IN ('vrb_rejected', 'profitability_rejected') THEN 'REJECTED'
-          -- 수지정산 단계
-          WHEN settle.status IS NOT NULL OR p.status = 'profitability_completed' OR p.current_phase = 'settlement' 
+          WHEN p.current_phase = 'completed' THEN 'COMPLETED'
+          WHEN p.current_phase = 'in_progress' THEN 'PROGRESSING'
+          WHEN p.current_phase = 'settlement' OR settle.status IS NOT NULL
             THEN COALESCE(settle.status, 'STANDBY')
-          -- 수지분석 단계
-          WHEN prof.status IS NOT NULL OR p.status IN ('vrb_completed', 'vrb_approved') OR p.current_phase = 'profitability' 
+          WHEN p.current_phase = 'profitability' OR prof.status IS NOT NULL
             THEN COALESCE(prof.status, 'STANDBY')
-          -- VRB 심의 단계
-          WHEN vrb.status IS NOT NULL OR p.status = 'md_estimation_completed' OR p.current_phase = 'vrb' OR md.status = 'COMPLETED'
+          WHEN p.current_phase = 'vrb' OR vrb.status IS NOT NULL
             THEN COALESCE(vrb.status, 'STANDBY')
-          -- MD 산정 단계
-          WHEN md.status IS NOT NULL OR p.status = 'md_estimation' OR p.current_phase = 'md_estimation' 
+          WHEN p.current_phase = 'md_estimation' OR md.status IS NOT NULL
             THEN COALESCE(md.status, 'STANDBY')
-          -- 영업 단계
-          WHEN p.status = 'sales_opportunity' THEN 'STANDBY'
           ELSE 'STANDBY'
         END as computed_status
       FROM we_projects p

@@ -29,8 +29,10 @@ import {
     TableBody,
     TableRow,
     TableHead,
-    TableCell
+    TableCell,
+    useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface Code {
@@ -47,6 +49,14 @@ interface Code {
 
 function CodesContent() {
     const searchParams = useSearchParams();
+    const { showToast, confirm } = useToast();
+    const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+        if (type === "confirm") {
+            confirm({ message, title, onConfirm: onConfirm! });
+        } else {
+            showToast(message, type as any, title);
+        }
+    };
     const [codes, setCodes] = useState<Code[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedCodeId, setSelectedCodeId] = useState<number | null>(null);
@@ -250,7 +260,10 @@ function CodesContent() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.code.trim() || !formData.name.trim()) return alert("코드와 코드명을 입력하세요.");
+        if (!formData.code.trim() || !formData.name.trim()) {
+            showToast("코드와 코드명을 입력하세요.", "error");
+            return;
+        }
 
         try {
             const method = isAdding ? "POST" : "PUT";
@@ -268,10 +281,10 @@ function CodesContent() {
             if (response.ok) {
                 await fetchCodes();
                 setIsModalOpen(false);
-                alert(isAdding ? "코드가 등록되었습니다." : "코드 정보가 수정되었습니다.");
+                showToast(isAdding ? "코드가 등록되었습니다." : "코드 정보가 수정되었습니다.", "success");
             } else {
                 const err = await response.json();
-                alert(`저장 실패: ${err.error || "알 수 없는 오류"}`);
+                showToast(`저장 실패: ${err.error || "알 수 없는 오류"}`, "error");
             }
         } catch (error) {
             console.error("Error saving code:", error);
@@ -280,23 +293,25 @@ function CodesContent() {
 
     const handleDelete = async (id: number) => {
         const target = codes.find(c => c.id === id);
-        if (target?.is_system) return alert("시스템 코드는 삭제할 수 없습니다.");
-
-        if (!confirm("코드를 삭제하시겠습니까? 하위 코드가 있는 경우 함께 삭제될 수 있습니다.")) return;
-
-        try {
-            const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
-            if (res.ok) {
-                await fetchCodes();
-                setSelectedCodeId(null);
-                alert("코드가 삭제되었습니다.");
-            } else {
-                const err = await res.json();
-                alert(err.error || "삭제 실패");
-            }
-        } catch (error) {
-            console.error("Delete error:", error);
+        if (target?.is_system) {
+            showToast("시스템 코드는 삭제할 수 없습니다.", "error");
+            return;
         }
+        showAlert("코드를 삭제하시겠습니까? 하위 코드가 있는 경우 함께 삭제될 수 있습니다.", "confirm", "코드 삭제", async () => {
+            try {
+                const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
+                if (res.ok) {
+                    await fetchCodes();
+                    setSelectedCodeId(null);
+                    showToast("코드가 삭제되었습니다.", "success");
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || "삭제 실패", "error");
+                }
+            } catch (error) {
+                console.error("Delete error:", error);
+            }
+        });
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
@@ -343,7 +358,7 @@ function CodesContent() {
         };
 
         if (targetId !== null && (sourceId === targetId || isDescendant(sourceId, targetId))) {
-            if (pos === "inside") { alert("상위 코드를 하위 코드로 이동할 수 없습니다."); return; }
+            if (pos === "inside") { showToast("상위 코드를 하위 코드로 이동할 수 없습니다.", "error"); return; }
         }
 
         let nextParentId: number | null = null;

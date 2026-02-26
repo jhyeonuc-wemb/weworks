@@ -42,7 +42,9 @@ import {
   DraggablePanel,
   Dropdown,
   DatePicker,
+  useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 
 interface UserRole {
   id: number;
@@ -99,6 +101,14 @@ interface CommonCode {
 
 function UsersContent() {
   const searchParams = useSearchParams();
+  const { showToast, confirm } = useToast();
+  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+    if (type === "confirm") {
+      confirm({ message, title, onConfirm: onConfirm! });
+    } else {
+      showToast(message, type as any, title);
+    }
+  };
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -323,7 +333,8 @@ function UsersContent() {
 
     // 전화번호 형식 검사 (값이 있는 경우에만)
     if (formData.phone && !/^\d{2,3}-\d{3,4}-\d{4}$/.test(formData.phone)) {
-      return alert("전화번호 형식이 올바르지 않습니다. (예: 010-0000-0000)");
+      showToast("전화번호 형식이 올바르지 않습니다. (예: 010-0000-0000)", "error");
+      return;
     }
 
     setIsSubmitting(true);
@@ -367,52 +378,46 @@ function UsersContent() {
       if (response.ok) {
         handleClosePanel();
         fetchUsers();
-        alert(isEditMode ? "사용자가 수정되었습니다." : "사용자가 생성되었습니다.");
+        showToast(isEditMode ? "사용자가 수정되었습니다." : "사용자가 생성되었습니다.", "success");
       } else {
         const error = await response.json();
-        // 중복 에러인 경우 더 명확한 메시지 표시
         if (error.field) {
           const fieldName = error.field === 'email' ? '이메일' : error.field === 'username' ? '아이디' : error.field;
-          alert(`${fieldName}: ${error.error}`);
+          showToast(`${fieldName}: ${error.error}`, "error");
         } else {
-          alert(`오류: ${error.error || error.message || "알 수 없는 오류"}`);
+          showToast(`오류: ${error.error || error.message || "알 수 없는 오류"}`, "error");
         }
       }
     } catch (error: any) {
       console.error("Error saving user:", error);
-      alert(`저장 실패: ${error.message}`);
+      showToast(`저장 실패: ${error.message}`, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`정말 "${name}"을(를) 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchUsers();
-        alert("사용자가 삭제되었습니다.");
-      } else {
-        const error = await response.json();
-        let errorMsg = error.message || "알 수 없는 오류";
-        if (errorMsg.includes("we_projects_created_by_fkey") || errorMsg.includes("manager_id") || errorMsg.includes("sales_representative_id")) {
-          errorMsg = "이 사용자가 생성했거나 담당(PM/영업)하고 있는 프로젝트가 존재하여 삭제할 수 없습니다. 관련 프로젝트의 담당자를 먼저 변경해 주세요.";
-        } else if (errorMsg.includes("we_departments_manager_id_fkey")) {
-          errorMsg = "이 사용자가 부서장으로 등록되어 있는 부서가 존재하여 삭제할 수 없습니다. 부서 관리에서 부서장을 먼저 변경해 주세요.";
+    showAlert(`정말 "${name}"을(를) 삭제하시겠습니까?`, "confirm", "사용자 삭제", async () => {
+      try {
+        const response = await fetch(`/api/users/${id}`, { method: "DELETE" });
+        if (response.ok) {
+          fetchUsers();
+          showToast("사용자가 삭제되었습니다.", "success");
+        } else {
+          const error = await response.json();
+          let errorMsg = error.message || "알 수 없는 오류";
+          if (errorMsg.includes("we_projects_created_by_fkey") || errorMsg.includes("manager_id") || errorMsg.includes("sales_representative_id")) {
+            errorMsg = "이 사용자가 생성했거나 담당(PM/영업)하고 있는 프로젝트가 존재하여 삭제할 수 없습니다. 관련 프로젝트의 담당자를 먼저 변경해 주세요.";
+          } else if (errorMsg.includes("we_departments_manager_id_fkey")) {
+            errorMsg = "이 사용자가 부서장으로 등록되어 있는 부서가 존재하여 삭제할 수 없습니다. 부서 관리에서 부서장을 먼저 변경해 주세요.";
+          }
+          showToast(`삭제 실패: ${errorMsg}`, "error");
         }
-        alert(`삭제 실패: ${errorMsg}`);
+      } catch (error: any) {
+        console.error("Error deleting user:", error);
+        showToast(`삭제 실패: ${error.message}`, "error");
       }
-    } catch (error: any) {
-      console.error("Error deleting user:", error);
-      alert(`삭제 실패: ${error.message}`);
-    }
+    });
   };
 
   const filteredUsers = useMemo(() => {
@@ -530,7 +535,7 @@ function UsersContent() {
         }
       }).open();
     } else {
-      alert("주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+      showToast("주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.", "error");
     }
   };
 

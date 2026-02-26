@@ -27,7 +27,9 @@ import {
   SearchInput,
   Dropdown,
   DraggablePanel,
+  useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface UnitPrice {
@@ -86,6 +88,14 @@ export interface UnitPriceLaborTabHandle {
 
 export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLaborTabProps>((props, ref) => {
   const [unitPrices, setUnitPrices] = useState<UnitPrice[]>([]);
+  const { showToast, confirm } = useToast();
+  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+    if (type === "confirm") {
+      confirm({ message, title, onConfirm: onConfirm! });
+    } else {
+      showToast(message, type as any, title);
+    }
+  };
   const [filteredPrices, setFilteredPrices] = useState<UnitPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -397,7 +407,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
       !formData.grade ||
       !formData.year
     ) {
-      alert("필수 항목을 입력해주세요.");
+      showToast("필수 항목을 입력해주세요.", "error");
       return;
     }
 
@@ -449,86 +459,79 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
       if (response.ok) {
         await fetchUnitPrices();
         handleCancel();
-        alert("기준단가가 저장되었습니다.");
+        showToast("기준단가가 저장되었습니다.", "success");
       } else {
         const error = await response.json();
-        alert(`오류: ${error.error || error.message || "알 수 없는 오류"}`);
+        showToast(`오류: ${error.error || error.message || "알 수 없는 오류"}`, "error");
       }
     } catch (error: any) {
       console.error("Error saving unit price:", error);
-      alert(`저장 실패: ${error.message}`);
+      showToast(`저장 실패: ${error.message}`, "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/unit-prices/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        await fetchUnitPrices();
-        alert("기준단가가 삭제되었습니다.");
-      } else {
-        const error = await response.json();
-        alert(`삭제 실패: ${error.message || "알 수 없는 오류"}`);
+    showAlert("정말 삭제하시겠습니까?", "confirm", "삭제 확인", async () => {
+      try {
+        const response = await fetch(`/api/unit-prices/${id}`, { method: "DELETE" });
+        if (response.ok) {
+          await fetchUnitPrices();
+          showToast("기준단가가 삭제되었습니다.", "success");
+        } else {
+          const error = await response.json();
+          showToast(`삭제 실패: ${error.message || "알 수 없는 오류"}`, "error");
+        }
+      } catch (error: any) {
+        console.error("Error deleting unit price:", error);
+        showToast(`삭제 실패: ${error.message}`, "error");
       }
-    } catch (error: any) {
-      console.error("Error deleting unit price:", error);
-      alert(`삭제 실패: ${error.message}`);
-    }
+    });
   };
 
   const handleCopyYear = async () => {
     if (!copySourceYear || !copyTargetYear) {
-      alert("복사할 연도와 목적지 연도를 선택해주세요.");
+      showToast("복사할 연도와 목적지 연도를 선택해주세요.", "error");
       return;
     }
 
     if (copySourceYear === copyTargetYear) {
-      alert("같은 연도는 복사할 수 없습니다.");
+      showToast("같은 연도는 복사할 수 없습니다.", "error");
       return;
     }
 
-    if (!window.confirm(`${copySourceYear}년 데이터를 ${copyTargetYear}년으로 복사하시겠습니까?`)) {
-      return;
-    }
+    showAlert(`${copySourceYear}년 데이터를 ${copyTargetYear}년으로 복사하시겠습니까?`, "confirm", "연도 복사", async () => {
+      setIsCopying(true);
+      try {
+        const response = await fetch("/api/unit-prices/copy-year", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sourceYear: parseInt(copySourceYear, 10),
+            targetYear: parseInt(copyTargetYear, 10),
+          }),
+        });
 
-    setIsCopying(true);
-    try {
-      const response = await fetch("/api/unit-prices/copy-year", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sourceYear: parseInt(copySourceYear, 10),
-          targetYear: parseInt(copyTargetYear, 10),
-        }),
-      });
-
-      if (response.ok) {
-        await fetchUnitPrices();
-        setCopyYearModal(false);
-        setCopySourceYear("");
-        setCopyTargetYear("");
-        alert("연도 데이터가 복사되었습니다.");
-      } else {
-        const error = await response.json();
-        alert(`복사 실패: ${error.message || "알 수 없는 오류"}`);
+        if (response.ok) {
+          await fetchUnitPrices();
+          setCopyYearModal(false);
+          setCopySourceYear("");
+          setCopyTargetYear("");
+          showToast("연도 데이터가 복사되었습니다.", "success");
+        } else {
+          const error = await response.json();
+          showToast(`복사 실패: ${error.message || "알 수 없는 오류"}`, "error");
+        }
+      } catch (error: any) {
+        console.error("Error copying year:", error);
+        showToast(`복사 실패: ${error.message}`, "error");
+      } finally {
+        setIsCopying(false);
       }
-    } catch (error: any) {
-      console.error("Error copying year:", error);
-      alert(`복사 실패: ${error.message}`);
-    } finally {
-      setIsCopying(false);
-    }
+    });
   };
 
   if (loading) {
@@ -1088,7 +1091,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
           </div>
 
           <div className="p-4 rounded-xl bg-orange-50 border border-orange-100">
-            <p className="text-xs font-bold text-orange-700 leading-relaxed">
+            <p className="text-sm font-bold text-orange-700 leading-relaxed">
               ⚠️ 주의: 대상 연도에 이미 데이터가 존재하는 경우, 현재 데이터가 덮어씌워질 수 있습니다. 복사 작업을 실행하시겠습니까?
             </p>
           </div>

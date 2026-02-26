@@ -11,12 +11,14 @@ export async function GET(request: NextRequest) {
     let sql = `
       WITH RECURSIVE dept_tree AS (
         SELECT id, name, parent_department_id, display_order, 
-               CAST(LPAD(COALESCE(display_order, 0)::text, 5, '0') || '_' || name AS text) as path
+               ARRAY[COALESCE(display_order, 0)] as sort_path,
+               CAST(name AS text) as path
         FROM we_departments
         WHERE parent_department_id IS NULL
         UNION ALL
         SELECT d.id, d.name, d.parent_department_id, d.display_order,
-               dt.path || ' > ' || LPAD(COALESCE(d.display_order, 0)::text, 5, '0') || '_' || d.name
+               dt.sort_path || COALESCE(d.display_order, 0),
+               dt.path || ' > ' || d.name
         FROM we_departments d
         JOIN dept_tree dt ON d.parent_department_id = dt.id
       )
@@ -81,9 +83,9 @@ export async function GET(request: NextRequest) {
       params.push(role);
     }
 
-    sql += ` GROUP BY u.id, dt.name, dt.path, rk.name, rk.code, rk.display_order
+    sql += ` GROUP BY u.id, dt.name, dt.path, dt.sort_path, rk.name, rk.code, rk.display_order
       ORDER BY 
-        COALESCE(dt.path, 'ZZZZZ') ASC, 
+        dt.sort_path ASC, 
         (CASE WHEN u.title IS NOT NULL AND u.title <> '' THEN 0 ELSE 1 END) ASC,
         COALESCE(rk.display_order, 999) ASC, 
         u.title ASC,

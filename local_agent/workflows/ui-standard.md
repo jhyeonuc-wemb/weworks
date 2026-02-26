@@ -69,16 +69,71 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
   - 기본 텍스트: `text-sm` (Pretendard).
   - 수치/금액: `text-sm text-right px-[10px]` (천 단위 콤마 필수, 우측 여백 확보).
 - **입력 필드 스타일 (Inline Input): [표준 확정]**
-  - **컨테이너 셀(`td`):** `p-0 h-[35px]`를 적용하여 셀 전체를 입력 영역으로 사용합니다.
-  - **Input 컴포넌트:** 
-    - `w-full h-full border-none bg-transparent` (평소).
+  - **컨테이너 셀(`td`):** `p-0`를 적용하여 셀 전체를 입력 영역으로 사용합니다.
+  - **Input 컴포넌트:**
+    - `w-full border-none bg-transparent` (평소).
     - `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white` (포커스 시).
     - `px-[10px]` (텍스트 정렬을 일반 셀과 맞춤).
     - `text-right` (숫자), `text-left` (텍스트).
+    - **반드시 `block` 클래스를 명시**합니다 (display: block 강제).
   - **Hover:** `hover:bg-blue-50`을 적용하여 입력 가능함을 시각적으로 힌트 제공.
 
-- **특화 레이아웃:** 
+- **⚠️ CSS 트릭 — 인라인 Input의 셀 높이 꽉 채우기 [필수]**
+  - **문제 1 — Strut(유령 공간):** `td` 안의 inline 요소는 브라우저가 line-height 기반의 보이지 않는 공간(strut)을 만들어 상하 여백이 생깁니다.
+    - **해결:** input이 들어있는 `td`에 `style={{ lineHeight: 0, fontSize: 0 }}`을 추가합니다.
+    - input 자체의 `text-sm` 등 폰트 클래스는 그대로 유지됩니다.
+  - **문제 2 — `height: 100%` 미동작:** table cell은 명시적 height가 없으면 자식의 `height: 100%`가 동작하지 않습니다.
+    - **해결:** `td`에 `style={{ height: "1px" }}`을 추가합니다. 실제 렌더 높이는 행 content에 맞게 자동 확장되므로 레이아웃에 영향을 주지 않습니다.
+    - 자식 input에는 `style={{ height: "100%", minHeight: "35px" }}`을 적용합니다.
+  - **종합 적용 예시 (td + input):**
+    ```tsx
+    // ✅ 올바른 패턴 — 셀을 꽉 채우는 인라인 Input
+    <td className="border border-gray-300 p-0"
+        style={{ lineHeight: 0, fontSize: 0, height: "1px" }}>
+      <input
+        className="w-full border-none bg-transparent px-[10px] text-sm
+                   hover:bg-blue-50 focus:outline-none focus:ring-2
+                   focus:ring-inset focus:ring-blue-500 focus:bg-white block"
+        style={{ height: "100%", minHeight: "35px" }}
+      />
+    </td>
+    ```
+
+- **가변 높이 Textarea — AutoResizeTextarea 패턴:**
+  - 내용 길이가 가변인 셀(안내 문구 등)은 `textarea`를 사용하고, 마운트·값 변경 시 `scrollHeight`로 높이를 자동 조정합니다.
+  - 아래 컴포넌트를 복사하여 사용하세요:
+    ```tsx
+    function AutoResizeTextarea({ value, onChange, placeholder, className }) {
+      const ref = useRef(null);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = "0px";
+        el.style.height = `${el.scrollHeight}px`;
+      }, [value]);
+      return (
+        <textarea ref={ref} rows={1} value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            e.target.style.height = "0px";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          placeholder={placeholder} className={className}
+          style={{ minHeight: "35px", overflow: "hidden" }} />
+      );
+    }
+    // td: style={{ verticalAlign: "top" }}
+    ```
+
+- **`<colgroup>` 주의사항:**
+  - JSX 주석(`{/* ... */}`)을 `<colgroup>` 안에 넣으면 HTML whitespace text node로 처리되어 **hydration 오류**가 발생합니다.
+  - `<col>` 태그 뒤에는 주석을 절대 붙이지 않습니다.
+  - ✅ 올바른 예: `<col style={{ width: "40px" }} />`
+  - ❌ 잘못된 예: `<col style={{ width: "40px" }} />  {/* No */}`
+
+- **특화 레이아웃:**
   - 좌측 구분 컬럼은 `bg-gray-50/50 font-bold` 처리하여 시각적 위계를 줍니다.
+
 
 
 ### 4. 상태 배지 (Badge)

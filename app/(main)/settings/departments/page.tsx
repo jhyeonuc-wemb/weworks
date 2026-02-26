@@ -31,8 +31,10 @@ import {
     TableBody,
     TableRow,
     TableHead,
-    TableCell
+    TableCell,
+    useToast,
 } from "@/components/ui";
+import type { AlertType } from "@/components/ui";
 
 interface Department {
     id: number;
@@ -62,6 +64,14 @@ interface User {
 
 function DepartmentsContent() {
     const searchParams = useSearchParams();
+    const { showToast, confirm } = useToast();
+    const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+        if (type === "confirm") {
+            confirm({ message, title, onConfirm: onConfirm! });
+        } else {
+            showToast(message, type as any, title);
+        }
+    };
     const [departments, setDepartments] = useState<Department[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -190,7 +200,7 @@ function DepartmentsContent() {
                 let current: Department | undefined = target;
                 while (current && current.parent_department_id) {
                     newExpanded.add(current.parent_department_id);
-                     
+
                     current = departments.find(d => d.id === current?.parent_department_id);
                 }
                 setExpandedIds(newExpanded);
@@ -326,7 +336,10 @@ function DepartmentsContent() {
 
     const handleSave = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!formData.name.trim()) return alert("부서명을 입력하세요.");
+        if (!formData.name.trim()) {
+            showToast("부서명을 입력하세요.", "error");
+            return;
+        }
 
         try {
             const method = isAdding ? "POST" : "PATCH";
@@ -357,13 +370,13 @@ function DepartmentsContent() {
                 setIsModalOpen(false);
                 if (isAdding) {
                     setSelectedDeptId(null);
-                    alert("부서가 등록되었습니다.");
+                    showToast("부서가 등록되었습니다.", "success");
                 } else {
-                    alert("부서 정보가 수정되었습니다.");
+                    showToast("부서 정보가 수정되었습니다.", "success");
                 }
             } else {
                 const err = await response.json();
-                alert(`저장 실패: ${err.error || "알 수 없는 오류"}`);
+                showToast(`저장 실패: ${err.error || "알 수 없는 오류"}`, "error");
             }
         } catch (error) {
             console.error("Error saving:", error);
@@ -371,16 +384,19 @@ function DepartmentsContent() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm("부서를 삭제하시겠습니까? 하위 부서가 있는 경우 삭제되지 않습니다.")) return;
-        try {
-            const res = await fetch(`/api/departments/${id}`, { method: "DELETE" });
-            if (res.ok) {
-                await fetchData();
-                setSelectedDeptId(null);
-                alert("부서가 삭제되었습니다.");
-            }
-            else { const err = await res.json(); alert(err.error || "삭제 실패"); }
-        } catch (error) { console.error("Delete error:", error); }
+        showAlert("부서를 삭제하시겠습니까? 하위 부서가 있는 경우 삭제되지 않습니다.", "confirm", "부서 삭제", async () => {
+            try {
+                const res = await fetch(`/api/departments/${id}`, { method: "DELETE" });
+                if (res.ok) {
+                    await fetchData();
+                    setSelectedDeptId(null);
+                    showToast("부서가 삭제되었습니다.", "success");
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || "삭제 실패", "error");
+                }
+            } catch (error) { console.error("Delete error:", error); }
+        });
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
@@ -427,7 +443,7 @@ function DepartmentsContent() {
         };
 
         if (targetId !== null && (sourceId === targetId || isDescendant(sourceId, targetId))) {
-            if (pos === "inside") { alert("상위 부서를 하위 부서로 이동할 수 없습니다."); return; }
+            if (pos === "inside") { showToast("상위 부서를 하위 부서로 이동할 수 없습니다.", "error"); return; }
         }
 
         let nextParentId: number | null = null;

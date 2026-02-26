@@ -65,14 +65,22 @@ description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
    - UI 라벨: "작성완료" / 배경색: 녹색 (`bg-green-50`)
 
 ## 단계 전환 (Phase Transition) 고정 로직
-각 모듈의 상태가 `COMPLETED`로 변경될 때, `we_projects` 테이블의 상태와 단계를 다음과 같이 동기화합니다.
+아래 모듈의 상태가 `COMPLETED`로 변경될 때, `we_projects` 테이블의 `current_phase가 갱신됩니다.
 
-| 현재 완료된 단계 | 프로젝트 상태 (`status`) | 프로젝트 현재 단계 (`current_phase`) |
-| :--- | :--- | :--- |
-| **MD 산정** | `md_estimation_completed` | `vrb` |
-| **VRB 검토** | `vrb_completed` | `profitability` |
-| **수지분석서** | `project_in_progress` | `project_in_progress` |
-| **수지정산서** | `completed` | `completed` |
+| 현재 완료된 단계 | 변경되는 `current_phase` |
+| :--- | :--- |
+| **MD 산정** | `vrb` |
+| **VRB 검토** | `profitability` |
+| **수지분석서** | `in_progress` |
+| **수지정산서** | `completed` |
+
+### `we_projects` 필드 역할
+- **`current_phase`**: 현재 어떤 단계인지를 나타냄 (`md_estimation`, `vrb`, `profitability`, `in_progress`, `settlement`, `completed` 등)
+- **`status`**: 프로젝트 전체 라이프사이클 상태만 표현
+  - `active` — 진행 중인 프로젝트
+  - `on_hold` — 보류
+  - `completed` — 수지정산 완료 후 최종 종료
+  - `cancelled` — 취소
 
 ## API 구현 가이드
 - **저장(PUT/POST) 시:** 
@@ -85,13 +93,12 @@ description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
 ### 1. 상태별 상단 액션 버튼 노출 정의 (4단계 공통)
 각 단계(M/D산정, VRB, 수지분석서, 수지정산서)의 상단 헤더에 배치되는 버튼 노출 규칙입니다.
 
-| 상태 | 삭제 버튼 | 엑셀 버튼 | 작성완료 버튼 | 기타 (VRB 전용) |
-| :--- | :---: | :---: | :---: | :--- |
-| **`STANDBY` (대기)** | 비노출 | 비노출 | 비노출 | - |
-| **`IN_PROGRESS` (작성 중)** | **노출** | **노출** | **노출** | - |
-| **`COMPLETED` (완료)** | 비노출 | **노출** | 비노출 | **반려, 승인 버튼 노출** |
+| 상태 | 삭제 버튼 | 엑셀 버튼 | 작성완료 버튼 |
+| :--- | :---: | :---: | :---: |
+| **`STANDBY` (대기)** | 비노출 | 비노출 | 비노출 |
+| **`IN_PROGRESS` (작성 중)** | **노출** | **노출** | **노출** |
+| **`COMPLETED` (완료)** | 비노출 | **노출** | 비노출 |
 
-* **VRB 심의 단계:** '작성완료'를 눌러 `COMPLETED` 상태가 되면, 심의 및 승인 권한자에게 **'승인'** 및 **'반려'** 버튼이 노출됩니다.
 
 ### 2. 컴포넌트 제어 규칙
 - **저장 버튼 (Save):** 상태가 **`COMPLETED`**인 경우, 화면 하단 및 각 섹션의 모든 '저장' 버튼은 **비노출** 처리합니다.

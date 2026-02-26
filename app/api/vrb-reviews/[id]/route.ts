@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { updatePhaseStatus, advanceProjectPhase } from '@/lib/phase';
 
 // VRB Review 상세 조회
 export async function GET(
@@ -326,48 +327,45 @@ export async function PUT(
       console.log('[API PUT] 업데이트 SQL:', updateSql);
       console.log('[API PUT] 업데이트 값:', updateValues);
 
+      // VRB 저장 시 STANDBY → IN_PROGRESS 자동 전환
+      if (body.status === undefined) {
+        const vrbProjRes = await query(
+          `SELECT project_id FROM we_project_vrb_reviews WHERE id = $1`, [id]
+        );
+        if (vrbProjRes.rows.length > 0) {
+          const pid = parseInt(String(vrbProjRes.rows[0].project_id), 10);
+          await query(
+            `UPDATE we_project_phase_progress
+             SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP
+             WHERE project_id = $1 AND phase_code = 'vrb' AND status = 'STANDBY'`,
+            [pid]
+          );
+        }
+        // 모듈 테이블의 status도 IN_PROGRESS로 전환
+        await query(
+          `UPDATE we_project_vrb_reviews SET status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END WHERE id = $1`,
+          [id]
+        );
+      }
+
       await query(updateSql, updateValues);
       console.log('[API PUT] 업데이트 성공');
 
-      // VRB 상태가 COMPLETED로 변경되면 프로젝트 상태도 업데이트
+      // VRB COMPLETED 시 phase_progress 업데이트 + 다음 단계 자동 이동
       if (body.status === 'COMPLETED') {
         try {
-          // 프로젝트 ID 가져오기 (VRB에서 직접 조회)
           const vrbResult = await query(
             `SELECT project_id FROM we_project_vrb_reviews WHERE id = $1`,
             [id]
           );
 
-          if (vrbResult.rows.length === 0) {
-            console.error('[API PUT] VRB review not found for project status update');
-            throw new Error('VRB review not found');
+          if (vrbResult.rows.length > 0) {
+            const projectId = parseInt(String(vrbResult.rows[0].project_id), 10);
+            await updatePhaseStatus(projectId, 'vrb', 'COMPLETED');
+            await advanceProjectPhase(projectId, 'vrb');
           }
-
-          const projectId = parseInt(String(vrbResult.rows[0].project_id), 10);
-          const projectStatus = 'vrb_completed';
-
-          console.log(`[API PUT] VRB Review COMPLETED. Updating project ${projectId} phase to profitability`);
-          const updateResult = await query(
-            `UPDATE we_projects 
-             SET status = $1, current_phase = $2, updated_at = CURRENT_TIMESTAMP 
-             WHERE id = $3`,
-            [projectStatus, 'profitability', projectId]
-          );
-
-          console.log('[API PUT] 프로젝트 상태 업데이트 성공:', {
-            projectId,
-            projectStatus,
-            rowsAffected: updateResult.rowCount
-          });
         } catch (error: any) {
-          console.error('[API PUT] 프로젝트 상태 업데이트 실패:', {
-            error: error.message,
-            stack: error.stack,
-            vrbId: id,
-            status: body.status
-          });
-          // 프로젝트 상태 업데이트 실패해도 VRB 업데이트는 성공했으므로 에러를 throw하지 않음
-          // 대신 로그만 남김
+          console.error('[API PUT] phase advance 실패:', error.message);
         }
       }
     } else {

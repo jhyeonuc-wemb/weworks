@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { updatePhaseStatus, advanceProjectPhase } from "@/lib/phase";
 
 // 수지정산서 상태 변경
 export async function PUT(
@@ -35,17 +36,21 @@ export async function PUT(
             );
         }
 
-        // 수지정산서가 완료되면 프로젝트 상태를 'completed'로 변경
+        // phase_progress 상태 업데이트
+        if (status === 'IN_PROGRESS') {
+            await query(
+                `UPDATE we_project_phase_progress
+                 SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP
+                 WHERE project_id = $1 AND phase_code = 'settlement' AND status = 'STANDBY'`,
+                [projectId]
+            );
+        }
+
+        // 수지정산서 완료 시 phase_progress 업데이트 + 다음 단계 자동 이동
+        // advanceProjectPhase가 마지막 단계라면 status='completed'로 처리함
         if (status === 'COMPLETED') {
-            try {
-                console.log(`Settlement COMPLETED via status API. Updating project ${projectId} status to completed`);
-                await query(
-                    "UPDATE we_projects SET status = 'completed', current_phase = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-                    [projectId]
-                );
-            } catch (err) {
-                console.error(`Failed to update project status for ${projectId}:`, err);
-            }
+            await updatePhaseStatus(projectId, 'settlement', 'COMPLETED');
+            await advanceProjectPhase(projectId, 'settlement');
         }
 
         return NextResponse.json({

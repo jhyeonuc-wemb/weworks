@@ -41,11 +41,7 @@ const items = [
         label: "프로젝트 현황",
         icon: FolderGit2,
       },
-      {
-        href: "/md-estimation",
-        label: "M/D 산정 현황",
-        icon: FileText,
-      },
+
       {
         href: "/vrb-review",
         label: "VRB 현황",
@@ -126,6 +122,11 @@ const items = [
         href: "/settings/permissions",
         label: "권한",
         icon: Shield,
+      },
+      {
+        href: "/settings/difficulty-checklist",
+        label: "난이도 체크리스트",
+        icon: CheckCircle2,
       },
     ],
   },

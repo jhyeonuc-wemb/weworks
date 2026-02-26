@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { updatePhaseStatus, advanceProjectPhase } from '@/lib/phase';
 
 // M/D 산정 상세 조회
 export async function GET(
@@ -358,41 +359,10 @@ export async function PUT(
       }
 
       updateQuery += `, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`;
-      console.log('[API PUT] 실행할 쿼리:', updateQuery);
-      console.log('[API PUT] 쿼리 파라미터:', values);
       await query(updateQuery, values);
 
-      // 저장 후 확인
-      const verifyResult = await query(
-        `SELECT selected_modeling_3d_weight_id, selected_pid_weight_id FROM we_project_md_estimations WHERE id = $1`,
-        [id]
-      );
-      if (verifyResult.rows.length > 0) {
-        console.log('[API PUT] 저장 후 확인:', {
-          selected_modeling_3d_weight_id: verifyResult.rows[0].selected_modeling_3d_weight_id,
-          selected_pid_weight_id: verifyResult.rows[0].selected_pid_weight_id,
-        });
-      }
-    }
-
-    // M/D 산정이 완료되면 프로젝트 단계도 업데이트
-    if (body.status === 'COMPLETED') {
-      // 프로젝트 ID 조회
-      const projectResult = await query(
-        `SELECT project_id FROM we_project_md_estimations WHERE id = $1`,
-        [id]
-      );
-
-      if (projectResult.rows.length > 0) {
-        const projectId = projectResult.rows[0].project_id;
-        // 프로젝트 상태를 md_estimation_completed로, current_phase를 vrb로 업데이트
-        console.log(`[API PUT] MD Estimation completed. Updating project ${projectId} phase to vrb`);
-        await query(
-          `UPDATE we_projects SET status = 'md_estimation_completed', current_phase = 'vrb', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
-          [projectId]
-        );
-        console.log(`[API PUT] Project ${projectId} phase updated to vrb`);
-      }
+      // M/D 산정 완료 시 (단계 이동 없음 - md_estimation 단계 비활성화됨)
+      // 모듈 테이블 status만 COMPLETED로 업데이트됨
     }
 
     // 난이도 정보 업데이트
