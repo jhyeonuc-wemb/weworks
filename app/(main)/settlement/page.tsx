@@ -237,18 +237,18 @@ export default function SettlementListPage() {
       {/* 테이블 섹션 */}
       <div className="neo-light-card overflow-hidden border border-border/40">
         <div className="overflow-x-auto custom-scrollbar-main">
-          <Table>
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계획 매출</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">실행 매출</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">계획 이익</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">실행 이익</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">이익 증감</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
+                <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
+                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">계획 매출</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">실행 매출</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">계획 이익</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">실행 이익</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">이익 증감</TableHead>
+                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -285,42 +285,42 @@ export default function SettlementListPage() {
                       className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                       onClick={() => router.push(`/projects/${s.project_id}/settlement`)}
                     >
-                      <TableCell align="center" className="px-8 py-3">
+                      <TableCell align="center" className="px-4 py-3">
                         <span className="text-sm text-foreground/80 font-mono">
                           {s.project_code || "-"}
                         </span>
                       </TableCell>
-                      <TableCell align="left" className="px-8 py-3">
-                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                      <TableCell align="left" className="px-4 py-3">
+                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2">
                           {s.project_name}
                         </div>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
+                      <TableCell align="center" className="px-4 py-3">
                         <span className="text-sm text-foreground/80">
                           {s.customer_name || "-"}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-8 py-3">
+                      <TableCell align="right" className="px-4 py-3">
                         <span className="text-sm text-foreground/40 font-mono italic">
                           {formatCurrency(s.planned_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-8 py-3">
+                      <TableCell align="right" className="px-4 py-3">
                         <span className="text-sm text-foreground/80 font-mono">
                           {formatCurrency(s.actual_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-8 py-3">
+                      <TableCell align="right" className="px-4 py-3">
                         <span className="text-sm text-foreground/40 font-mono italic">
                           {formatCurrency(s.planned_profit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-8 py-3">
+                      <TableCell align="right" className="px-4 py-3">
                         <span className="text-sm text-foreground/80 font-mono">
                           {formatCurrency(actualProfit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
+                      <TableCell align="center" className="px-4 py-3">
                         <span className={cn(
                           "text-xs font-bold font-mono px-2 py-1 rounded-md",
                           s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
@@ -328,7 +328,7 @@ export default function SettlementListPage() {
                           {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="center" className="px-8 py-3">
+                      <TableCell align="center" className="px-4 py-3">
                         <Badge variant={s.status === "COMPLETED" ? "success" : s.status === "IN_PROGRESS" ? "warning" : "info"} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                           {s.status === "COMPLETED" ? "완료" : s.status === "IN_PROGRESS" ? "작성중" : "대기"}
                         </Badge>

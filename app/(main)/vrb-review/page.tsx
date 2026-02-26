@@ -275,15 +275,15 @@ export default function VrbReviewListPage() {
       {/* 테이블 섹션 */}
       <div className="neo-light-card overflow-hidden border border-border/40">
         <div className="overflow-x-auto custom-scrollbar-main">
-          <Table>
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">코드</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">심의 결과</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">예상 매출(원)</TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
+                <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
+                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">심의 결과</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">예상 매출(원)</TableHead>
+                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">
                   <div className="flex items-center justify-center gap-1">
                     영업이익(원)
                     {isMounted && (
@@ -301,7 +301,7 @@ export default function VrbReviewListPage() {
                     )}
                   </div>
                 </TableHead>
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">
+                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">
                   <div className="flex items-center justify-center gap-1">
                     이익률
                     {isMounted && (
@@ -320,7 +320,7 @@ export default function VrbReviewListPage() {
                   </div>
                 </TableHead>
 
-                <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -354,13 +354,13 @@ export default function VrbReviewListPage() {
                     className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                     onClick={() => router.push(`/projects/${review.project_id}/vrb-review`)}
                   >
-                    <TableCell align="center" className="px-8 py-3">
+                    <TableCell align="center" className="px-4 py-3">
                       <span className="text-sm text-foreground/80 font-mono">
                         {review.project_code || "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="left" className="px-8 py-3">
-                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                    <TableCell align="left" className="px-4 py-3">
+                      <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-2">
                         {review.project_name}
                       </div>
                     </TableCell>
@@ -388,19 +388,19 @@ export default function VrbReviewListPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
+                    <TableCell align="center" className="px-4 py-3">
                       <span className="text-sm text-foreground/80">
                         {review.customer_name || "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="right" className="px-8 py-3">
+                    <TableCell align="right" className="px-4 py-3">
                       <span className="text-sm text-foreground/80 font-mono">
                         {review.best_estimated_revenue_services
                           ? formatCurrency(review.best_estimated_revenue_services, "KRW", false)
                           : "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="right" className="px-8 py-3">
+                    <TableCell align="right" className="px-4 py-3">
                       <span className={cn(
                         "text-sm font-mono font-bold",
                         (review.best_operating_profit || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
@@ -410,7 +410,7 @@ export default function VrbReviewListPage() {
                           : "-"}
                       </span>
                     </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
+                    <TableCell align="center" className="px-4 py-3">
                       <span className={cn(
                         "text-sm font-bold font-mono",
                         (review.best_operating_profit_percent || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
@@ -421,7 +421,7 @@ export default function VrbReviewListPage() {
                       </span>
                     </TableCell>
 
-                    <TableCell align="center" className="px-8 py-3">
+                    <TableCell align="center" className="px-4 py-3">
                       <Badge variant={getStatusVariant(review.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
                         {getStatusLabel(review.status)}
                       </Badge>
