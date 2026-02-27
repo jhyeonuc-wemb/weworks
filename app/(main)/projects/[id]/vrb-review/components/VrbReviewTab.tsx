@@ -1478,7 +1478,7 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                         <option value="하(30%)">하(30%)</option>
                       </select>
                     </td>
-                    <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">담당영업</th>
+                    <th className="border border-gray-300 bg-blue-50/50 px-[10px] text-left font-bold text-gray-900 leading-tight">영업대표</th>
                     <td className="border border-gray-300 p-0 relative h-[35px]">
                       <div className="relative w-full h-full">
                         <input

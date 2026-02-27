@@ -53,6 +53,7 @@ interface Project {
   contractEndDate: string | null;
   currency: "KRW" | "USD" | "EUR" | "JPY";
   managerName?: string;
+  managerRank?: string;
 }
 
 export default function ProfitabilityPage({
@@ -119,6 +120,7 @@ export default function ProfitabilityPage({
             contractEndDate: data.project.contract_end_date,
             currency: (data.project.currency || "KRW") as any,
             managerName: data.project.manager_name || "미지정",
+            managerRank: data.project.manager_rank_name || "",
           });
         }
 

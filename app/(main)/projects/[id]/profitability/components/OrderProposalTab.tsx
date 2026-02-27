@@ -273,7 +273,7 @@ export function OrderProposalTab({
               {/* 3행: PM명(1-T) | Value(2-D) | 기간(3-T) | Value(4-D) | 수행장소(5-T) | [Input(6-8 D)] */}
               <tr className="h-[35px] border-b border-gray-300">
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700">PM명</th>
-                <td className="px-[10px] border-r border-gray-300 text-left bg-white">{project?.managerName}</td>
+                <td className="px-[10px] border-r border-gray-300 text-left bg-white">{[project?.managerName, project?.managerRank].filter(Boolean).join(' ')}</td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">기간</th>
                 <td className="px-[10px] border-r border-gray-300 text-left bg-white text-sm whitespace-nowrap overflow-hidden text-ellipsis">{formatDateStr(project?.contractStartDate)} ~ {formatDateStr(project?.contractEndDate)}</td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">수행장소</th>
