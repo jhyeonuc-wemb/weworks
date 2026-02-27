@@ -72,6 +72,8 @@ export function OrderProposalTab({
   const [extraData, setExtraData] = useState({ extraRevenue: 0, extraExpense: 0 });
 
   const [saving, setSaving] = useState(false);
+  const [contractTypeCodes, setContractTypeCodes] = useState<{ id: number; name: string }[]>([]);
+  const [contractCategoryCodes, setContractCategoryCodes] = useState<{ id: number; name: string }[]>([]);
 
   // --- 초기 데이터 로드 ---
   useEffect(() => {
@@ -116,6 +118,29 @@ export function OrderProposalTab({
     };
     loadData();
   }, [project?.id, profitabilityId]);
+
+  // 코드 목록 로드 (계약형태/계약유형)
+  useEffect(() => {
+    const loadCodes = async () => {
+      try {
+        const [typeRes, catRes] = await Promise.all([
+          fetch('/api/codes?parentCode=CD_002_03'),
+          fetch('/api/codes?parentCode=CD_002_04'),
+        ]);
+        if (typeRes.ok) {
+          const data = await typeRes.json();
+          setContractTypeCodes(data.codes || []);
+        }
+        if (catRes.ok) {
+          const data = await catRes.json();
+          setContractCategoryCodes(data.codes || []);
+        }
+      } catch (e) {
+        console.error('Error loading codes:', e);
+      }
+    };
+    loadCodes();
+  }, []);
 
   // --- 수지표 요약 계산 (Profitability Summary) ---
   const summary = useMemo(() => {
@@ -250,7 +275,10 @@ export function OrderProposalTab({
                 <td colSpan={3} className="px-[10px] border-r border-gray-300 text-left bg-white">{project?.customerName}</td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">계약형태</th>
                 <td className="border-r border-gray-300 p-0 text-left bg-white">
-                  <input type="text" value={contractType} onChange={e => setContractType(e.target.value)} disabled={isReadOnly} className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400" />
+                  <select value={contractType} onChange={e => setContractType(e.target.value)} disabled={isReadOnly} className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400 appearance-none">
+                    <option value="">선택</option>
+                    {contractTypeCodes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
                 </td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">주사업자</th>
                 <td className="p-0 text-left bg-white">
@@ -263,7 +291,10 @@ export function OrderProposalTab({
                 <td colSpan={3} className="px-[10px] border-r border-gray-300 text-left bg-white">{project?.name}</td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">계약유형</th>
                 <td className="border-r border-gray-300 p-0 text-left bg-white">
-                  <input type="text" value={contractCategory} onChange={e => setContractCategory(e.target.value)} disabled={isReadOnly} className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400" />
+                  <select value={contractCategory} onChange={e => setContractCategory(e.target.value)} disabled={isReadOnly} className="w-full h-[35px] border-none px-[10px] text-left text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400 appearance-none">
+                    <option value="">선택</option>
+                    {contractCategoryCodes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
                 </td>
                 <th className="bg-blue-50/50 border-r border-gray-300 px-[10px] text-center font-bold text-gray-700 text-sm">기타</th>
                 <td className="p-0 text-left bg-white">
