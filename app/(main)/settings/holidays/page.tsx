@@ -25,6 +25,7 @@ import {
     useToast,
     SearchInput,
     Dropdown,
+    DatePicker,
 } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,18 @@ export default function HolidaysPage() {
         is_recurring: false,
         description: "",
     });
+
+    const parseLocalDate = (dateStr: string | null) => {
+        if (!dateStr) return undefined;
+
+        if (dateStr.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? undefined : date;
+    };
 
     // 실데이터 조회
     const fetchHolidays = async (year?: string) => {
@@ -379,15 +392,19 @@ export default function HolidaysPage() {
                 <form onSubmit={handleSave} className="space-y-6">
                     <div className="space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-500 px-1">
-                                휴일 날짜 <span className="text-primary">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={formData.holiday_date}
-                                onChange={(e) => setFormData({ ...formData, holiday_date: e.target.value })}
-                                className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 outline-none transition-all"
+                            <DatePicker
+                                label="휴일 날짜"
+                                date={parseLocalDate(formData.holiday_date)}
+                                setDate={(date) => {
+                                    if (!date) {
+                                        setFormData(prev => ({ ...prev, holiday_date: "" }));
+                                        return;
+                                    }
+                                    const y = date.getFullYear();
+                                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                                    const d = String(date.getDate()).padStart(2, '0');
+                                    setFormData(prev => ({ ...prev, holiday_date: `${y}-${m}-${d}` }));
+                                }}
                             />
                         </div>
 
