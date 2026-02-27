@@ -15,6 +15,7 @@ interface User {
   name: string;
   email: string;
   role_name: string;
+  rank_name?: string;
 }
 
 interface Client {
@@ -906,16 +907,18 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
     };
 
     // 영업 선택 핸들러
-    const handleSalesSelect = (userId: string, userName: string) => {
-      setVrbData((prev) => ({ ...prev, salesManager: userName }));
-      setSalesSearch(userName);
+    const handleSalesSelect = (userId: string, userName: string, userRank?: string) => {
+      const displayName = [userName, userRank].filter(Boolean).join(' ');
+      setVrbData((prev) => ({ ...prev, salesManager: displayName }));
+      setSalesSearch(displayName);
       setShowSalesDropdown(false);
     };
 
     // PS 선택 핸들러
-    const handlePsSelect = (userId: string, userName: string) => {
-      setVrbData((prev) => ({ ...prev, psManager: userName }));
-      setPsSearch(userName);
+    const handlePsSelect = (userId: string, userName: string, userRank?: string) => {
+      const displayName = [userName, userRank].filter(Boolean).join(' ');
+      setVrbData((prev) => ({ ...prev, psManager: displayName }));
+      setPsSearch(displayName);
       setShowPsDropdown(false);
     };
 
@@ -1499,8 +1502,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                             <div className="fixed inset-0 z-10" onClick={() => setShowSalesDropdown(false)} />
                             <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-none border border-gray-300 bg-white shadow-md">
                               {filteredSales.map((user) => (
-                                <button key={user.id} type="button" onClick={() => handleSalesSelect(user.id.toString(), user.name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                                  <div className="font-bold text-gray-900">{user.name}</div>
+                                <button key={user.id} type="button" onClick={() => handleSalesSelect(user.id.toString(), user.name, user.rank_name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                  <div className="font-bold text-gray-900">{user.name}{user.rank_name ? ` ${user.rank_name}` : ''}</div>
                                   <div className="text-xs text-gray-500">{user.email}</div>
                                 </button>
                               ))}
@@ -1530,8 +1533,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                             <div className="fixed inset-0 z-10" onClick={() => setShowPsDropdown(false)} />
                             <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-none border border-gray-300 bg-white shadow-md">
                               {filteredPs.map((user) => (
-                                <button key={user.id} type="button" onClick={() => handlePsSelect(user.id.toString(), user.name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                                  <div className="font-bold text-gray-900">{user.name}</div>
+                                <button key={user.id} type="button" onClick={() => handlePsSelect(user.id.toString(), user.name, user.rank_name)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                  <div className="font-bold text-gray-900">{user.name}{user.rank_name ? ` ${user.rank_name}` : ''}</div>
                                   <div className="text-xs text-gray-500">{user.email}</div>
                                 </button>
                               ))}
