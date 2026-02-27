@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Save } from "lucide-react";
 import { useStandardExpenses } from "@/hooks/useStandardExpenses";
 import { useToast } from "@/components/ui";
@@ -15,6 +16,8 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
     useStandardExpenses(projectId);
 
   const { showToast } = useToast();
+  const [focusedId, setFocusedId] = useState<number | null>(null);
+  const [localVal, setLocalVal] = useState<string>("");
 
   const handleSave = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -165,13 +168,25 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                         {isCalculatedEditable ? (
                           <input
                             type="text"
-                            value={expense.calculatedValue === null ? "" : expense.calculatedValue.toLocaleString()}
+                            value={focusedId === expense.id ? localVal : (expense.calculatedValue === null ? "" : Number(expense.calculatedValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                            onFocus={() => {
+                              if (isReadOnly) return;
+                              setFocusedId(expense.id);
+                              setLocalVal(expense.calculatedValue === null ? "" : expense.calculatedValue.toString());
+                            }}
                             onChange={(e) => {
                               if (isReadOnly) return;
-                              const val = parseInt(e.target.value.replace(/,/g, ""));
-                              if (!isNaN(val)) {
-                                updateExpense(expense.id, "calculatedValue", val);
-                              } else if (e.target.value === "") {
+                              const val = e.target.value.replace(/[^0-9.]/g, "");
+                              setLocalVal(val);
+                            }}
+                            onBlur={() => {
+                              if (isReadOnly) return;
+                              setFocusedId(null);
+                              const parsed = parseFloat(localVal);
+                              if (!isNaN(parsed)) {
+                                const roundedVal = Math.round(parsed * 100) / 100;
+                                updateExpense(expense.id, "calculatedValue", roundedVal);
+                              } else {
                                 updateExpense(expense.id, "calculatedValue", 0);
                               }
                             }}
@@ -181,7 +196,7 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                         ) : (
                           <span className="text-sm text-gray-900">
                             {expense.inputValue !== null && expense.calculatedValue !== null
-                              ? expense.calculatedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })
+                              ? Number(expense.calculatedValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                               : ""}
                           </span>
                         )}
