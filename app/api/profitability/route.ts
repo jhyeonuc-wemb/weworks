@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     // created_by를 현재 로그인한 유저로 설정
     const insertResult = await query(
       `INSERT INTO we_project_profitability (project_id, version, status, created_by, version_comment)
-       VALUES ($1, $2, 'STANDBY', $3, $4) RETURNING id`,
+       VALUES ($1, $2, 'IN_PROGRESS', $3, $4) RETURNING id`,
       [projectIdNum, newVersion, created_by, version_comment]
     );
 
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       id: newId,
       version: newVersion,
-      profitability: { id: newId, version: newVersion, status: 'STANDBY' }
+      profitability: { id: newId, version: newVersion, status: 'IN_PROGRESS' }
     });
   } catch (error: any) {
     console.error("Error creating profitability:", error);
