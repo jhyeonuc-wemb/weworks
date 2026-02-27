@@ -1124,17 +1124,17 @@ export default function ProjectSettlementPage() {
       const totalPlanMM = planMonthly.reduce((s, v) => s + v, 0);
       const totalActualMM = actualMonthly.reduce((s, v) => s + v, 0);
 
-      const totalPlanAmount = items.reduce((sum: number, item) => {
+      const totalPlanAmount = Math.round(items.reduce((sum: number, item) => {
         const mm = Object.values(item.monthlyAllocation || {}).reduce((s: number, v) => s + (Number(v) || 0), 0);
-        const amount = item.internalAmount != null ? item.internalAmount : Math.round((item.internalUnitPrice || 0) * mm);
+        const amount = item.internalAmount != null ? item.internalAmount : (item.internalUnitPrice || 0) * mm;
         return sum + amount;
-      }, 0);
+      }, 0));
 
-      const totalActualAmount = items.reduce((sum: number, item) => {
+      const totalActualAmount = Math.round(items.reduce((sum: number, item) => {
         const mm = Object.values(item.actualMonthlyAllocation || {}).reduce((s: number, v) => s + (Number(v) || 0), 0);
-        const amount = item.actualInternalAmount != null ? item.actualInternalAmount : Math.round((item.internalUnitPrice || 0) * mm);
+        const amount = item.actualInternalAmount != null ? item.actualInternalAmount : (item.internalUnitPrice || 0) * mm;
         return sum + amount;
-      }, 0);
+      }, 0));
 
       return {
         label: cat.label,
@@ -1160,29 +1160,29 @@ export default function ProjectSettlementPage() {
     const prodRevOwn = products.filter(i => i.type === '자사').reduce((sum, i) => sum + (i.proposalPrice || 0), 0);
     const prodRevExt = products.filter(i => i.type === '타사').reduce((sum, i) => sum + (i.proposalPrice || 0), 0);
 
-    const svcRevOwn = manpower.filter(i => (i.affiliationGroup || '').startsWith('위엠비')).reduce((sum, i) => {
+    const svcRevOwn = Math.round(manpower.filter(i => (i.affiliationGroup || '').startsWith('위엠비')).reduce((sum, i) => {
       const mm = Object.values(i.monthlyAllocation || {}).reduce((s, v) => s + (Number(v) || 0), 0);
-      return sum + (i.proposedAmount ?? Math.round((i.proposedUnitPrice || 0) * mm));
-    }, 0);
-    const svcRevExt = manpower.filter(i => !(i.affiliationGroup || '').startsWith('위엠비')).reduce((sum, i) => {
+      return sum + (i.proposedAmount ?? (i.proposedUnitPrice || 0) * mm);
+    }, 0));
+    const svcRevExt = Math.round(manpower.filter(i => !(i.affiliationGroup || '').startsWith('위엠비')).reduce((sum, i) => {
       const mm = Object.values(i.monthlyAllocation || {}).reduce((s, v) => s + (Number(v) || 0), 0);
-      return sum + (i.proposedAmount ?? Math.round((i.proposedUnitPrice || 0) * mm));
-    }, 0);
+      return sum + (i.proposedAmount ?? (i.proposedUnitPrice || 0) * mm);
+    }, 0));
 
     // Cost and MM
     let internalMM = 0;
     let externalMM = 0;
 
-    const svcCostOwn = manpower.filter(i => !(i.affiliationGroup || '').startsWith('외주')).reduce((sum, i) => {
+    const svcCostOwn = Math.round(manpower.filter(i => !(i.affiliationGroup || '').startsWith('외주')).reduce((sum, i) => {
       const mm = Object.values(i.monthlyAllocation || {}).reduce((s, v) => s + (Number(v) || 0), 0);
       internalMM += mm;
-      return sum + (i.internalAmount ?? Math.round((i.internalUnitPrice || 0) * mm));
-    }, 0);
-    const svcCostExt = manpower.filter(i => (i.affiliationGroup || '').startsWith('외주')).reduce((sum, i) => {
+      return sum + (i.internalAmount ?? (i.internalUnitPrice || 0) * mm);
+    }, 0));
+    const svcCostExt = Math.round(manpower.filter(i => (i.affiliationGroup || '').startsWith('외주')).reduce((sum, i) => {
       const mm = Object.values(i.monthlyAllocation || {}).reduce((s, v) => s + (Number(v) || 0), 0);
       externalMM += mm;
-      return sum + (i.internalAmount ?? Math.round((i.internalUnitPrice || 0) * mm));
-    }, 0);
+      return sum + (i.internalAmount ?? (i.internalUnitPrice || 0) * mm);
+    }, 0));
 
     const prodCostOwn = products.filter(i => i.type === '자사').reduce((sum, i) => sum + (i.costPrice || 0), 0);
     const prodCostExt = products.filter(i => i.type === '타사').reduce((sum, i) => sum + (i.costPrice || 0), 0);
