@@ -16,7 +16,7 @@ export async function GET(
         c.name as customer_name,
         o.name as orderer_name,
         u1.name as manager_name,
-        u1.rank_name as manager_rank_name,
+        rk1.name as manager_rank_name,
         u1.id as manager_id,
         u2.name as sales_representative_name,
         u2.id as sales_representative_id,
@@ -52,6 +52,7 @@ export async function GET(
       LEFT JOIN we_clients c ON p.customer_id = c.id
       LEFT JOIN we_clients o ON p.orderer_id = o.id
       LEFT JOIN we_users u1 ON p.manager_id = u1.id
+      LEFT JOIN we_codes rk1 ON u1.rank_id = rk1.id
       LEFT JOIN we_users u2 ON p.sales_representative_id = u2.id
       LEFT JOIN (
         SELECT DISTINCT ON (project_id) project_id, status
