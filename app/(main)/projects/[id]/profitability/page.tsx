@@ -76,6 +76,7 @@ export default function ProfitabilityPage({
   const [header, setHeader] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [versionCommentModal, setVersionCommentModal] = useState<{ open: boolean; comment: string }>({ open: false, comment: '' });
 
   const { showToast, confirm } = useToast();
 
@@ -342,11 +343,12 @@ export default function ProfitabilityPage({
     }
   };
 
-  const handleCreateNewVersion = async () => {
+  const handleCreateNewVersion = () => {
     if (!id) return;
-    const comment = window.prompt("새 버전에 대한 코멘트를 입력해주세요.");
-    if (comment === null) return;
+    setVersionCommentModal({ open: true, comment: '' });
+  };
 
+  const executeCreateNewVersion = async (comment: string) => {
     try {
       setIsCreatingVersion(true);
       const res = await fetch("/api/profitability", {
@@ -649,6 +651,49 @@ export default function ProfitabilityPage({
         )}
       </div>
 
+      {/* 버전 코멘트 입력 모달 */}
+      {versionCommentModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">새 버전 생성</h3>
+            <p className="text-sm text-gray-500 mb-4">새 버전에 대한 코멘트를 입력해주세요.</p>
+            <input
+              type="text"
+              value={versionCommentModal.comment}
+              onChange={(e) => setVersionCommentModal(prev => ({ ...prev, comment: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setVersionCommentModal({ open: false, comment: '' });
+                  executeCreateNewVersion(versionCommentModal.comment);
+                } else if (e.key === 'Escape') {
+                  setVersionCommentModal({ open: false, comment: '' });
+                }
+              }}
+              autoFocus
+              placeholder="예: 고객 요청사항 반영"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setVersionCommentModal({ open: false, comment: '' })}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setVersionCommentModal({ open: false, comment: '' });
+                  executeCreateNewVersion(versionCommentModal.comment);
+                }}
+                disabled={isCreatingVersion}
+                className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              >
+                생성
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
