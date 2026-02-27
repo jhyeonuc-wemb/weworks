@@ -13,9 +13,9 @@ export async function updatePhaseStatus(
 
     await query(
         `INSERT INTO we_project_phase_progress (project_id, phase_code, status, started_at, completed_at, updated_at)
-     VALUES ($1, $2, $3,
-       CASE WHEN $3 IN ('IN_PROGRESS', 'COMPLETED') THEN $4::timestamp ELSE NULL END,
-       CASE WHEN $3 = 'COMPLETED' THEN $4::timestamp ELSE NULL END,
+     VALUES ($1, $2, $3::varchar,
+       CASE WHEN $3::varchar IN ('IN_PROGRESS', 'COMPLETED') THEN $4::timestamp ELSE NULL END,
+       CASE WHEN $3::varchar = 'COMPLETED' THEN $4::timestamp ELSE NULL END,
        $4::timestamp
      )
      ON CONFLICT (project_id, phase_code) DO UPDATE SET
