@@ -7,19 +7,13 @@ import { Button, StatusBadge } from "@/components/ui";
 import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import VrbReviewTab, { VrbReviewTabHandle } from "./components/VrbReviewTab";
 import ChecklistTab from "./components/ChecklistTab";
-import MdEstimationTabs, { MdEstimationTabsHandle } from "./components/MdEstimationTabs";
+import MdEstimationTab from "./components/MdEstimationTab";
 
 const TABS = [
   { id: "vrb", label: "VRB 심의" },
   { id: "checklist", label: "난이도" },
-  { id: "overview", label: "예상 M/D" },
-  { id: "difficulty", label: "가중치" },
-  { id: "development", label: "개발" },
-  { id: "modeling3d", label: "3D 모델링" },
-  { id: "pid", label: "P&ID" },
+  { id: "md-estimation", label: "M/D 산정" },
 ];
-
-const MD_TAB_IDS = ["overview", "difficulty", "development", "modeling3d", "pid"];
 
 export default function VrbReviewPage({
   params,
@@ -34,15 +28,11 @@ export default function VrbReviewPage({
     customerName?: string;
   } | null>(null);
 
-  // VRB 상태 — 페이지 전체 공통 (탭과 무관하게 API에서 직접 로드)
+  // VRB 상태 — 페이지 전체 공통
   const [vrbStatus, setVrbStatus] = useState<string>("STANDBY");
   const [vrbId, setVrbId] = useState<number | null>(null);
   const [vrbReviewResult, setVrbReviewResult] = useState<string | undefined>(undefined);
   const vrbRef = useRef<VrbReviewTabHandle | null>(null);
-
-  // MD 산정 ref
-  const [mdEstimationId, setMdEstimationId] = useState<number | null>(null);
-  const mdRef = useRef<MdEstimationTabsHandle | null>(null);
 
   // 페이지 레벨에서 프로젝트 정보 + VRB 상태를 직접 fetch
   useEffect(() => {
@@ -92,11 +82,8 @@ export default function VrbReviewPage({
     fetchData();
   }, [id]);
 
-  // 탭 상태 계산
   const isVrbTab = activeTab === "vrb";
-  const isMdTab = MD_TAB_IDS.includes(activeTab);
-  const currentId = isVrbTab ? vrbId : isMdTab ? mdEstimationId : null;
-  const canDelete = vrbStatus === "IN_PROGRESS" && !!currentId;
+  const canDelete = vrbStatus === "IN_PROGRESS" && !!vrbId && isVrbTab;
   const canExcel = vrbStatus === "IN_PROGRESS" || vrbStatus === "COMPLETED";
   const canComplete = vrbStatus === "IN_PROGRESS";
   const showReviewResult = vrbStatus === "COMPLETED" && !!vrbReviewResult;
@@ -114,7 +101,7 @@ export default function VrbReviewPage({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-2xl font-semibold tracking-tight text-gray-900 line-clamp-2 max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[800px] leading-snug">
                 VRB - {project?.name || "프로젝트"}
               </h1>
               {vrbStatus !== "STANDBY" && <StatusBadge status={vrbStatus} />}
@@ -145,10 +132,7 @@ export default function VrbReviewPage({
             {canDelete && (
               <Button
                 variant="secondary"
-                onClick={() => {
-                  if (isVrbTab) vrbRef.current?.deleteVrb();
-                  else if (isMdTab) mdRef.current?.deleteEstimation();
-                }}
+                onClick={() => vrbRef.current?.deleteVrb()}
                 className="flex items-center gap-2 text-red-600 hover:bg-red-50 border-red-200"
               >
                 <Trash2 className="h-4 w-4" />
@@ -214,16 +198,8 @@ export default function VrbReviewPage({
           />
         )}
         {activeTab === "checklist" && <ChecklistTab projectId={id} vrbStatus={vrbStatus} />}
-        {MD_TAB_IDS.includes(activeTab) && (
-          <MdEstimationTabs
-            ref={mdRef}
-            projectId={id}
-            activeSubTab={activeTab}
-            onStatusChange={(status, estimationId) => {
-              if (status) setVrbStatus(status);
-              setMdEstimationId(estimationId);
-            }}
-          />
+        {activeTab === "md-estimation" && (
+          <MdEstimationTab projectId={id} vrbStatus={vrbStatus} />
         )}
       </div>
     </div>

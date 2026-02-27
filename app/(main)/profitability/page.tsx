@@ -234,16 +234,16 @@ export default function ProfitabilityListPage() {
                     <Table className="w-full table-fixed">
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
+                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
                                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                                <TableHead className="w-[150px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">수주합계(원)</TableHead>
-                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">손익(원)</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">손익률</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">당사 M/M</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center">타사 M/M</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">버전</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                                <TableHead className="w-[150px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
+                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">수주합계(원)</TableHead>
+                                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">손익(원)</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">손익률</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">당사 M/M</TableHead>
+                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">타사 M/M</TableHead>
+                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">버전</TableHead>
+                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -292,7 +292,7 @@ export default function ProfitabilityListPage() {
                                                 {p.customer_name || "-"}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="right" className="px-4 py-3">
+                                        <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
                                                 {formatCurrency((p.total_revenue || 0) * 1000, "KRW", false)}
                                             </span>

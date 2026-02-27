@@ -278,12 +278,12 @@ export default function VrbReviewListPage() {
           <Table className="w-full table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">심의 결과</TableHead>
-                <TableHead className="w-[160px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center">예상 매출(원)</TableHead>
-                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">심의 결과</TableHead>
+                <TableHead className="w-[160px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
+                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">예상 매출(원)</TableHead>
+                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-1">
                     영업이익(원)
                     {isMounted && (
@@ -301,7 +301,7 @@ export default function VrbReviewListPage() {
                     )}
                   </div>
                 </TableHead>
-                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center">
+                <TableHead className="w-[130px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-1">
                     이익률
                     {isMounted && (
@@ -320,7 +320,7 @@ export default function VrbReviewListPage() {
                   </div>
                 </TableHead>
 
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -364,8 +364,8 @@ export default function VrbReviewListPage() {
                         {review.project_name}
                       </div>
                     </TableCell>
-                    <TableCell align="center" className="px-8 py-3">
-                      <div className="flex items-center justify-center">
+                    <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
+                      <div className="flex items-center justify-center shrink-0">
                         {review.review_result === "PROCEED" ? (
                           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 text-emerald-700 border border-emerald-200/50 shadow-[0_2px_10px_-4px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.4)]">
                             <div className="relative flex h-5 w-5 items-center justify-center">

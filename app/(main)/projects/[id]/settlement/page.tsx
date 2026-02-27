@@ -1272,7 +1272,9 @@ export default function ProjectSettlementPage() {
           </button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">수지정산서 - {projectName}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-gray-900 line-clamp-2 max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[800px] leading-snug">
+                수지정산서 - {projectName}
+              </h1>
               <StatusBadge
                 status={settlement.status || 'STANDBY'}
               />

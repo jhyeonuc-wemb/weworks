@@ -362,7 +362,7 @@ export default function MdEstimationSettingsPage() {
                         <div className="flex items-center gap-2 mb-2">
                             <h3 className="text-sm font-bold flex items-center gap-2 text-gray-800">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                {activeCategory.name === "개발" ? "개발 공수표" : activeCategory.name + " 공수 기준표"}
+                                {activeCategory.name === "개발" ? "개발 공수 기준표" : activeCategory.name + " 공수 기준표"}
                             </h3>
                         </div>
 

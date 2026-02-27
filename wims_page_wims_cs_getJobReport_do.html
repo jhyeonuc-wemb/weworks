@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+   
+
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-language" content="ko">
+<title>WIMS</title>
+<script type="text/javascript" src="/jslib/jquery-1.9.0/jquery-1.9.0.min.js"></script>
+<script type="text/javascript" src="/jslib/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+<script type="text/javascript" src="/js/util.js"></script>
+<script type="text/javascript" src="/js/UtilAjax.js"></script>
+<script type="text/javascript" src="/js/DefaultValue.js"></script>
+<script type="text/javascript" src="/js/googleanalytics.js"></script>
+<!--[if lt IE 8]>
+<script type="text/javascript" src="/js/json/json2.js"></script>
+<![endif]-->
+<link rel="stylesheet" href="/jslib/jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" />
+<link href="/css/spp/xeniview_NX.css" rel="stylesheet" type="text/css" >
+<link href="/css/spp/wims.css" rel="stylesheet" type="text/css" >
+</head>
+<body>
+<form id="form" name="form" action="/wims/cs/getJobReport.do?_sid=9AF2C4CDED6F4E49790E31B31ABE2A7D" method="post">
+<input id="pageIndex" name="pageIndex" type="hidden" value="1"/>
+ <div class="page" id="pg_container"> <!-- pg_container -->
+      <div class="title" id="page_title"></div>
+      <div class="root" id="page_navi" ></div>
+      	 <!-- 조회조건 Start -->
+           <div class="searchbox"> 
+           	 <div>
+	           	 <ul>
+	           	 
+	           	 	<li style="width:auto;padding-right: 30px">부서&nbsp;&nbsp;
+		           	 	<select id="user_dept" name="user_dept" style="overflow-y:auto; overflow-x:auto; width: 210px ">
+							<option value="">- 전체 -</option>
+							<option value="076d0a99-b364-4b32-858b-4b9a1328329b">기술연구소</option><option value="62b3e9c5-0b5e-42bf-bfca-b75c4f3abd7e">기술연구소&gt;&gt;전략연구실</option><option value="a6cd55d8-07e5-4e4e-8d42-0c93053667ce">기술연구소&gt;&gt;전략연구실&gt;&gt;솔루션연구팀</option><option value="d0bfbdf8-4818-41ca-9318-304eefaf465b">기술연구소&gt;&gt;전략연구실&gt;&gt;전자도면팀</option><option value="968b2f48-6583-4adf-a895-a60c78f36cb4">기술연구소&gt;&gt;제품연구실</option><option value="6ebd4c99-98bb-458a-80dc-c56ab9de4e1f">기술연구소&gt;&gt;제품연구실&gt;&gt;품질팀</option><option value="7b81cc91-4366-480f-88bb-709547406c9b">기술연구소&gt;&gt;제품연구실&gt;&gt;시각화팀</option><option value="f1b62218-535f-4099-b2c0-3db5e9f8a08f">기술연구소&gt;&gt;제품연구실&gt;&gt;데이터팀</option><option value="b82af1a7-e6b8-4d99-939e-e61d681b50a4">기술연구소&gt;&gt;융합기술연구실</option><option value="194de0d5-225c-4452-8544-c724eece7ae0">기술연구소&gt;&gt;융합기술연구실&gt;&gt;AI응용기술팀</option><option value="cd351e5e-fabd-400e-9352-18afa7d4701d">기술연구소&gt;&gt;융합기술연구실&gt;&gt;전략과제팀</option><option value="10153c41-d035-49c7-b4b1-631a20cfcc97">DI본부(구)</option><option value="1495f31f-5140-4ff8-b7da-650610270d72">Presales그룹(구)</option><option value="2b9c5aa5-3721-48eb-a931-6fa71c07f8a7">Presales그룹(구)&gt;&gt;조기경보팀(구)</option><option value="1dfdec66-6242-43a0-8dd5-2ab80db4cfb5">해외사업본부(구)</option><option value="1ede0d12-3939-4d8c-abdc-d04740fb581f">경영지원실(구)</option><option value="0ed9d4a1-3d86-420b-a052-11e5f8fb846e">경영지원실(구)&gt;&gt;마케팅 파트(구)</option><option value="e878aaa0-791f-48f7-b4ae-31d67706c1d3">경영지원실(구)&gt;&gt;회계/인사/총무팀(구)</option><option value="23050B73-0E2E-62CA-2AE0-47776ACDEE96">R&amp;D센터(구)</option><option value="1f2a60a7-8d33-4faf-9dc6-fc1b7d949174">R&amp;D센터(구)&gt;&gt;RENOBIT팀(구)</option><option value="4b34be3c-649a-426a-b4d3-5c3bfad9fecd">R&amp;D센터(구)&gt;&gt;QA파트(구)</option><option value="6dcb3882-bca0-48ea-88ef-60c6808b24b3">R&amp;D센터(구)&gt;&gt;조기경보팀(구)</option><option value="A02433CD-44AA-6AE5-3F3F-4777EE7E6C40">R&amp;D센터(구)&gt;&gt;기술연구소(구)</option><option value="ea97fde3-82da-4964-bbaf-bec9aa964417">R&amp;D센터(구)&gt;&gt;기술연구소(구)&gt;&gt;TIM팀(구)</option><option value="ee884a68-5962-430e-a136-624d64ee8735">R&amp;D센터(구)&gt;&gt;솔루션기획팀(구)</option><option value="2310a958-89a7-4d05-8b42-757db45c2ea6">전략기획부(구)</option><option value="01c8a8ce-11eb-43c6-ae04-4fa977522bfe">전략기획부(구)&gt;&gt;기획마케팅팀(구)</option><option value="4565a4f2-4592-4fa2-b058-c79190d5131a">전략기획부(구)&gt;&gt;해외사업팀(구)</option><option value="2c46110b-f6bd-447a-b22e-826d26d1a2ea">Dataric</option><option value="3ae414e6-8dec-4568-bdf4-85d409420328">기술본부(구)</option><option value="035662c7-282b-447c-92ae-eb4ee225a14a">기술본부(구)&gt;&gt;CD팀(구)</option><option value="2d34006b-a687-433a-81b3-fdb84031831c">기술본부(구)&gt;&gt;PMO팀(구)</option><option value="402f2127-984c-4cc1-8a47-d92e8c38d293">기술본부(구)&gt;&gt;DA그룹(구)</option><option value="0d14e009-2034-4c62-8aa0-841a25fdaaa8">기술본부(구)&gt;&gt;DA그룹(구)&gt;&gt;PMO팀(구)</option><option value="a091b0bb-3eee-40cf-a6a1-36ed612555bd">기술본부(구)&gt;&gt;DA그룹(구)&gt;&gt;Solution팀(구)</option><option value="f0d3dc16-8b7e-4496-873a-bae067ea31e4">기술본부(구)&gt;&gt;DA그룹(구)&gt;&gt;상주팀(구)</option><option value="47c205c1-b487-4741-a0b7-3c678a6d117f">기술본부(구)&gt;&gt;Solution팀(구)</option><option value="8ef16f56-344f-4451-b57b-ac51f82c2219">기술본부(구)&gt;&gt;Smart팀(구)</option><option value="a9afd48a-5611-40ad-a67c-dca9c0e96782">기술본부(구)&gt;&gt;서비스그룹(구)</option><option value="632c1a1b-3274-4d2f-a916-d60570b04c32">기술본부(구)&gt;&gt;서비스그룹(구)&gt;&gt;CS팀(구)</option><option value="c161ec97-11fd-48de-ac7d-8794dd649d62">기술본부(구)&gt;&gt;서비스그룹(구)&gt;&gt;서비스팀(구)</option><option value="cec7fbfc-27aa-45b7-b9f2-d29a8240da89">기술본부(구)&gt;&gt;서비스그룹(구)&gt;&gt;CS상주팀(구)</option><option value="dd562185-5f5b-4a90-a7a2-081f6e7572d1">기술본부(구)&gt;&gt;DT그룹(구)</option><option value="5ffff713-efc5-44a0-ad72-2d81a44c3514">기술본부(구)&gt;&gt;DT그룹(구)&gt;&gt;Smart팀(구)</option><option value="61a34e99-dcb0-49de-a430-217e33929823">기술본부(구)&gt;&gt;DT그룹(구)&gt;&gt;CS팀(구)</option><option value="d7b3492f-f43a-4b50-8524-7cf64e39b58e">기술본부(구)&gt;&gt;DT그룹(구)&gt;&gt;CD팀(구)</option><option value="3db57d47-31ec-4b70-88a9-9a06552f8c0a">R&amp;D센터(구)</option><option value="4aa641f3-2854-4a0c-8f91-b20ee3260b0f">R&amp;D센터(구)&gt;&gt;데이터플랫폼연구실</option><option value="d907b9cd-5402-4708-8aa4-c7404df26f99">R&amp;D센터(구)&gt;&gt;데이터플랫폼연구실&gt;&gt;데이터플랫폼팀</option><option value="575a6ec6-c815-495e-b307-d26169e8dba2">R&amp;D센터(구)&gt;&gt;솔루션연구실</option><option value="ca1da8f0-9a4c-426b-ba85-8d170afb2763">R&amp;D센터(구)&gt;&gt;솔루션연구실&gt;&gt;솔루션팀</option><option value="a4ded198-2c34-4048-afe1-5c5b61ee8495">R&amp;D센터(구)&gt;&gt;UI/UX기획실</option><option value="ca62b844-68c0-4d42-8989-10394c08a5c2">R&amp;D센터(구)&gt;&gt;품질혁신팀</option><option value="ca707c68-b07e-4cf3-807a-4f0c31094736">R&amp;D센터(구)&gt;&gt;데이터비전연구실</option><option value="074cf0f1-f43c-4198-a241-fb1dbbda8a96">R&amp;D센터(구)&gt;&gt;데이터비전연구실&gt;&gt;VX팀</option><option value="ac452ad8-6d9d-43a1-8b55-da9a9b2174a2">R&amp;D센터(구)&gt;&gt;데이터비전연구실&gt;&gt;CV팀</option><option value="3fc5fae3-509f-4954-a40e-98483509b739">AI팀(구)</option><option value="485263a1-94fe-4957-82e1-67871fff6250">해외사업본부(구)</option><option value="2a393c6a-0288-4f91-988a-bdcbafd5fa58">해외사업본부(구)&gt;&gt;본사</option><option value="48b9e86c-b70d-4047-a471-b63869caa8b5">해외사업본부(구)&gt;&gt;대만법인</option><option value="4ae96089-3c80-4e2d-851b-b4c818d6bb72">기술본부(구)</option><option value="02ca854b-ab26-4acb-bc5b-fb2515baa389">기술본부(구)&gt;&gt;플랫폼그룹</option><option value="2763707e-0ba7-4686-a72c-fdfc80282f64">기술본부(구)&gt;&gt;솔루션그룹</option><option value="51c981e0-9d76-4aaa-ab9a-948d6edc3c17">전문위원</option><option value="61b764db-afc9-489e-9deb-f9b9fda39f69">ES사업본부(구)</option><option value="0aabb966-d805-4bd0-977a-a0fbce45b3b9">ES사업본부(구)&gt;&gt;영업 1팀(구)</option><option value="6f2f7813-65a9-469f-8b86-3423509b894e">ES사업본부(구)&gt;&gt;영업지원팀(구)</option><option value="c76a8910-8b79-4bea-9f8f-b42a1629888c">ES사업본부(구)&gt;&gt;영업 3팀(구)</option><option value="fe7a8a32-2726-4dca-b8c5-f35e7dd6f757">ES사업본부(구)&gt;&gt;영업 2팀(구)</option><option value="6269b013-1bd6-4aaa-a23f-8b79414387a3">R&amp;D센터 2연구소(구)</option><option value="694cf381-389a-41d9-9bb8-c3d130b3608d">사업부문장(구)</option><option value="0a7d022c-1f21-460f-8c53-7abd00a20dc0">사업부문장(구)&gt;&gt;해외사업본부(구)</option><option value="1eaf71e1-8f62-43f9-ac16-450e65995547">사업부문장(구)&gt;&gt;온라인사업부(구)</option><option value="693b89b5-6f9c-4664-854f-90219dc6ee25">사업부문장(구)&gt;&gt;사업지원(구)</option><option value="94c68c00-d379-4710-bc02-c5e2fee2b172">사업부문장(구)&gt;&gt;스마트사업담당(구)</option><option value="788a1e2a-44a9-4e17-8e60-4a2938b9511f">ES본부(구)</option><option value="1194fd58-caf0-46c8-bef2-e527e05c38cf">ES본부(구)&gt;&gt;TS그룹(구)</option><option value="19ec74de-0187-45bb-bff4-ee564d6a2c7c">ES본부(구)&gt;&gt;TS그룹(구)&gt;&gt;CD팀(구)</option><option value="615aa41a-96ad-408b-bad0-67e758559563">ES본부(구)&gt;&gt;TS그룹(구)&gt;&gt;PS팀(구)</option><option value="d019e326-0d59-4652-962d-ce8f0532367d">ES본부(구)&gt;&gt;TS그룹(구)&gt;&gt;SD팀(구)</option><option value="eb552914-b319-4476-bc31-7f1d70acd373">ES본부(구)&gt;&gt;TS그룹(구)&gt;&gt;SM팀(구)</option><option value="f58d7613-b8c9-4933-8592-b55ad2b10dd7">ES본부(구)&gt;&gt;TS그룹(구)&gt;&gt;CS팀(구)</option><option value="1bf4c65e-c916-4386-bfbb-4e71079b2a43">ES본부(구)&gt;&gt;플랫폼기획실(구)</option><option value="79dcf918-8d20-4c97-bf40-99dbabc1eadd">ES본부(구)&gt;&gt;플랫폼기획실(구)&gt;&gt;TA팀(구)</option><option value="1f484339-f3ab-4cb7-adb9-a8bbfb50d736">ES본부(구)&gt;&gt;PB그룹(구)</option><option value="53f0265f-1233-4146-92c8-37e556857757">ES본부(구)&gt;&gt;PB그룹(구)&gt;&gt;BS팀(구)</option><option value="5c2fa68f-7545-42e9-b05a-ee7a63f1b68d">ES본부(구)&gt;&gt;PB그룹(구)&gt;&gt;PD팀(구)</option><option value="8c036674-a909-4cc3-ad57-50bed7355ab2">ES본부(구)&gt;&gt;PB그룹(구)&gt;&gt;SS팀(구)</option><option value="2c225411-3ddb-4abf-87e0-e463fd45e81c">ES본부(구)&gt;&gt;DI그룹(구)</option><option value="4f0b7d8c-5a9f-4185-9334-8be13af5bfd6">ES본부(구)&gt;&gt;DI그룹(구)&gt;&gt;컨설팅팀(구)</option><option value="b033c8bd-edb6-4722-a794-1ffe878b4a63">ES본부(구)&gt;&gt;DI그룹(구)&gt;&gt;서비스개발팀(구)</option><option value="de9f2791-84ea-452e-9674-a739a25b3729">ES본부(구)&gt;&gt;DI그룹(구)&gt;&gt;혁신기술팀(구)</option><option value="3ffae8c3-a2ec-4095-9993-750df8e72c41">ES본부(구)&gt;&gt;Ent.그룹(구)</option><option value="b65c8559-2628-4969-94a4-a05047b66482">ES본부(구)&gt;&gt;Ent.그룹(구)&gt;&gt;Pre-sales팀(구)</option><option value="5c602d11-510f-4dda-84a2-3958c58b5e6c">ES본부(구)&gt;&gt;플랫폼그룹(구)</option><option value="296d1135-e8f0-4eb3-b2e2-e646faba73db">ES본부(구)&gt;&gt;플랫폼그룹(구)&gt;&gt;개발2팀(구)</option><option value="a701cf03-9e93-4641-8a1f-19f97d50783c">ES본부(구)&gt;&gt;플랫폼그룹(구)&gt;&gt;개발1팀(구)</option><option value="613e3984-21ac-4a3c-8a24-9f7ae08aec0c">ES본부(구)&gt;&gt;솔루션 그룹(구)</option><option value="63b8f00a-5b1f-43f6-a658-993c1b1efd31">ES본부(구)&gt;&gt;VB그룹(구)</option><option value="59f46e94-0568-4c7a-b620-2ac6b3f22bab">ES본부(구)&gt;&gt;VB그룹(구)&gt;&gt;서비스팀(구)</option><option value="711a5a0e-a9af-4dcb-9b80-69308ed220c7">ES본부(구)&gt;&gt;VB그룹(구)&gt;&gt;CS팀(구)</option><option value="a3c28721-7ab8-4734-b98a-f13ea06f439b">ES본부(구)&gt;&gt;VB그룹(구)&gt;&gt;BSS팀(구)</option><option value="c8729b11-5d10-4c13-b2f0-8e3fe4a108c6">ES본부(구)&gt;&gt;VB그룹(구)&gt;&gt;TSS팀(구)</option><option value="7de6a72f-1c39-4770-98cb-e1ce54567f64">ES본부(구)&gt;&gt;영업지원팀(구)</option><option value="870bf44f-820a-4495-8b34-17f49d20f005">ES본부(구)&gt;&gt;영업3팀(구)</option><option value="8da24abc-8c02-414d-ada1-90634a3a77d7">ES본부(구)&gt;&gt;영업그룹(구)</option><option value="52ce48be-017c-49fb-af56-05f888de6274">ES본부(구)&gt;&gt;영업그룹(구)&gt;&gt;영업1팀(구)</option><option value="714452d2-c2c3-4e49-b7f6-df5f5b224561">ES본부(구)&gt;&gt;영업그룹(구)&gt;&gt;영업3팀(구)</option><option value="a3ad181b-7b78-4850-a7a3-9afd9854099c">ES본부(구)&gt;&gt;영업그룹(구)&gt;&gt;영업2팀(구)</option><option value="90570829-2696-47aa-b590-b01f4142ba41">ES본부(구)&gt;&gt;NB그룹(구)</option><option value="a3b607da-f359-46b0-a813-7a87c4c75bcc">ES본부(구)&gt;&gt;NB그룹(구)&gt;&gt;서비스팀(구)</option><option value="d8347b9b-5246-4256-8435-d656a844bf0f">ES본부(구)&gt;&gt;NB그룹(구)&gt;&gt;전략사업팀(구)</option><option value="fcde3ac9-e80d-4dda-b304-93dc138072c3">ES본부(구)&gt;&gt;NB그룹(구)&gt;&gt;영업지원팀(구)</option><option value="911d3983-6120-46b5-98a5-e53cf6041d0a">ES본부(구)&gt;&gt;영업2팀(구)</option><option value="d74cab70-eb80-4766-802a-ee6b5627bec4">ES본부(구)&gt;&gt;DX그룹(구)</option><option value="1a900a44-2659-497b-aa25-46e78c40b6c3">ES본부(구)&gt;&gt;DX그룹(구)&gt;&gt;DX사업부(구)</option><option value="1db51db3-19e1-4322-ac24-970f993d22e4">ES본부(구)&gt;&gt;DX그룹(구)&gt;&gt;TA팀(구)</option><option value="ed9bb8ea-1cd3-4761-8835-430bb0ac3396">ES본부(구)&gt;&gt;DX그룹(구)&gt;&gt;SA팀(구)</option><option value="e597fa44-b0cb-44f6-85f4-2946c1067043">ES본부(구)&gt;&gt;TE그룹(구)</option><option value="b2464fe2-a7ab-403d-952b-1d847f6e56cc">ES본부(구)&gt;&gt;TE그룹(구)&gt;&gt;TED팀(구)</option><option value="f7cb9bd5-e01d-43c2-b589-50eafb624922">ES본부(구)&gt;&gt;TE그룹(구)&gt;&gt;TEC팀(구)</option><option value="ed7a4005-5ac8-42f6-aa92-815ca90a2c6f">ES본부(구)&gt;&gt;영업1팀(구)</option><option value="fc79e91d-8ae6-4ee4-9450-af5bb572beb3">ES본부(구)&gt;&gt;Ent그룹(구)</option><option value="0e5711dd-c63c-44ba-8a86-23da00c195fd">ES본부(구)&gt;&gt;Ent그룹(구)&gt;&gt;SM팀(구)</option><option value="37537494-6364-431f-a98e-b991586d56ef">ES본부(구)&gt;&gt;Ent그룹(구)&gt;&gt;Ent사업부(구)</option><option value="f0827dc2-6cef-4fd6-ab30-30bfce52adf4">ES본부(구)&gt;&gt;Ent그룹(구)&gt;&gt;CS팀(구)</option><option value="7b7c702a-4102-4fe1-a85b-dc7dc6875f38">영업본부(구)</option><option value="000e302a-aa60-4e7f-8af7-b7824cc972f8">영업본부(구)&gt;&gt;영업 1그룹(구)</option><option value="c8e91f13-7bb0-42c1-98c7-467ce5bb9a7a">영업본부(구)&gt;&gt;영업 2그룹(구)</option><option value="8456cc8c-ac00-42b0-aa65-41dfd36022e6">전략기술연구실</option><option value="8ad229ce-f1db-4d2d-b4f6-2ff1cf5210f7">전략기획실(구)</option><option value="6ef17cc3-f375-4ac6-9f54-c8ff9ecd0de9">전략기획실(구)&gt;&gt;마케팅파트(구)</option><option value="926af658-ece0-4b86-8ab3-f35844cd9941">전략기획실(구)&gt;&gt;해외영업파트(구)</option><option value="a24a6f62-4a15-47bb-90c9-4cf12851d7b1">전략기획실(구)&gt;&gt;SB팀(구)</option><option value="8adf3e49-b334-4984-916a-5d538ee762da">미래전략본부</option><option value="02fe7996-34b1-4a96-a486-9ccef7d2071d">미래전략본부&gt;&gt;미래기획실</option><option value="a125f905-9cf0-4117-b0c9-7d9ef68e574e">미래전략본부&gt;&gt;미래기획실&gt;&gt;솔루션기획팀</option><option value="56bf4008-b50a-4f20-aa7b-4f1c639611a2">미래전략본부&gt;&gt;재무경영실</option><option value="50c3f1da-21a7-44a1-b531-2a535ec36590">미래전략본부&gt;&gt;재무경영실&gt;&gt;재경팀</option><option value="8966d158-6371-46bb-9d07-5c3a0713aa35">미래전략본부&gt;&gt;전략기획실</option><option value="65d0cb24-197c-4a92-938b-5243a43d716c">미래전략본부&gt;&gt;전략기획실&gt;&gt;전략기획팀</option><option value="acec2c96-8b12-4f7f-967f-17490842bad6">미래전략본부&gt;&gt;전략기획실&gt;&gt;기획마케팅팀</option><option value="b6dcd0b8-b081-487f-8008-236ee065c95f">미래전략본부&gt;&gt;인사총무팀</option><option value="fccc1384-a145-4b0b-b971-6e70136ad341">미래전략본부&gt;&gt;해외사업부</option><option value="8de98416-34a5-430c-8122-8d621fe2834f">SMD본부(구)</option><option value="0dbae15e-97f9-4256-a818-d102e8d95744">SMD본부(구)&gt;&gt;영업팀</option><option value="18f17222-aca3-4abf-a1fb-68303ecaef88">SMD본부(구)&gt;&gt;기술팀</option><option value="21b9aba8-ef9b-45f4-aec2-e4626bd41d6e">SMD본부(구)&gt;&gt;그룹장(구)</option><option value="02ec0d52-1011-42fa-93aa-f2ba048bfee4">SMD본부(구)&gt;&gt;그룹장(구)&gt;&gt;기술팀(구)</option><option value="2a50a575-38c7-467e-9a10-f28ab8beacc5">SMD본부(구)&gt;&gt;그룹장(구)&gt;&gt;영업팀(구)</option><option value="699538c7-84d1-4ae4-b3f4-0e30240a781e">SMD본부(구)&gt;&gt;사업팀(구)</option><option value="8edbaa05-3716-4d32-b40f-6e745662c452">R&amp;D센터(구)</option><option value="0257509f-fe4e-46d1-bb5f-f5a739342c59">R&amp;D센터(구)&gt;&gt;CV실(구)</option><option value="0b38c27d-3afc-4159-ab44-8a4e3cf5cc82">R&amp;D센터(구)&gt;&gt;Big-Data실(구)</option><option value="198a28d3-2aa6-4f9b-843d-e5f3f9bb816b">R&amp;D센터(구)&gt;&gt;PA실(구)</option><option value="4a8720c7-ef66-4358-ae3b-b7388d892d57">R&amp;D센터(구)&gt;&gt;DT실(구)</option><option value="73e5151d-f4f8-4d52-8d08-92a5f877e159">R&amp;D센터(구)&gt;&gt;디자인팀(구)</option><option value="be6dbe07-b08b-4274-89b6-06e9c0eabf2c">R&amp;D센터(구)&gt;&gt;Design실(구)</option><option value="d6d03ad8-047f-48f0-8f8d-38322d053524">R&amp;D센터(구)&gt;&gt;솔루션팀(구)</option><option value="96498a3e-d971-4666-a954-32d128402023">ES기술본부(구)</option><option value="81919cde-79bd-4010-bdf1-c6283c85c3df">ES기술본부(구)&gt;&gt;Smart팀(구)</option><option value="8b77011e-5714-4a75-8eb6-3094741ad9a0">ES기술본부(구)&gt;&gt;BI그룹(구)</option><option value="ac4ba440-318e-4199-aa3e-3d3702edaf79">ES기술본부(구)&gt;&gt;CS그룹(구)</option><option value="cb3ceaf4-06db-4982-9a06-fd0f12e5a764">ES기술본부(구)&gt;&gt;솔루션그룹(구)</option><option value="43d47284-7ad2-4ee2-92e1-af91d287119f">ES기술본부(구)&gt;&gt;솔루션그룹(구)&gt;&gt;서비스팀(구)</option><option value="4b5bda99-41ab-44f9-87a5-79083f702f75">ES기술본부(구)&gt;&gt;솔루션그룹(구)&gt;&gt;솔루션팀(구)</option><option value="5e1d7561-55e5-4cf7-8fec-8dbea85e0d23">ES기술본부(구)&gt;&gt;솔루션그룹(구)&gt;&gt;CD팀(구)</option><option value="B91B674D-9552-90E1-50DC-4779A215616D">삭제_외주인력</option><option value="E0B7F7EA-5EA8-8598-F82C-4778FE0C4673">SMD본부(구)</option><option value="3ee80fcf-3b5d-443f-a36a-349ea19922d1">SMD본부(구)&gt;&gt;영업팀(구)</option><option value="8a4d307f-0244-4f75-85d3-31431a07090f">SMD본부(구)&gt;&gt;기술팀(구)</option><option value="a7c330e4-4a6b-44d3-ae24-12a640833567">-------------------------</option><option value="b5cd14a3-621a-4205-8856-5574556757c2">기술혁신본부(구)</option><option value="2d3ae3b2-5f0c-4f67-b6f6-6d77e0f812fc">기술혁신본부(구)&gt;&gt;TS그룹</option><option value="6b62f026-ca03-435d-ac30-d7019a0b9f73">기술혁신본부(구)&gt;&gt;ES그룹</option><option value="17de782b-32c7-42a7-84ef-33017d621716">기술혁신본부(구)&gt;&gt;ES그룹&gt;&gt;SS팀</option><option value="bb6d5250-3866-48e4-82a1-1b451ac855af">기술혁신본부(구)&gt;&gt;ES그룹&gt;&gt;SM팀</option><option value="ad85371f-20c1-4185-bb5e-14c2c50d719a">기술혁신본부(구)&gt;&gt;DV그룹</option><option value="01da6b0d-8331-4464-8a82-2a82c7784b4d">기술혁신본부(구)&gt;&gt;DV그룹&gt;&gt;DR팀</option><option value="797035cf-16f9-419a-8331-c91156bbe23d">기술혁신본부(구)&gt;&gt;DV그룹&gt;&gt;DD팀</option><option value="c4d9f9fe-0630-4bb9-80af-11f9b9a6256d">기술혁신본부(구)&gt;&gt;TB1그룹</option><option value="9edf8833-8cad-4fdd-9dbd-dfb393d26ec9">기술혁신본부(구)&gt;&gt;TB1그룹&gt;&gt;TB1.1팀</option><option value="aa1647bd-df0b-439e-b319-4c83b27737c2">기술혁신본부(구)&gt;&gt;TB1그룹&gt;&gt;TB1.2팀</option><option value="f5a1fed9-a66d-4fc7-9527-8a3f64bc209c">기술혁신본부(구)&gt;&gt;TB2그룹</option><option value="632f0eac-83ae-41e4-b504-b6823b3ee75e">기술혁신본부(구)&gt;&gt;TB2그룹&gt;&gt;TB2.2팀</option><option value="95657a15-0fad-464a-9a43-6ab45cc91d99">기술혁신본부(구)&gt;&gt;TB2그룹&gt;&gt;TB2.1팀</option><option value="bab013df-06a4-447b-a185-3faf7c0fa69f">CD팀(구)</option><option value="c4665df0-f860-44d0-ac88-f469db40d8f6">프로젝트(구)</option><option value="cbcf493b-09b7-4415-aeb9-f38a49683b89">퇴사자</option><option value="dd2e7a71-804c-4787-afe7-89ea40d9dfd1">R&amp;D센터(구)</option><option value="16ff3719-bb4b-4a96-b662-e2131e8dbac3">R&amp;D센터(구)&gt;&gt;제품개발 2팀(구)</option><option value="1857808d-bb89-47bf-83cd-f886b3807ce7">R&amp;D센터(구)&gt;&gt;제품개발팀(구)</option><option value="4f2a3745-c1ec-4d58-8219-b51a159959fc">R&amp;D센터(구)&gt;&gt;기술연구소(구)</option><option value="fc46e19a-9d57-4504-9dc9-bdc2aaa2401d">R&amp;D센터(구)&gt;&gt;기술연구소(구)&gt;&gt;DX팀(구)</option><option value="a53c4855-7bf6-4343-ad2d-a46ff96c8d86">R&amp;D센터(구)&gt;&gt;QX팀(구)</option><option value="a9ce461a-8ad2-456d-949f-a3fab50658f0">R&amp;D센터(구)&gt;&gt;품질관리팀(구)</option><option value="d32232ce-7c48-4c9a-a113-2ffd5f53ee08">R&amp;D센터(구)&gt;&gt;UX개발팀(구)</option><option value="e51ebe1c-7e64-45a7-a7e7-1f5112441f34">R&amp;D센터(구)&gt;&gt;VX팀(구)</option><option value="ef8c95cf-effc-432d-adec-80e70e375948">R&amp;D센터(구)&gt;&gt;제품개발 1팀(구)</option><option value="e2b0c344-4424-4d86-ba80-a2d3b993eff8">시스템그룹(구)</option><option value="e2fd0afe-7aaf-4a6a-8d32-2c6636af2a9a">R&amp;D센터</option><option value="ea936942-8328-4abe-a3c7-01e7b8ce3c7b">국내사업부문(구)</option><option value="ed3b68b8-930a-4781-af1e-720c719c3299">사업본부</option><option value="34933b29-984b-466b-8d84-5911929c3f46">사업본부&gt;&gt;영업 1그룹</option><option value="7748ff90-c347-4733-9244-d31814852080">사업본부&gt;&gt;영업 2그룹</option><option value="7a55b028-ce81-4669-bcda-4ec2e473ea62">사업본부&gt;&gt;기술그룹</option><option value="1bcd8979-5c9c-4681-bce2-f850d7f53535" selected="selected">사업본부&gt;&gt;기술그룹&gt;&gt;개발팀</option><option value="2e54fb03-a20d-4855-b43b-57dbbb48e7e1">사업본부&gt;&gt;기술그룹&gt;&gt;개발팀&gt;&gt;개발 3파트</option><option value="5c9bc011-a06e-4696-a55b-da11b352ea66">사업본부&gt;&gt;기술그룹&gt;&gt;개발팀&gt;&gt;개발 1파트</option><option value="5ff2f964-fa45-4a4c-bc42-6797ab629c4c">사업본부&gt;&gt;기술그룹&gt;&gt;개발팀&gt;&gt;개발 2파트</option><option value="2f650a25-171e-4001-86a0-53471896da88">사업본부&gt;&gt;기술그룹&gt;&gt;서비스지원팀</option><option value="3aeed140-7026-463a-b0c6-9440e64eb678">사업본부&gt;&gt;기술그룹&gt;&gt;PMO팀</option><option value="8dee610d-b8e3-46f6-9319-2926e809cfc0">사업본부&gt;&gt;기술그룹&gt;&gt;디자인팀</option><option value="edd42f7a-b311-4fdc-8dfe-c28948d2d82c">SP본부(구)</option><option value="b5a832c5-232d-488b-adde-8f0c36fc3798">SP본부(구)&gt;&gt;Energy그룹(구)</option><option value="a02c2ec2-7f66-4d53-91e9-a628b4d42dda">SP본부(구)&gt;&gt;Energy그룹(구)&gt;&gt;Plant팀(구)</option><option value="c734bb6b-88d2-4793-9f3a-a5f7ded473e0">SP본부(구)&gt;&gt;Energy그룹(구)&gt;&gt;Smart팀(구)</option><option value="f083ddf3-b95b-4dfc-8927-9d91ce1298b5">R&amp;D 2센터(구)</option><option value="d04cef7e-7834-4353-ba1b-748e6e1375e5">R&amp;D 2센터(구)&gt;&gt;DP팀</option>
+						</select>&nbsp;&nbsp;
+	           	 	</li>
+	           	 	
+	           	 	<li>
+							구분
+							<select id="p_gubun_nm" name="p_gubun_nm" style="width: 160px;">
+								<option value="" selected="selected">전체</option> 
+								<option value="CD00000181">Presales</option><option value="CD00000182">일반 프로젝트 계약</option><option value="CD00000204">무상유지보수</option><option value="CD00000200">유지보수 계약</option><option value="CD00000201">RnD 프로젝트</option><option value="CD00000335">연구과제</option><option value="CD00000203">기타(TFT 활동)</option>
+							</select>
+					</li>	
+	           	 
+	           	 	<li style="width: auto;">
+							프로젝트
+							<input id="p_name" name="p_name" onkeydown="onEnter(event, fnSearch);" style="width: 150px; font-size: 12px;" type="text" value=""/>
+					</li>   	 
+					
+					<li style="width: auto;">
+							메모
+							<input id="w_work_memo" name="w_work_memo" onkeydown="onEnter(event, fnSearch);" style="width: 150px; font-size: 12px;" type="text" value=""/>
+					</li>
+					
+					<li style="width: auto;">
+							이름
+							<input id="user_name" name="user_name" onkeydown="onEnter(event, fnSearch);" style="width: 70px; font-size: 12px;" type="text" value=""/>
+					</li>
+	           	 </ul>
+           	 </div>
+           	 		<table align="right" style="margin:6px;">
+						<tr>
+							<td class="gBtn1" style="padding-right:3px;"><a href="#"><span onclick="fnSearch();">조회</span></a></td>
+							<td class="gBtn1"><a href="#"><span class="btnE" onclick="fnExcel(this);">엑셀</span></a></td>
+						</tr>
+					</table>
+           	</div>
+           	
+         <div id="grid_1" class="gridtitle" style="height: auto;">
+			<table id="resultTable" border="0" cellspacing="0" cellpadding="0" align="center" style="width: 100%;border-bottom:1px solid #5881a0;">
+				<colgroup style="">
+					<col style="width: 80px;">
+					<col style="width: 50px;">
+					<col style="width: 100px;">
+					<col style="width: 150px;">
+					<col style="width: 300px;">
+				</colgroup>
+				<tr class="contents_grid_02" height="25px">
+					<th class="contents_grid_02">날짜</th>
+					<th class="contents_grid_02">이름</th>
+					<th class="contents_grid_02">프로젝트 구분</th>
+					<th class="contents_grid_02">프로젝트명</th>
+					<th class="contents_grid_02">메모</th>
+				</tr>
+
+				  	
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-02-20</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">휴가(개인연차)</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-02-19</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">휴가(개인연차)</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-30</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">일반 관리업무</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-30</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">기타</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-29</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반 프로젝트 계약</td>
+					<td align="left" class="board-box-line-bott grid_font ">P25-019_고성 천연가스발전사업 디지털 트윈 구축 용역</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-28</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">기타</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-27</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">휴가(개인연차)</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-26</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">휴가(개인연차)</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-23</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">기타</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-22</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">기타</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-21</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반 프로젝트 계약</td>
+					<td align="left" class="board-box-line-bott grid_font ">P25-043_한국남동발전_AI 초혁신 업무 프로세스 개선 시범구축 용역</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-21</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">일반 관리업무</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-20</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">일반 관리업무</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-19</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">기타</td>
+                    <td align="left" class="board-box-line-bott grid_font ">WEWORKS</td>
+				</tr>
+				
+				<tr class="board-box-line-bott" onmouseover="this.bgColor='#eaf7ff'" onMouseOut="this.bgColor='#ffffff'">
+				
+					<td align="center" class="board-box-line-bott grid_font ">2026-01-16</td>
+					<td  height="30px" align="center" class="board-box-line-bott grid_font">정현우</td>
+					<td align="center" class="board-box-line-bott grid_font ">일반업무</td>
+					<td align="left" class="board-box-line-bott grid_font ">전사 워크샵 진행</td>
+                    <td align="left" class="board-box-line-bott grid_font "></td>
+				</tr>
+				
+			</table>
+			
+			 <div class="paging" id="paging_div">
+	            <div id="pagination">
+	              <ul class="paging_align">
+							<td><li><a href="?pageIndex=1" onclick="fn_Link_Page(1);return false; "><img src="/images/NX/common/icon_prevend.gif" alt="처음" style="vertical-align: middle;" border="0"/></a></li></td><td><li><a href="?pageIndex=1" onclick="fn_Link_Page(1);return false; "><img src="/images/NX/common/icon_prev.gif"    alt="이전" style="vertical-align: middle;"  border="0"/></a></li></td><td><li><strong>1</strong></li></td><td><li><a href="?pageIndex=2" onclick="fn_Link_Page(2);return false; ">2</a></li></td><td><li><a href="?pageIndex=3" onclick="fn_Link_Page(3);return false; ">3</a></li></td><td><li><a href="?pageIndex=4" onclick="fn_Link_Page(4);return false; ">4</a></li></td><td><li><a href="?pageIndex=5" onclick="fn_Link_Page(5);return false; ">5</a></li></td><td><li><a href="?pageIndex=6" onclick="fn_Link_Page(6);return false; ">6</a></li></td><td><li><a href="?pageIndex=7" onclick="fn_Link_Page(7);return false; ">7</a></li></td><td><li><a href="?pageIndex=8" onclick="fn_Link_Page(8);return false; ">8</a></li></td><td><li><a href="?pageIndex=9" onclick="fn_Link_Page(9);return false; ">9</a></li></td><td><li><a href="?pageIndex=10" onclick="fn_Link_Page(10);return false; ">10</a></li></td><td><li>&#160;<a href="?pageIndex=11" onclick="fn_Link_Page(11);return false; "><img src="/images/NX/common/icon_next.gif"    alt="다음" style="vertical-align: middle;"  border="0"/></a></li></td><td><li><a href="?pageIndex=161" onclick="fn_Link_Page(161);return false; "><img src="/images/NX/common/icon_nextend.gif" alt="마지막" style="vertical-align: middle;" border="0"/></a></li></td>
+
+				  </ul>
+				</div>
+	         </div>
+		</div>
+ </div>
+</form>
+</body>
+<script type="text/javascript">
+$(function() {
+	
+	gfPageTitle();//메뉴제목
+	gfPageGrade(); //권한관리
+	
+});
+
+//검색
+function fnSearch(){
+	document.form.pageIndex.value = 1;
+	document.form.action = "/wims/cs/getJobReport.do";
+	document.form.submit();
+}
+
+//페이징처리
+function fn_Link_Page(pageNo){
+	document.form.pageIndex.value = pageNo;
+	document.form.action = "/wims/cs/getJobReport.do";
+	document.form.submit();
+}
+
+//엑셀
+function fnExcel(obj) {
+	
+	var vparm = "?user_dept="+$("#user_dept").val()+"&p_gubun_nm="+$("#p_gubun_nm").val()+"&p_name="+$("#p_name").val()+"&w_work_memo="+$("#w_work_memo").val()+"&user_name="+$("#user_name").val();
+	excelDownload(obj.id,'/wims/cs/getjobExcel.do'+vparm);
+}
+</script>
+</html>

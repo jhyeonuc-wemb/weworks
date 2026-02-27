@@ -1,0 +1,950 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+<html>
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="content-language" content="ko">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link href="/css/spp/wims.css" rel="stylesheet" type="text/css" >
+	<link href="/css/spp/xeniview_NX.css" rel="stylesheet" type="text/css" > 
+	<link href="/css/layout/component.css" rel="stylesheet" type="text/css" > <!--  -->
+
+  <script type="text/javascript" src="/jslib/jquery-1.9.0/jquery-1.9.0.min.js"></script>
+  <script type="text/javascript" src="/jslib/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="/js/util.js"></script>
+  <script type="text/javascript" src="/js/UtilAjax.js"></script>
+  <script type="text/javascript" src="/js/DefaultValue.js"></script>
+  <script type="text/javascript" src="/js/googleanalytics.js"></script>
+  <!--[if lt IE 8]>
+<script type="text/javascript" src="/js/json/json2.js"></script>
+<![endif]-->
+  <link rel="stylesheet" href="/jslib/jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" />
+
+  <script src="js/select/classie.js"></script>
+  <script src="js/select/gnmenu.js"></script>
+	<script src="js/select/modernizr.custom.js"></script>
+
+<title>WIMS</title>
+
+<style>
+
+/* //////////////  */             
+/* 2013.08.09. JJS */
+/* //////////////  */  
+
+/*
+  Globals
+*/
+
+html {height:100%;}
+
+body {
+	height:100%;
+	width:100%;
+	margin: 0;
+}
+
+/*
+  Content   
+*/
+
+div#content {
+	border:0px solid red;
+	/* position:relative; */
+	float:left;
+	top: 20px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	padding: 10px 30px 10px 10px;
+	overflow: inherit;
+	background: #ffffff;
+	border-radius:0;
+}
+
+div#menu_wrapper {
+	position:absolute;
+}
+
+
+
+.wimsMenu2 {
+	background-image: url("../images/font/file.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.wimsMenu3 {
+	background-image: url("../images/font/user.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.wimsMenu4 {
+	background-image: url("../images/font/users.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.wimsMenu5 {
+	background-image: url("../images/font/mug.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.wimsMenu6 {
+	background-image: url("../images/font/hammer.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.wimsMenu1 {
+	background-image: url("../images/font/order.gif");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 12% 50%;
+	opacity : 0.8;
+	font-family:돋움;
+	font-size: 13px;
+	font-style:bold;
+}
+
+.logoutButton {
+	background-image: url("../images/font/switch.png");
+	background-repeat: no-repeat;
+	position: relative;
+	background-position: 50% 50%;
+	opacity : 0.8;
+}
+
+
+
+
+</style>
+
+
+</head>
+<body style="overflow-y: visible; overflow-x: visible;">
+
+
+<!-- / Content panel / start -->
+
+<!-- / Content panel / end -->
+
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+
+<div class="container">
+<div class="top" style="">
+<!-- 
+<a href="#">
+<div class="bi"></div>
+</a> -->  
+
+	<ul id="gn-menu" class="gn-menu-main" style="border-bottom: 1px solid #c6d0da; display:table;">
+		<li class="gn-trigger">
+			<a class="gn-icon-menu" style="height:100%; align:center; padding-top:8px;"><span>WIMS</span></a>
+			<nav class="gn-menu-wrapper">
+				<div class="gn-scroller">
+					<ul id="menuTree" class="menu">
+						
+						
+						
+						
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							 <!-- ROOT -->
+							<li class="item1" id="ee617590-9956-408c-8bd4-f6048cdc481c" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="0" label="현황관리" navi="현황관리" menu_grade="CRUDPE" style="border-bottom: 1px solid #c6d0da;text-align: left;">
+								<a href="#" style="padding-left:60px;" class="wimsMenu1">현황관리<!-- <span>+</span> --></a>
+				
+								<ul>
+							
+							
+							
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem1 activeMenu" id="b204e515-df60-43e0-9807-57836b5e649c" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/UserYearStatus.do" label="인력 운영 현황" navi="현황관리 > 인력 운영 현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">인력 운영 현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem2 activeMenu" id="1b7d0f40-303e-40c7-9cf7-a642ba0811f1" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/StatList.do" label="프로젝트 운영 현황" navi="현황관리 > 프로젝트 운영 현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">프로젝트 운영 현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem3 activeMenu" id="6d60683d-0e66-4135-a49c-acc8174d6b31" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/MainTenList.do" label="유지보수 현황" navi="현황관리 > 유지보수 현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">유지보수 현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem4 activeMenu" id="f74f79b4-1a37-4655-9b5b-22b0f8633bd0" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/MainDetailList.do" label="유지보수 현황 상세" navi="현황관리 > 유지보수 현황 상세" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">유지보수 현황 상세</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem5 activeMenu" id="286f11cc-008b-48c3-8847-dbcb34756930" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/UserAnnualList.do" label="연차 현황" navi="현황관리 > 연차 현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">연차 현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem6 activeMenu" id="eea3f58d-acbd-4b54-aafd-66961cf90260" parent="ee617590-9956-408c-8bd4-f6048cdc481c" pid="wims/stat/inputList.do" label="WIMS 미입력 현황" navi="현황관리 > WIMS 미입력 현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">WIMS 미입력 현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							 <!-- 자식 Tag가 종료되고 Top 태그 시작시 tag 닫기  -->
+								
+								</ul>
+							
+							
+							
+							
+							
+							 <!-- ROOT -->
+							<li class="item2" id="20000" parent="20000" pid="0" label="프로젝트관리" navi="프로젝트관리" menu_grade="CRUDPE" style="border-bottom: 1px solid #c6d0da;text-align: left;">
+								<a href="#" style="padding-left:60px;" class="wimsMenu2">프로젝트관리<!-- <span>+</span> --></a>
+				
+								<ul>
+							
+							
+							
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem7 activeMenu" id="CE41FC3F-BAE1-F590-C055-DB9BE37F251C" parent="20000" pid="wims/pms/PmsList.do" label="프로젝트 관리" navi="프로젝트관리 > 프로젝트 관리" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">프로젝트 관리</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem8 activeMenu" id="B63CD055-E442-45A5-278E-5A8A36BA71B6" parent="20000" pid="/job/getJobSchedule.do" label="개인별 작업일지" navi="프로젝트관리 > 개인별 작업일지" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">개인별 작업일지</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem9 activeMenu" id="9EAC4F6A-278B-21F9-B158-5A8ABCFABFDC" parent="20000" pid="/job/getTeamWork.do" label="팀별 작업일지" navi="프로젝트관리 > 팀별 작업일지" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">팀별 작업일지</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem10 activeMenu" id="45b80c09-38b8-4f70-ae76-442b75ed1b4a" parent="20000" pid="wims/cs/getJobReport.do" label="작업일지 게시판" navi="프로젝트관리 > 작업일지 게시판" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">작업일지 게시판</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem11 activeMenu" id="3ed154e1-37c5-45c5-a93c-9cd5383e70b9" parent="20000" pid="bbs/boardList.do?board_mng_id=2" label="문의게시판" navi="프로젝트관리 > 문의게시판" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">문의게시판</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							 <!-- 자식 Tag가 종료되고 Top 태그 시작시 tag 닫기  -->
+								
+								</ul>
+							
+							
+							
+							
+							
+							 <!-- ROOT -->
+							<li class="item3" id="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="0" label="직원관리" navi="직원관리" menu_grade="CRUDPE" style="border-bottom: 1px solid #c6d0da;text-align: left;">
+								<a href="#" style="padding-left:60px;" class="wimsMenu3">직원관리<!-- <span>+</span> --></a>
+				
+								<ul>
+							
+							
+							
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem12 activeMenu" id="6BDCDD02-7BCE-91CC-86AD-AD2E699C6A88" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="/com/userList.do" label="직원 관리" navi="직원관리 > 직원 관리" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">직원 관리</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem13 activeMenu" id="4EDD152D-837B-F705-5B67-F60AFD6FA9A5" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="wims/rep/PmsJobStatus.do" label="프로젝트별 업무현황" navi="직원관리 > 프로젝트별 업무현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">프로젝트별 업무현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem14 activeMenu" id="D2E614F8-EEA1-56F2-6C7C-FA7A76788BE5" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="wims/rep/UserJobStatus.do" label="구성원별 업무현황" navi="직원관리 > 구성원별 업무현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">구성원별 업무현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem15 activeMenu" id="d76016b2-954b-4b84-9894-b9019f0627d1" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="/wims/rep/getPreSalesInfo.do" label="기간별 업무현황" navi="직원관리 > 기간별 업무현황" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">기간별 업무현황</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem16 activeMenu" id="03A2DFF8-8835-54E2-953A-570AFCA5535E" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="wims/rep/getYearUserList.do" label="연도별 입사자 추이" navi="직원관리 > 연도별 입사자 추이" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">연도별 입사자 추이</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem17 activeMenu" id="a8fe9d6f-fc0f-4e5a-a4b0-1f6c6203f95c" parent="10B1ECB0-9ECD-E9B2-17DA-AD2ACB591163" pid="wims/mypage/MyPageMain.do" label="My Page" navi="직원관리 > My Page" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">My Page</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							 <!-- 자식 Tag가 종료되고 Top 태그 시작시 tag 닫기  -->
+								
+								</ul>
+							
+							
+							
+							
+							
+							 <!-- ROOT -->
+							<li class="item4" id="2F866B65-8EB3-EE0A-6AAD-9313A13EC06C" parent="2F866B65-8EB3-EE0A-6AAD-9313A13EC06C" pid="0" label="고객관리" navi="고객관리" menu_grade="CRUDPE" style="border-bottom: 1px solid #c6d0da;text-align: left;">
+								<a href="#" style="padding-left:60px;" class="wimsMenu4">고객관리<!-- <span>+</span> --></a>
+				
+								<ul>
+							
+							
+							
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem18 activeMenu" id="A4DB7F3A-F109-1BAB-369E-931566A7F514" parent="2F866B65-8EB3-EE0A-6AAD-9313A13EC06C" pid="wims/pms/CompanyList.do" label="업체 관리" navi="고객관리 > 업체 관리" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">업체 관리</a>
+							</li>
+							
+							
+						
+							
+							
+						
+						
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							 <!--  자식 태그 시작  -->
+							<li class="subitem19 activeMenu" id="247C4402-A499-815E-A98E-932FCF27B622" parent="2F866B65-8EB3-EE0A-6AAD-9313A13EC06C" pid="wims/pms/getClientList.do" label="고객 관리" navi="고객관리 > 고객 관리" menu_grade="CRUDPE" style="text-align:left;">
+								<a class="activeMenu" href="#">고객 관리</a>
+							</li>
+							
+							
+						
+							
+							
+						
+					</ul>						
+				</div>
+			</nav>
+		</li>
+		<li style="width:20%; /* max-width:500px; */  height:60px; border-right: 1px solid #c6d0da;">
+		</li>
+		
+		<li style="width:160px; border-right: 1px solid #c6d0da; height:100%; text-align:center;">
+			<a href="#" onclick="fnMenuOpen('/job/getJobSchedule.do');"><span style="display:table-cell; height:60px; width:160px; vertical-align:middle; text-align: center; font-family:돋움; font-size: 14px; font-style:bold;">개인별 작업 일지</span></a>
+		</li>
+		<li style="width:160px; border-right: 1px solid #c6d0da; text-align:center; ">
+			<a href="#" onclick="fnMenuOpen('/job/getTeamWork.do');"><span style="display:table-cell; height:60px; width:160px; vertical-align:middle; text-align: center; font-family:돋움; font-size: 14px; font-style:bold;">팀별 작업 일지</span></a>
+		</li>
+	    <li style="width:180px; text-align:center; padding-right:4px;">
+	    	<a href="#" onclick="fnMenuOpen('wims/mypage/MyPageMain.do');"><span style="display:table-cell; height:60px; width:180px; vertical-align:middle; text-align: center; font-family:돋움; font-size: 12px; font-style:bold;">정현우 이사 (팀장)</span></a>
+	    </li> 
+	    <li class="logout" style="display:table; height:60px; line-height:60px; width:66px; vertical-align:middle; text-align: center;">	
+			<div style="display: table-cell; text-align: center; vertical-align: middle;">
+			<span>
+				<a href="#" id="logout">
+					<img src="/../images/font/switch.png" style="width:22px; height:22px;  filter:alpha(opacity=50); opacity:0.5; " />
+				</a>
+			</span>
+			</div>
+	    </li>
+	    
+	    <li style="width:180px; text-align:center; padding-right:4px; cursor:pointer;">
+	    	<form id="form" name="form" action="/main.do" method="post">
+	    		<select id="link" name="cd_id" style="height:60px; width:178px;" onchange="fnLink()">
+                       <option value="" selected="selected">바로가기 링크</option>  
+                       <option style="height: 28px;" value="https://www.bizplay.co.kr/main_0003_01.act">비즈플레이</option><option style="height: 28px;" value="http://wims.wemb.co.kr:8888/loginView.do">WIMS 모바일</option><option style="height: 28px;" value="http://www.wemb.co.kr">위엠비 홈페이지</option><option style="height: 28px;" value="http://wemb.ezwel.com/">복지사이트</option><option style="height: 28px;" value="http://file.wemb.co.kr:8080/cgi-bin/">NAS</option><option style="height: 28px;" value="http://115.21.12.16/scan.htm">프린터 메일박스(경관부)</option><option style="height: 28px;" value="http://115.21.12.17/scan.htm">프린터 메일박스(SMD)</option><option style="height: 28px;" value="http://0505.uplus.co.kr/">인터넷 팩스</option>
+	    		</select>
+	    	</form>
+	    </li> 
+	   
+	    <li style="width:2px;">
+	    </li>
+	</ul>
+</div>
+
+	<!-- Content panel -->
+	<div id="content" style="padding-left:64px; height:100%; overflow: auto">
+		<!-- <div class="menu-trigger"></div> -->
+		<script type="text/javascript">
+		function setIFrameHeight(hsize){
+		    if(document.getElementById("if_contentPage").contentDocument){
+		    	document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentDocument.body.offsetHeight+hsize;
+		    	//document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentWindow.document.body.scrollHeight;
+		    } else {
+		    	document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentWindow.document.body.scrollHeight;
+		    }
+		     // 화면 사이즈가 작은 경우 콤보 박스 데이터가 나오지 않아 400px 로 늘려준다.
+		    if(	document.getElementById("if_contentPage").height <400) 	document.getElementById("if_contentPage").height =1000;
+		}
+		</script>
+		<iframe id="if_contentPage" style="border:0px solid red; width: 100%; left:0px; margin-top:10px;" frameborder='0' scrolling='no' onLoad="setIFrameHeight(10)" ></iframe>
+	</div>	
+	
+</div>
+
+</div>
+
+
+
+
+		<script>
+		// 메뉴클릭시 메뉴창 닫기 위해 사용
+		     var g_tn = false;
+		
+			new gnMenu( document.getElementById( 'gn-menu' ) );
+		</script>
+		
+		
+
+		<script  type="text/javascript">
+		//1. jQuery Init
+		$(function(){
+			var menu_ul = $('.menu > li > ul'),
+				menu_a  = $('.menu > li > a'),
+				menu_child = $(" .menu > li > ul > li");
+	
+			menu_ul.hide();
+			menu_a.click(function(e) {
+				e.preventDefault();
+				if(!$(this).hasClass('active')) {
+					menu_a.removeClass('active');
+					menu_ul.filter(':visible').slideUp('normal');
+					$(this).addClass('active').next().stop(true,true).slideDown('normal');
+				} else {
+					$(this).removeClass('active');
+					$(this).next().stop(true,true).slideUp('normal');
+				}
+				
+				g_tn =false; //메뉴 클릭시 닫기 위해 사용
+			});
+	
+			menu_child.click(function(e){
+				var target_menu = $(this);
+				$('#menu_name').val(target_menu.attr("label"));
+				$('#menu_navi').val(target_menu.attr("navi"));
+				$('#menu_grade').val(target_menu.attr("menu_grade"));
+				$('#if_contentPage').attr('src',target_menu.attr("pid"));
+	
+	
+				// 이미 적용된 부분 찾아내기.
+				$(".activeMenu", menu_child).css('color', '');
+				$(".activeMenu", menu_child).removeClass("activeMenu");
+	
+				$("a", target_menu).addClass("activeMenu");
+				$('a', target_menu).css('color', '#3f9eef');
+			
+				/* 메뉴 클리 후 메뉴 닫기 */
+				g_tn =true;  //메뉴 클릭시 닫기 위해 사용
+				//fnmenuclose();
+	
+			}) ;
+	
+			// 실행할 메뉴.
+			/* fnMenuOpen('/job/getJobSchedule.do');  */
+			fnMenuOpen('wims/mypage/MyPageMain.do');
+	
+	
+			// Logo Click
+			$('.bi').bind('click', function(e){
+				window.location = '';
+			});
+			$('#logout').bind('click', function(){
+				result = confirm('로그아웃 하시겠습니까?');
+				
+				if(result == true) {
+					window.location = '/logout';
+				}
+				else {
+					return false;
+				}
+			});
+	
+			$('#setting').bind('click', function(){
+				alert('준비중입니다.');
+			});
+	/*
+	
+			// INterval.
+			var interValGap = 1000; // 1Sec
+			var interAjaxGap = 1000 * 60 * 1; // 1분
+			var currentGap = 0;
+			var curTimeObj = $('#dayTime');
+			setInterval(function(){
+				var curTime = curTimeObj.text().replace(/[., ]/gi, '');
+				var d1 = new Date( curTime.substr(0, 4)
+						, curTime.substr(4, 2)
+						, curTime.substr(6, 2)
+						, curTime.substr(8, 2)
+						, curTime.substr(10, 2)
+						, curTime.substr(12, 2));
+	
+				d1.setSeconds(d1.getSeconds()+1);
+	
+				curTime = d1.getFullYear()+'.'
+						+ LPad((d1.getMonth()), 2, '0')+'.'
+						+ LPad(d1.getDate(), 2, '0') + ' '
+						+ LPad(d1.getHours(), 2, '0') + '.'
+						+ LPad(d1.getMinutes(), 2, '0') + '.'
+						+ LPad(d1.getSeconds(), 2, '0');
+	
+				curTimeObj.text(curTime);
+	
+				if(interAjaxGap == currentGap) {
+					currentGap = 0;
+					ajax('/com/selectCurrentTime.do', 'html', '', function(data){
+						curTimeObj.text(data);
+					});
+				}
+				currentGap += interValGap;
+			}, interValGap);	// 1sec.
+	*/
+	
+			// Left Menu.
+	 		
+			var $body = $('body')
+					,$menu_trigger = $('.menu-trigger');
+	
+			if(typeof $menu_trigger !== undefined) {
+				$menu_trigger.click( function(){
+					$body.toggleClass('menu-active');
+				});
+			}
+			
+			
+		});
+		
+		
+		//2. HTML onLoad Event Handling
+		function fnInit() {
+			
+		}
+		// LPAD 함수
+		// str : 타겟str, num : 목표 글자수, chr: 채울문자
+		function fnLpad(str, num, chr) {
+			var target_length = str.length;
+			if(target_length < num) {
+				for(var i = 0; i < num - target_length; i++) {
+					str = chr + str;
+				}
+			}
+			return str;
+		}
+	
+	function fnmenuclose(){
+		if(document.body.clientWidth <1500){
+			// Left Menu.
+			var $body = $('body')
+					,$menu_trigger = $('.menu-trigger');
+	
+			if(typeof $menu_trigger !== undefined) {
+				$body.toggleClass('menu-active');
+				
+				
+			}
+		}
+	}
+	
+	function fnMenuOpen(url){
+		
+	
+		var menuList = $(".menu > li > ul > li");
+		var selectMenu; // 선택한 메뉴
+		var firstMenu; // 첫메뉴.
+	
+		firstMenu = $(menuList[0]);
+		$.each(menuList, function(idx, val){
+			val = $(val);
+			if(url == val.attr('pid')){
+				selectMenu = val;
+			}
+		});
+	
+		selectMenu = selectMenu || firstMenu;
+		if(selectMenu) {
+			$('#menu_name').val(selectMenu.attr("label"));
+			$('#menu_navi').val(selectMenu.attr("navi"));
+			$('#menu_grade').val(selectMenu.attr("menu_grade"));
+			$('#if_contentPage').attr('src',selectMenu.attr("pid"));
+		}
+		fnmenuclose();
+		
+	}
+	
+	
+	function fnLink(){
+		
+		var url = $("#link option:selected").val();
+		window.open( url , 'LinkPop', "");
+		$("#link").val("").chainz();
+		
+	}
+	
+	
+	
+	</script>	
+
+
+	<!-- menu Form // start -->
+	<form name="menuForm" id="menuForm" method="post">
+		<input type="hidden" id="menu_id"/>
+		<input type="hidden" id="menu_name"/>
+		<input type="hidden" id="menu_navi"/>
+		<input type="hidden" id="menu_parent"/>
+		<input type="hidden" id="menu_grade"/>
+	</form>
+	<!-- menu Form // end -->	
+	
+	
+<!-- 	<script>
+		function setIFrameHeight(hsize){
+		
+		    if(document.getElementById("if_contentPage").contentDocument){
+		    	document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentDocument.body.offsetHeight+hsize;
+		    	//document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentWindow.document.body.scrollHeight;
+		    } else {
+		    	document.getElementById("if_contentPage").height = document.getElementById("if_contentPage").contentWindow.document.body.scrollHeight;
+		    }
+		    // 화면 사이즈가 작은 경우 콤보 박스 데이터가 나오지 않아 400px 로 늘려준다.
+		    if(	document.getElementById("if_contentPage").height <400) 	document.getElementById("if_contentPage").height =400;
+		}
+	</script> -->
+
+</body>
+</html>

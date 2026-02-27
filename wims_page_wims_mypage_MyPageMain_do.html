@@ -1,0 +1,1932 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+
+
+
+
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="content-language" content="ko">
+
+  <title>WIMS</title>
+
+  <script type="text/javascript" src="/jslib/jquery-1.9.0/jquery-1.9.0.min.js"></script>
+  <script type="text/javascript" src="/jslib/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="/js/util.js"></script>
+  <script type="text/javascript" src="/js/UtilAjax.js"></script>
+  <script type="text/javascript" src="/js/DefaultValue.js"></script>
+  <script type="text/javascript" src="/js/googleanalytics.js"></script>
+  <!--[if lt IE 8]>
+<script type="text/javascript" src="/js/json/json2.js"></script>
+<![endif]-->
+  <link rel="stylesheet" href="/jslib/jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" />
+
+  <link href="/css/spp/xeniview_NX.css" rel="stylesheet" type="text/css" >
+  <link href="/css/spp/wims.css" rel="stylesheet" type="text/css" >
+  <script type="text/javascript" src="/jslib/amcharts_2.10.0/amcharts/amcharts.js"></script>
+  <link href="/jslib/fullcalendar/fullcalendar/fullcalendar.css" rel="stylesheet" />
+  <link href="/jslib/fullcalendar/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print"/>
+  <link href="/jslib/palette/spectrum.css" rel="stylesheet"/>
+  <link href="/css/select/select2.css" rel="stylesheet" />
+
+
+
+<style type="text/css">
+
+.out_line{
+	border: 0px solid #ddd;
+}
+
+fieldset {
+	border: 0;
+}
+.fc-header-title {
+	font: bold 15px Dotum;
+	color: #555;
+}
+.fc-widget-header {
+	 background-color: #dddddd;
+}
+.fc-widget-header.fc-sat {
+	background-color: #FFC26B;
+}
+.fc-widget-header.fc-sun {
+	background-color: #FF756B;
+}
+
+.sub_title {
+	font-family:돋움,verdana;
+	font-size:16px;
+	font-weight:bold;
+	color:#435066;
+	line-height:1.3;
+	padding:5px 0 10px 20px;
+}
+
+.dashed_line {
+	border-top:1px dashed #999;
+}
+
+.ui-datepicker {
+	margin-left: -50px;
+}
+
+</style>
+
+</head>
+<body>
+<div class="page" id="pg_container" style=" height: 100%; padding-bottom:10px;"> <!-- pg_container -->
+    <div class="title">My Page</div>
+    <div class="root" id="page_navi" style="padding-bottom:0px;"></div>
+    
+    	<div style="width:100%; height:100%;">
+    		<div style=" float:left; width:480px; padding-left:10px; margin-right:10px;"> <!-- left -->
+    		    <!-- 공지사항 시작 -->
+				<div id="notice" class="out_line" style=" height: 180px; outline: 1px solid #ddd; margin-bottom:10px;padding-bottom:10px;"></div>
+				<!-- 공지사항 끝 -->
+				<!-- 프로젝트 현황 시작 -->
+			  <div id="project_date" class="out_line" style=" height: 300px; outline: 1px solid #ddd; margin-bottom:10px;"></div>
+				<!-- 프로젝트 현황 끝 -->
+    			<!-- 프로젝트 현황 시작 -->
+				 <div id="project" class="out_line" style=" height: 430px; outline: 1px solid #ddd; margin-bottom:10px;"></div> 
+				<!-- 프로젝트 현황 끝 -->				
+				<!-- 개인정보변경 시작 -->
+				<div id="userInfo" class="" style=" height: 254px; outline: 1px solid #ddd;padding-bottom:10px;"></div>
+				<!-- 개인정보변경 끝 -->
+    		</div>    	
+    		<div style=" margin-left:10px;"> <!-- right -->				
+				<!-- 작업일지 -->
+		        <div id="workBook" class="out_line" style="overflow: auto; margin-top: 10px; outline: 1px solid #ddd; margin-left:10px; margin-right:1px; padding-right:2px; padding-bottom:8px;">
+		        	<div style="margin-left: 10px; ">
+						<div class="title">작업 일지</div>
+						<div class="root" id="page_navi"></div>
+					
+						<div id='calendar' style="margin-right: 5px;"></div>
+							
+						<div id='calendar'></div>
+		
+
+	<div id='caledarDetail-form' title="일정정보" style="width: 100%; height: auto; display: none; overflow:hidden;background:#f6f6f6;border-bottom: 1px solid #D9DADE;border-radius: 0px;border: 0px solid #D9DADE;">
+		<form id="calendarDetail" action="/wims/mypage/MyPageMain.do?_sid=9AF2C4CDED6F4E49790E31B31ABE2A7D" method="post">
+			<fieldset>
+				<input type="hidden" id='searchWorkType' value="E" >
+				<input type="hidden" id='w_id' >
+				<input type="hidden" id='w_type' >
+				<!-- <input id='w_work_title' style="width: 100%;"> -->
+				<table>
+					<tr>
+						<td> 
+						<span style="width:50px;border-right:1px solid #a1a1a1;font: bold 12px Dotum;padding-right: 6px;margin-right: 6px;color: #63656b;margin-left: 10px;">일정</span> 
+							<input id='wstart_date' style="width: 75px;padding-left: 10px;border: 1px solid #bebebe;border-top: 2px solid #bebebe;font: normal 11px Dotum;color: #1B1C24;height: 15px;" readonly>
+							
+							<select id='wstart_time' style="width: 73px;"></select>
+							~
+							<input type='hidden' id='wend_date' style="width: 80px;" readonly>
+							<select id='wend_time' style="width: 110px;"></select>
+						</td>
+						<td align="right">
+							<div class="gBtn2" style="margin-bottom: 5px; width: 100px;">
+							<a href="#" style="color: #5c76d0;"><span class="gbtn1" onclick="fnAllDay(); return false;">업무시간</span></a>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+						<div id="dv_next_date" style="border-top: 1px dashed rgb(206, 206, 217);"> 
+						<span style="width: 50px;border-right: 1px solid #a1a1a1;font: bold 12px Dotum;padding-right: 6px;margin-right: 6px;color: #63656b;margin-left: 10px;">적용 기간</span>
+						<input id='next_date' style="width: 75px;padding-left: 10px;border: 1px solid #bebebe;border-top: 2px solid #bebebe;font: normal 11px Dotum;color: #1B1C24;height: 15px; readonly value="">
+						<input id ="holy" type="checkbox" checked="checked" style="margin-top: 5px;margin-left: 15px;" >주말제외</input>
+						</div>
+						</td>
+					</tr>
+				</table>
+			
+			
+			<!--     <select id="p_gubun" onchange="fn_project_select()">
+			 		<option value="CD00000181">Presales</option>
+			 		<option value="CD00000182">일반 프로젝트 계약</option>
+			 		<option value="CD00000200">유지보수 계약</option>
+			 		<option value="CD00000201">RnD 프로젝트</option>
+			 		<option value="CD00000204">무상유지보수</option>
+			 		<option value="CD00000203">기타(TFT 활동)</option>
+			 		<option value="CD00000206">일반업무</option>
+			 	</select>  -->
+			 				
+			 <div style="border: 1px solid #d6d6d6;padding: 5px;margin-top: 8px;background: #ecedee;">
+			 	<div>
+			 	<span style="width:50px;border-right:1px solid #a1a1a1;font: bold 12px Dotum;padding-right: 6px;margin-right: 6px;color: #76777a;margin-left: 5px;">구분</span> 
+			 	<select id="p_gubun" name="p_gubun" style="width: 110px;" onchange="fn_project_select()">
+                                <option value="CD00000181">Presales</option><option value="CD00000182">일반 프로젝트 계약</option><option value="CD00000204">무상유지보수</option><option value="CD00000200">유지보수 계약</option><option value="CD00000206">일반업무</option><option value="CD00000201">RnD 프로젝트</option><option value="CD00000335">연구과제</option><option value="CD00000203">기타(TFT 활동)</option>
+			    </select>
+				
+	<!-- 			<select id="code" onchange="fn_project_select()">
+					<option value="">전체</option>
+					<option value="ENT">ENT</option>
+					<option value="BS">BS</option>
+					<option value="SMD">SMD</option>
+					<option value="RND">RND</option>
+					<option value="경영기획">경영기획</option>
+				</select> -->
+				
+				<select id="code" name="code_label" onchange="fn_project_select()">
+								<option value="" selected="selected">전체</option>
+			                    
+			    </select>
+				 
+				<select id='p_id' style="width: 220px;margin-bottom: 5px;margin-left: 10px;font-family: Dotum;">
+			 	</select> 
+				 
+				 
+				
+				<div id="mainten" style="border-top: 1px dashed rgb(206, 206, 217);">
+				<span style="width: 50px;border-right: 1px solid #a1a1a1;font: bold 12px Dotum;padding-right: 6px;margin-right: 6px;color: #76777a;margin-left: 5px;">유지보수 구분</span>
+				<select id="m_gubun" name="maintenance_gubun" style="margin-top:7px; margin-bottom:7px;"> 
+					<option value="" selected="selected">선택</option>       
+					<option value="CD00000331">요청_고객</option><option value="CD00000330">요청_기술본부</option><option value="CD00000329">요청_영업본부</option><option value="CD00000332">요청_기타</option>
+				</select>
+				
+				<span style="width: 50px;border-right: 1px solid #a1a1a1;font: bold 12px Dotum;padding-right: 6px;margin-right: 6px;color: #76777a;margin-left: 30px;">유지보수 형태</span>
+				<select id="m_type" name="maintenance_type">     
+					<option value="" selected="selected">선택</option>   
+					<option value="CD00000314">정기_결함처리</option><option value="CD00000311">정기_기술지원</option><option value="CD00000317">정기_기타(사용자교육 등)</option><option value="CD00000334">정기_보안취약점_개발</option><option value="CD00000315">정기_보안취약점_제품</option><option value="CD00000312">정기_영업지원</option><option value="CD00000309">정기_예방점검</option><option value="CD00000316">정기_이슈대응</option><option value="CD00000313">정기_장애처리</option><option value="CD00000310">정기_정기PM</option><option value="CD00000320">비정기_감사기간대응</option><option value="CD00000321">비정기_변경</option><option value="CD00000318">비정기_인수인계</option><option value="CD00000319">비정기_편의기능개선</option><option value="CD00000333">비정기_프로젝트지원</option><option value="CD00000323">일반_사이트별이슈</option><option value="CD00000322">일반_주간/월간계획</option><option value="CD00000324">관리_산출물현행화</option><option value="CD00000325">유상_서비스</option>
+				</select>
+				</div>
+				
+				
+				
+			 	
+				<!-- <input id='w_bgcolor' type="text" style="cursor: pointer;"> -->
+				<textarea id="w_work_memo" style="width: 95%;margin: 7px;height: 185px;background-color: #ffffff;"></textarea>
+				
+				</div>
+			</fieldset>
+		</form>
+	</div>
+					</div>
+		        </div>
+		        <!-- 작업일지 끝 -->
+    		</div>
+    	</div>
+    
+		<!-- 프로젝트 색상 설정 팝업 시작 -->
+			<div id='projectColor-form' title="프로젝트 지정 색상 관리" style=" display: none; overflow:hidden;"></div>
+		<!-- 프로젝트 색상 설정 팝업 끝 -->
+</div>
+</body>
+<script type="text/javascript" src="/jslib/fullcalendar/fullcalendar/fullcalendar.js"></script>
+<script type='text/javascript' src="http://bgrins.github.com/spectrum/spectrum.js"></script>
+<script src="/js/select/select2.js"></script>
+<script src="/js/select/select2_locale_ko.js"></script>
+<script type="text/javascript">
+
+/////////////////////////////////////////////////
+var originalId = "";
+var _checkId = false;
+var tmpColor; // 프로젝트 색상 임시 기억 변수
+var allday = false; //all-day 클릭 확인을 위해.
+/////////////////////////////////////////////////
+
+//1. jQuery Init
+$(function() {
+	fnInit();
+	
+});
+
+function fnInit(){
+	var user_dept = "1bcd8979-5c9c-4681-bce2-f850d7f53535";
+	var u_id = "hwjeong";
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getInputStat.do",
+		dataType:"JSON",
+		data: {user_id : u_id},
+		async: false,
+		success:function(data){
+			
+			if(data != null && user_dept != '43d47284-7ad2-4ee2-92e1-af91d287119f'){
+				//20190409-KJS수정
+				//alert("누락된 실행내역이 있습니다.\n WIMS 미입력 현황으로 이동합니다.");
+				//window.location = "/wims/stat/inputList.do";
+			}
+		}
+	});
+	
+	
+	
+	fn_project_select();
+	
+	
+	var cyear ="2026";
+	var cmonth ="02";
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getJobStatus.do",
+		dataType:"html",
+		data: {syear : cyear, smon : cmonth},
+		async: false,
+		
+		success:function(data){
+			$('#project')[0].innerHTML = data;
+		}
+	});
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getProjectStatus.do",
+		dataType:"html",
+		data: {},
+		async: false,
+		
+		success:function(data){
+			$('#project_date')[0].innerHTML = data;
+		}
+	});
+	
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getUserInfo.do",
+		dataType:"html",
+		async: false,
+		
+		success:function(data){
+			$('#userInfo')[0].innerHTML = data;
+		}
+	});
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getNoticeList.do",
+		dataType:"html",
+		async: false,
+		
+		success:function(data){
+			$('#notice')[0].innerHTML = data;
+		}
+	});
+	
+	$("#syear").val(cyear).change();
+	createPage();
+	
+}
+
+function createPage() {
+	
+	gfPageTitle();//메뉴제목
+	gfPageGrade(); //권한관리
+	
+	u_id = $('#user_id').val();
+	$('#u_id').attr("value", u_id);
+	
+	/* 달력 이벤트 설정 */
+	$('#birthday').datepicker({
+		dateFormat: "yy-mm-dd",
+		showOn: "button",
+		buttonImage: "/jslib/jquery-ui-1.9.0/demos/images/calendar.gif",
+		buttonImageOnly: true,
+		  monthNames: ['1월','2월','3월','4월','5월','6월',
+		  '7월','8월','9월','10월','11월','12월'],
+		  monthNamesShort: ['1월','2월','3월','4월','5월','6월',
+		  '7월','8월','9월','10월','11월','12월'],
+		  dayNames: ['일','월','화','수','목','금','토'],
+		  dayNamesShort: ['일','월','화','수','목','금','토'],
+		  dayNamesMin: ['일','월','화','수','목','금','토'],
+		  weekHeader: 'Wk',
+		  firstDay: 0,
+		  isRTL: false,
+		  showMonthAfterYear: true,
+		   changeMonth: true, // 월선택 select box 표시 (기본은 false)
+          changeYear: true,  // 년선택 selectbox 표시 (기본은 false)
+          yearRange: 'c-100:c+1'
+	}).prop("disabled", false);
+	
+	fnSetLayoutMode();
+	addEvent();
+	drawChart(); //프로젝트 현황 차트
+	createCalendar(); //작업 일지
+}
+
+//화면종류에 따른 제어
+function fnSetLayoutMode() {
+	$('#btnS').hide();
+	$('#btnU').show();
+	$('#userInfo input, #userInfo select, #userInfo textarea').attr({'disabled': true}).css("background-color","#ddd");
+	$('#userInfo img').attr({'disabled': true});
+	$('#birthday').datepicker("disable");
+}
+
+//이벤트 등록
+function addEvent(){
+	
+	/* 휴대전화, 집전화 숫자만 입력 */
+     $('#home_pho, #mobile').keypress(function(event) {
+          if (event.which && (event.which < 48 || event.which > 57)) {
+               event.preventDefault();
+          }
+     });
+	
+	/* 입력 글자수 제한 */
+     $('#user_id').keypress(function(event) {
+    	 if (limitCharacters('user_id',20)){
+               event.preventDefault();
+         }
+     });
+     
+     $('#name').keypress(function(event) {
+    	 if (limitCharacters('name',20)){
+               event.preventDefault();
+         }
+     });
+     
+     $('#password').keypress(function(event) {
+    	 if (limitCharacters('password',20)){
+               event.preventDefault();
+         }
+     });
+     
+     $('#mobile').keypress(function(event) {
+    	 if (limitCharacters('mobile',20)){
+               event.preventDefault();
+         }
+     });
+     
+     $('#home_addr').keypress(function(event) {
+    	 if (limitCharacters('home_addr',200)){
+               event.preventDefault();
+         }
+     });
+     
+     $('#home_pho').keypress(function(event) {
+    	 if (limitCharacters('home_pho',20)){
+               event.preventDefault();
+         }
+     });
+	
+}
+
+function refreshJobStatus(){
+	var cyear ="2026";
+	var cmonth ="02";
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getJobStatus.do",
+		dataType:"html",
+		data: {syear : cyear, smon : cmonth},
+		async: false,
+		
+		success:function(data){
+			$('#project')[0].innerHTML = data;
+			drawChart();
+		}
+	});
+}
+
+//수정 버튼 클릭 시 입력 활성화
+function fnActivateScreen(){
+	$('#btnU').hide();
+	$('#btnS').show();
+	$('#userInfo img').attr({'disabled': false});
+	$('#userInfo input, #userInfo select, #userInfo textarea').attr({'disabled': false}).css("background-color","#ffffff");
+	$('#birthday').datepicker("enable");
+	
+	$('#userInfo #name').attr({'disabled': true}).css("background-color","#ddd");
+	$('#userInfo #user_id').attr({'disabled': true}).css("background-color","#ddd");
+	$('#birthday').attr({'disabled': true}).css("background-color","#ddd");
+}
+
+//저장 시 데이터 전달을 위해 disabled 해제
+function updateDisabledClear(){
+	$('#userInfo input')
+	.attr({'disabled': false});
+	$('#userInfo select')
+	.attr({'disabled': false});
+	$('#userInfo textarea')
+	.attr({'disabled': false});
+	$('#userInfo img')
+	.attr({'disabled': false});
+}
+
+function validate(){
+	
+	if($("#name").val() == "") {
+		alert("이름을 입력해주십시오.");
+		return false;
+	} else if ( /\s/g.test($("#name").val()) || /[^ㄱ-ㅣ가-힣\w\s]/i.test($("#name").val()) ) {
+		alert("이름에 공백문자 또는 특수문자는 입력할 수 없습니다.");
+		return false;
+	}
+	
+	if ( $("#password").val() == "" ) {
+		alert("비밀번호를 입력해주십시오.");
+		return false;
+	}
+	
+	return true;
+}
+
+// 뒤로가기
+function fnBack() {
+	history.back();
+	return false;
+}
+
+//수정페이지로.
+function fnUpdate(){
+	
+	if ( !validate() ) return;
+	
+	if(confirm("수정하시겠습니까?")){
+		updateDisabledClear();
+		var f_data = $("#userInfoForm").serialize();
+		$.ajax({
+			type:"post",
+			url:"/wims/mypage/updateUserInfo.do",
+			dataType:"json",
+			data: f_data,
+			async: false,
+			
+			success:function(data){
+				var result = data["result"];
+				//1 일경우 성공, 0일경우 실패
+				if(result == "1"){
+					alert("수정되었습니다.");
+				}else{
+					alert("수정 실패 하였습니다.");
+				}
+				
+				fnSetLayoutMode();
+			},
+			error:function(data){
+				alert("수정 실패 하였습니다.");
+			}
+		});
+	}
+}
+
+// id, 제한 글자 수
+function limitCharacters(textid, limit){
+	//입력 값 저장
+	var text = $('#'+textid).val();
+	// 입력값 길이 저장
+	var textlength = text.length;
+	if(textlength+1 > limit){
+		// 제한 글자 길이만큼 값 재 저장
+		//$('#'+textid).val(text.substr(0,limit));
+		return true;
+	}else{
+		return false;
+	}
+}
+
+//자동하이픈 생성
+function chk_tel(value, field){
+ var str;
+ str = checkDigit(value);
+ len = str.length;
+ 
+ if(len==8){
+  if(str.substring(0,2)==02){
+   error_numbr(str, field);
+  }else{
+   field.value  = phone_format(1,str);
+  }   
+ }else if(len==9){
+  if(str.substring(0,2)==02){
+   field.value = phone_format(2,str);
+  }else{
+   error_numbr(str, field);
+  }
+ }else if(len==10){
+  if(str.substring(0,2)==02){
+   field.value = phone_format(2,str);
+  }else{
+   field.value = phone_format(3,str);
+  }
+ }else if(len==11){
+  if(str.substring(0,2)==02){
+   error_numbr(str, field);
+  }else{
+   field.value  = phone_format(3,str);
+  }
+ }else if(len==0){
+  return;
+ }else{
+  error_numbr(str, field);
+ }
+}
+
+function checkDigit(num){
+ var Digit = "1234567890";
+ var string = num;
+ var len = string.length;
+ var retVal = "";
+ for (var i = 0; i < len; i++){
+  if (Digit.indexOf(string.substring(i, i+1)) >= 0){
+   retVal = retVal + string.substring(i, i+1);
+  }
+ }
+ return retVal;
+}
+
+function phone_format(type, num){
+ if(type==1){
+  return num.replace(/([0-9]{4})([0-9]{4})/,"$1-$2");
+ }else if(type==2){
+  return num.replace(/([0-9]{2})([0-9]+)([0-9]{4})/,"$1-$2-$3");
+ }else{
+  return num.replace(/(^01.{1}|[0-9]{3})([0-9]+)([0-9]{4})/,"$1-$2-$3");
+ }
+}
+
+function error_numbr(str, field){
+ alert("정상적인 전화번호가 아닙니다.");
+ field.value = "";
+ //field.focus();
+ return;
+}
+//자동하이픈 끝
+
+
+/**
+ * 파일첨부팝업 출력
+ * f_id : 파일 ID input tag
+ * f_name : 파일명 input tag
+ * file_type : 파일종류(P:사진,...)
+ */
+function fileUploadOpen(f_id, f_name, file_type){
+	window.open("/com/fileUploadForm.do?input_file_id=" + f_id + "&input_file_name=" + f_name + "&file_type=" + file_type
+			, "FileUploadPop", "width=400,height=200,status=yes,menubar=no,scollbars=no");
+}
+
+/**
+ * 사진 변경 후 저장
+ * f_id_rep : id 저장 할 태그
+ * f_name_rep : 파일명 저장 할 태그
+ * f_id : 사진 id
+ * f_name : 사진 파일 명
+ */
+function setFiles(f_id_rep, f_name_rep, f_id, f_name){
+	$("#"+f_id_rep).val(f_id);
+	
+	var u_id = $("#u_id").val();
+	var user_photo = $("#user_photo").val();
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/updateUserPhoto.do",
+		dataType:"json",
+		data: {u_id : u_id , user_photo : user_photo},
+		async: false,
+		
+		success:function(data){
+			var result = data["result"];
+			//1 일경우 성공, 0일경우 실패
+			if(result == "1"){
+				alert("수정되었습니다.");
+				$("#MyPhoto").attr("src","/com/imageDownload.do?fileId=" + f_id);
+			}else{
+				alert("수정 실패 하였습니다.");
+			}
+			
+		},
+		error:function(data){
+			alert("수정 실패 하였습니다.");
+		}
+	});
+}
+
+//프로젝트 상세 팝업
+function fnDetail(p_id){
+	window.open("/wims/pms/PmsDetailPop.do?p_id=" + p_id, "DetailPop", "width=770,height=500,status=yes,menubar=no,scollbars=yes");
+}
+
+//사용자 상세 정보
+function fnUserDetail(u_id){
+    window.open("/com/userReg.do?u_id=" + u_id + "&viewType=V", "InsertPop", "width=480,height=700,status=yes,menubar=no,scollbars=no");
+}
+
+//PM 클릭 시 상세
+function fnPMDetail(u_id){
+    window.open("/com/userReg.do?u_id=" + u_id + "&viewType=V", "InsertPop", "width=480,height=700,status=yes,menubar=no,scollbars=no");
+}
+
+//PageIndex 
+function fn_Link_Page(pageIdx) {
+	
+	var syear=  $('#syear').val();
+	var smon=  $('#smon').val();
+
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getJobStatus.do",
+		dataType:"html",
+		data: {syear : syear, smon : smon, pageIndex : pageIdx},
+		async: false,
+		
+		success:function(data){
+			$('#project')[0].innerHTML = data;
+		}
+	});
+	
+	drawChart();
+	
+}
+
+//조회
+function fnSearch(){
+	/*
+	var syear=  $('#syear').val();
+	var smon=  $('#smon').val();
+
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getJobStatus.do",
+		dataType:"html",
+		data: {syear : syear, smon : smon},
+		async: false,
+		
+		success:function(data){
+			$('#project')[0].innerHTML = data;
+		}
+	});
+	*/
+	drawChart();
+	
+}
+
+//엑셀
+function fnExcel(obj) {
+	var syear=  $('#syear').val();
+	var smon=  $('#smon').val();
+	
+	var vparm = "?syear="+syear+"&smon="+smon;
+	excelDownload(obj.id, '/wims/mypage/getJobStatusExcel.do'+vparm);
+
+}
+
+//제목 클릭시 상세
+function fnBoardDetail(board_id) {
+	parent.menuForm.menu_name.value = "문의게시판(임시)";
+	$('#board_id').val(board_id);
+	document.noticeForm.action = '/bbs/getBoardView.do';
+	document.noticeForm.submit();  
+}
+
+function drawChart() {
+	
+	var chart;
+	var legend;
+	var chartData = [];
+	var chartColor = [];
+	var tempColor;
+	
+	var syear=  $('#syear').val();
+	var smon=  $('#smon').val();
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/getChartData.do",
+		dataType:"json",
+		data: {syear : syear, smon : smon},
+		async: false,
+		
+		success:function(data){
+			
+			$.each(data,function(idx,val){
+				
+				if ( val['PMS_COLOR'] == null || val['PMS_COLOR'] == "" ) {
+					tempColor = "#1266FF";
+				} else {
+					tempColor = val['PMS_COLOR'];
+				}
+				
+				chartColor.push(tempColor);
+				chartData.push({country:val['P_NAME'],value:val['W_PERCENT']});
+				
+				
+				
+				
+				var chart = document.getElementById("chartdiv"); 	
+				var jstatus = document.getElementById("project");
+				
+				
+				//차트 짤리는것 방지
+				if(chartData.length >= 13){
+					chart.style.height =  600 + 'px';
+					jstatus.style.height = 670 + 'px';
+				}else if(chartData.length >= 8) {
+					chart.style.height =  460 + 'px';
+					jstatus.style.height = 530 + 'px';
+				}else{
+					chart.style.height =  360 + 'px';
+					jstatus.style.height = 430 + 'px';
+				}
+			});
+		}
+	});
+	
+    // PIE CHART
+    chart = new AmCharts.AmPieChart();
+    chart.dataProvider = chartData;
+    chart.titleField = "country";
+    chart.valueField = "value";
+    chart.outlineColor = "#FFFFFF";
+    chart.outlineAlpha = 0.8;
+    chart.outlineThickness = 2;
+    // this makes the chart 3D
+    chart.depth3D = 15;
+    chart.angle = 30;
+	chart.percentFormatter = {precision:1, decimalSeparator:'.', thousandsSeparator:','};
+	chart.color = "#FF007F";
+	chart.colors = chartColor;
+	chart.startDuration = 0;
+	chart.fontFamily = "돋움";
+	chart.labelText = "";
+
+	// LEGEND
+	legend = new AmCharts.AmLegend();
+	legend.align = "center";
+	legend.markerType = "square";
+	legend.valueText = " : " + legend.valueText + "시간";
+	legend.valueWidth = 40;
+	legend.verticalGap = 2;
+	legend.fontFamily = "돋움";
+	legend.fontSize = 12;
+	chart.addLegend(legend);
+
+    // WRITE
+    chart.write("chartdiv");
+}
+
+function createCalendar(){
+	  var allday = false; //all-day 클릭 확인을 위해.
+
+		$(function() {
+			
+		 	 $("#p_id").select2({
+			 }); 
+			 
+		 	fn_project_select();
+		 	
+		 	
+		 	
+		 	
+			// 시간 지정.
+			var DEF_SELECT_TIME  = [
+			  	'0000', '0030', '0100', '0130', '0200', '0230', '0300', '0330', '0400', '0430', '0500', '0530', '0600', '0630',
+				'0700', '0730', '0800', '0830', '0900', '0930', '1000', '1030', '1100', '1130', '1200', '1230', '1300', '1330',
+				'1400', '1430', '1500', '1530', '1600', '1630', '1700', '1730', '1800', '1830', '1900', '1930', '2000', '2030',
+				'2100', '2130', '2200', '2230', '2300', '2330', '2400'
+			];
+			
+
+			var i,  // 임시변수
+					length,	// 임시
+					tmpContext,	// dom 용 임시
+					currentWeekDay = []// 금주에 관련된 날짜를 가지고 있는 변수.
+					;
+
+			/** 기본 데이터 설정 (금주일자 설정)**/
+			
+			var tmpWeek = {
+				dd : '20260223',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260224',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260225',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260226',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260227',
+				today : 'Y'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260228',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			var tmpWeek = {
+				dd : '20260301',
+				today : 'N'
+			};
+			currentWeekDay.push(tmpWeek);
+			
+			
+			
+			/* 달력 설정 */
+			$('#calendar').fullCalendar({
+				contentHeight: 2000,
+				editable:true
+				,disableDragging: true	// 드래그 금지. 중복 체크로 인해.
+				,disableResizing: true	// 리사이즈 금지
+				,defaultView: 'basicWeek'
+				,events : function(start, end, callback) {	// 이벤트 조회.
+					ajax('/job/getMyJobSchedule.do', "JSON", {
+						start: Math.round(start.getTime() / 1000),	// 조회 시작일.
+						end: Math.round(end.getTime() / 1000),
+						searchWorkType : $('#searchWorkType').val(),	// 조회 타입
+						searchUserId : 'hwjeong'
+					}, function(doc) {
+						$.each(doc, function(idx, val){
+							if ( val['backgroundColor'] == null || val['backgroundColor'] == "" ){
+								val['backgroundColor'] = "#1266FF";
+							}
+						});
+						callback(doc);
+						$(".tooltip").tooltip({
+							delay : 0,
+							showURL: false,
+							opacity: 1,
+							content:function(){
+					            return this.getAttribute("title");
+					        }
+						});
+					});
+				}
+				,header : {
+					left : 'prev,next today'
+					,center : 'title'
+					,right : 'month,basicWeek,agendaDay'
+				}
+				,firstHour : 9 /* 일과 시작 시간*/
+			    ,slotMinutes : 30 /* 시간 Gap*/
+				,agenda : 'HH:mm{ - HH:mm}'
+				,timeFormat: 'HH:mm { ~ HH:mm}'
+				,titleFormat : {
+					month : "yyyy년 MM" + "월", // 2013년 7월
+					week : "yyyy년 MM"+"월"+" dd"+"일" +"[ yyyy]{"+" ~'[ MM"+"월"+"] dd" + "일}",     // 2013년 Jul 22 ~ 28 */
+					/* week : "yyyy년 MMM d"+"일" +"[ yyyy]{"+" ~'[ MMM] d}" + "일",     // 2013년 Jul 22 ~ 28 */
+					day: "yyyy년 MM"+"월"+" dd" +"일"   // 2013년 Jul월 22일 Monday
+				}
+				,columnFormat:{
+					month: 'ddd',    // Mon
+					week: 'yyyy-MM-dd ddd', // Mon 9/7
+					day: 'yyyy-MM-dd ddd'  // Monday 9/7
+				}
+				,dayClick:function(date, allDay, jsEvent, view){	/* 날짜 클릭시 */
+					
+						
+						/* sysdd.substring(start, end) */				
+			
+						 $('#p_id').val("-sel-").change();
+						 $("#cs_id").val("");
+						 $("#cs_title").val("");
+						 
+						 
+						 
+				
+						var isExecuteFlag = (checkCurrentWeek(date.getFullYear()+''+ LPad((date.getMonth()+1), 2, '0') +'' + LPad(date.getDate(), 2, '0')));
+						var tTypeRadio = ($(":input:radio[name=wTypeRadio]:checked").val() || 'E');
+		
+						$( "#wstart_date, #wend_date").val(date.getFullYear()+'-'+ LPad((date.getMonth()+1), 2, '0') +'-' + LPad(date.getDate(), 2, '0'));
+						
+				
+						
+						
+		                if(allDay) allday=true; // allday 클릭했는지 확인
+		             
+						if(view.name == 'month') {	// 월
+							allday = false;
+							$('#wstart_time').val('09' + LPad(date.getMinutes(), 2, '0')).change();
+						} else if(view.name == 'basicWeek') {
+							allday = false;
+							$('#wstart_time').val('09' + LPad(date.getMinutes(), 2, '0')).change();
+						} else {
+							if(allday){
+								$('#wstart_time').val('0900').change();
+							}else{
+								$('#wstart_time').val(LPad(date.getHours(), 2, '0') + LPad(date.getMinutes(), 2, '0')).change();
+							}
+						}
+						
+						
+						//계획 기간 자동 입력 일자
+						$('#next_date').val(date.getFullYear()+'-'+ LPad((date.getMonth()+1), 2, '0') +'-' + LPad(date.getDate(), 2, '0'));
+						
+						$('#w_id,#w_work_memo, #w_work_title').val('');
+						$('#w_bgcolor').val('#1266FF');
+						$('#btnMove').hide();
+						
+		 			
+						/* $('#p_id').select2('val', '-sel-'); */
+						
+					 	if(('E' == tTypeRadio) ) {	// 실행.
+							
+					 		$('#p_id').val("-sel-").change();
+					 		$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(실행)" );
+							$('#w_type').val('E');
+							/* 계획 기간 자동 입력 안보이게 */
+							$('#dv_next_date').css('display', 'none'); 			
+						
+						}else if(('P' == tTypeRadio)) {
+							
+								$('#p_id').val("-sel-").change();
+								$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(계획)" );
+								$('#w_type').val('P');
+								/* 계획 기간 자동 입력 보이게 */
+								$('#dv_next_date').css('display', 'block');
+								
+						} else {
+								return;
+						} 
+					 	
+				/* 	 	$("#w_bgcolor").spectrum({
+							color:"#1266FF",
+						    showPaletteOnly: true,
+						    change: function(color) {
+						        $("#w_bgcolor").val(color.toHexString());
+						    },
+						    palette: [
+						        ["rgb(18, 102, 255)","rgb(92, 209, 229)","rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
+						        "rgb(204, 204, 204)", "rgb(217, 217, 217)"],
+						        ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
+						        "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"], 
+						        ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)", 
+						        "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)", 
+						        "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)", 
+						        "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)", 
+						        "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)", 
+						        "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
+						        "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
+						        "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
+						        "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)", 
+						        "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
+						    ]
+						});
+					 	 */
+					 	
+						ajax('/job/checkEndTime.do', '',
+								{
+									w_endtime : $("#wstart_date").val(),
+									w_type : $("#w_type").val()
+							
+								}, function (data){
+									if(data) {
+										
+									$("#wstart_time").val(data).change();
+										
+									} else {
+										
+									}
+								}
+						);
+					 	
+						//TODO 달력 임시로 풀어줌.
+					/* 	if(('E' == tTypeRadio) && (isExecuteFlag == 0)) {	// 실행.
+							$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(실행)" );
+							$('#w_type').val('E');
+		
+						} else if(('P' == tTypeRadio) && (isExecuteFlag == 1)) {
+							$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(계획)" );
+							$('#w_type').val('P');
+						} else {
+							return;
+						} */
+						$('#btnDelete, #btnSave').button('enable');
+						$( "#caledarDetail-form" ).dialog({ position:[ jsEvent.clientX, jsEvent.clientY]});//팝업 위치값 변경(클릭한 위치에서 뛰우기
+						$( "#caledarDetail-form" ).dialog( "open" );
+				}
+				,eventClick: function(calEvent, jsEvent, view) {  /* 이벤트 클릭 */
+
+				
+					if(calEvent.w_type == 'H') return;
+
+					var isExecuteFlag = (checkCurrentWeek(calEvent.start.getFullYear()+''+ LPad((calEvent.start.getMonth()+1), 2, '0') +'' + LPad(calEvent.start.getDate(), 2, '0')));
+					var tTypeRadio = ($(":input:radio[name=wTypeRadio]:checked").val() || 'E');
+
+					if(calEvent.start) {
+						$('#wstart_date').val(calEvent.start.getFullYear()+'-'+ LPad((calEvent.start.getMonth()+1), 2, '0') +'-' + LPad(calEvent.start.getDate(), 2, '0'));
+						$('#wstart_time').val(LPad(calEvent.start.getHours(), 2, '0') + LPad(calEvent.start.getMinutes(), 2, '0')).change();
+
+						if(calEvent.end){
+							$('#wend_date').val(calEvent.end.getFullYear()+'-'+ LPad((calEvent.end.getMonth()+1), 2, '0') +'-' + LPad(calEvent.end.getDate(), 2, '0'));
+							if(LPad(calEvent.end.getHours(), 2, '0') + LPad(calEvent.end.getMinutes(), 2, '0') == '2359'){
+								$('#wend_time').val("2400");
+							}else{
+								$('#wend_time').val(LPad(calEvent.end.getHours(), 2, '0') + LPad(calEvent.end.getMinutes(), 2, '0'));
+							}
+						}
+					}
+					$('#w_id').val(calEvent.w_id);
+					$('#w_type').val(calEvent.w_type);
+					$('#w_work_title').val(calEvent.w_work_title);
+					$('#w_work_memo').val(calEvent.w_work_memo);
+					/* $('#p_id').select2('val', calEvent.p_id); */
+					$('#p_gubun').val(calEvent.p_gubun);
+					fn_project_select(calEvent.p_id);
+					$('#p_id').val(calEvent.p_id).change(); 
+					/* $('#w_bgcolor').spectrum("set",calEvent.backgroundColor); */
+					$('#w_bgcolor').val(calEvent.backgroundColor);
+					$('#m_gubun').val(calEvent.maintenance_gubun);
+					$('#m_type').val(calEvent.maintenance_type);
+					$('#cs_id').val(calEvent.cs_id);
+					$('#cs_title').val(calEvent.cs_title);
+					tmpColor = calEvent.backgroundColor; // 프로젝트 색상 변경 유무를 확인하기 위해 임시 저장
+				
+					
+					if(('E' == tTypeRadio)) {	// 실행.
+						$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(실행)" );
+						$('#w_type').val('E');
+						$('#btnDelete, #btnSave').button('enable');
+						$('#btnMove').hide();				       
+						/* 계획 기간 자동 입력 안보이게 */
+						$('#dv_next_date').css('display', 'none'); 			
+					} else if(('P' == tTypeRadio)) {
+						$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(계획)");
+						$('#w_type').val('P');
+						$('#btnDelete, #btnSave').button('enable');
+						$('#btnMove').show();
+						/* 계획 기간 자동 입력 보이게 */
+						$('#dv_next_date').css('display', 'block');
+					} else {
+						$('#btnDelete, #btnSave').button('disable'); 
+					} 
+					
+					
+					//계획 기간 자동 입력 일자
+					$('#next_date').val(calEvent.start.getFullYear()+'-'+ LPad((calEvent.start.getMonth()+1), 2, '0') +'-' + LPad(calEvent.start.getDate(), 2, '0'));
+					
+					
+					//TODO 달력 임시로 풀어줌.
+				/* 	if(('E' == tTypeRadio) && (isExecuteFlag == 0)) {	// 실행.
+						$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(실행)" );
+						$('#w_type').val('E');
+						$('#btnDelete, #btnSave').button('enable');
+					} else if(('P' == tTypeRadio) && (isExecuteFlag == 1)) {
+						$( "#caledarDetail-form" ).dialog( "option", "title", "일정정보(계획)" );
+						$('#w_type').val('P');
+						$('#btnDelete, #btnSave').button('enable');
+					} else {
+						$('#btnDelete, #btnSave').button('disable');
+					} */
+
+					// 지난주인지 금주인지 판단.지나버린 주일 경우. 삭제등이 불가능.
+					$( "#caledarDetail-form" ).dialog( "open" );
+				}
+				,eventResize: function(event,dayDelta,minuteDelta,revertFunc) {	/* 일정 드래그 변경 */
+					if (!confirm("일정을 변경하시겠습니까?")) {
+						revertFunc();
+					} else {
+						ajax('/job/saveJobSchedule.do', '',
+							{
+								w_id : event.w_id,
+								w_type : event.w_type,
+								w_starttime : event.start.getFullYear() + LPad((event.start.getMonth()+1), 2, '0')  + LPad(event.start.getDate(), 2, '0') + LPad(event.start.getHours(), 2, '0') + LPad(event.start.getMinutes(), 2, '0'),
+								w_endtime : event.end.getFullYear() + LPad((event.end.getMonth()+1), 2, '0')  + LPad(event.end.getDate(), 2, '0') + LPad(event.end.getHours(), 2, '0') + LPad(event.end.getMinutes(), 2, '0'),
+								w_work_title : event.w_work_title,
+								w_work_memo : event.w_work_memo,
+								p_id : event.p_id,
+								w_bgcolor : event.backgroundColor,
+								maintenance_gubun: event.maintenance_gubun,
+								maintenance_type: event.maintenance_type,
+								cs_id: event.cs_id,
+								cs_title: event.cs_title,
+								p_gubun: event.p_gubun
+							}, function (data){
+								if(data == 'SUCCESS') {
+									$('#calendar').fullCalendar('refetchEvents');
+								} else {
+									message('변경에 실패하였습니다. \n다시 시도해주세요.');
+								}
+							}
+						);
+					}
+				}
+				,eventDrop : function(event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view ){
+
+					if(dayDelta != 0) {
+						alert('날짜를 변경할 수 없습니다.');
+						return;
+					}
+				}
+				,eventMouseover: function( event, jsEvent, view ) {
+					$(this).css('cursor', 'pointer');
+				}
+				,eventMouseout: function(){
+					$(this).css('cursor', '');
+				}
+			});
+
+		/*  색상 팔레트 /
+			$('#w_bgcolor').minicolors({
+				letterCase: 'uppercase',
+				textfield: false
+			}); */
+			
+			/* $("#w_bgcolor").spectrum({
+				color:"#1266FF",
+			    showPaletteOnly: true,
+			    change: function(color) {
+			        $("#w_bgcolor").val(color.toHexString());
+			    },
+			    palette: [
+			        ["rgb(18, 102, 255)","rgb(92, 209, 229)","rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
+			        "rgb(204, 204, 204)", "rgb(217, 217, 217)"],
+			        ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
+			        "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"], 
+			        ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)", 
+			        "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)", 
+			        "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)", 
+			        "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)", 
+			        "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)", 
+			        "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
+			        "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
+			        "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
+			        "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)", 
+			        "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
+			    ]
+			}); */
+			
+			
+
+		
+
+			/* 작업 시간 설정 */
+			length = DEF_SELECT_TIME.length;
+			tmpContext = '';
+			for(i=0; i < length; i++){
+				tmpContext += '<option value='+DEF_SELECT_TIME[i]+'>'+DEF_SELECT_TIME[i].substr(0, 2)+':' + DEF_SELECT_TIME[i].substr(2)+ '</option>';
+			}
+			
+			
+			
+				
+			// Options 설정.
+			$('#wstart_time, #wend_time').html(tmpContext).change( function () {
+				if(this.id == 'wstart_time') {// 시작 시간이 변경 될 경우
+					tmpContext = '';
+					var isStart = false, j=1;
+					for(i=0; i < length; i++){
+						if(!isStart && this.value == DEF_SELECT_TIME[i]) {
+							if(allday){
+								if(this.value == '0900'){
+									isStart=true;
+									continue;
+								}else{
+									isStart=false;
+								}	
+							}else{
+								isStart=true;
+								allday = false;
+								continue;
+							}
+							//tmpContext += '<option value='+DEF_SELECT_TIME[i]+'>'+DEF_SELECT_TIME[i].substr(0, 2)+':' + DEF_SELECT_TIME[i].substr(2)+'('+((j++)*30)+'분) </option>';
+						}
+						if(isStart){
+							if($('#wstart_time').val() =='0900' && DEF_SELECT_TIME[i].substr(0, 2)+':' + DEF_SELECT_TIME[i].substr(2)=='18:00' && allday==true){
+								tmpContext += '<option value='+DEF_SELECT_TIME[i]+' selected>'+DEF_SELECT_TIME[i].substr(0, 2)+':' + DEF_SELECT_TIME[i].substr(2)+'('+((j++)*0.5)+'시간) </option>';
+							}else{
+								tmpContext += '<option value='+DEF_SELECT_TIME[i]+'>'+DEF_SELECT_TIME[i].substr(0, 2)+':' + DEF_SELECT_TIME[i].substr(2)+'('+((j++)*0.5)+'시간) </option>';
+							}
+							
+						}
+					}
+					$(' #wend_time').html(tmpContext);
+					allday = false;
+				}
+			});
+
+			/**
+			 * 금주인지 체크.
+			 * @param selDay 선택한 일자.
+			 * @return -1 // 금주가 아닌 지난주. 0 금주(실행) // 1 계획.
+			 */
+			function checkCurrentWeek(selDay){
+			
+				var isPlan=false,
+						isToday=false,
+						toDay = '',
+						tmpCurDay,
+						lastDay='';
+				var curLeng=currentWeekDay.length;
+
+				if(currentWeekDay[0].dd > selDay) {
+					return -1;
+				}
+	           /* an. 막음.
+				for(var j=0; j < curLeng; j++) {
+					tmpCurDay = currentWeekDay[j];
+
+					//마자막날 금요일 - 자동등록 날짜				
+					if(j==curLeng-3){
+						$('#next_date').val( fnDateFormat(tmpCurDay.dd));
+					}
+				} */
+				
+				for(var j=0; j < curLeng; j++) {
+					tmpCurDay = currentWeekDay[j];
+
+					if(!isToday && tmpCurDay.today == 'Y') {
+						isToday=true;
+						toDay = tmpCurDay.dd;
+					}
+
+					if(selDay == tmpCurDay.dd) {
+						if(toDay == selDay) { // 실행.
+							return 0;
+						}
+						// 날짜가 다르다면 today 지났는지 여부로.
+						// 금일 날짜가 지났으면 계획 : 실행.
+						return (isToday)? 1 : 0;
+					}
+					
+				}
+				return 1;
+			};
+
+			/* 달력 버튼 설정 */
+			var custom_buttons = '<span>' +
+						'<input type="radio" id="wPlan" name="wTypeRadio" value="P"/><label for="wPlan">계획</label>' +
+						'<input type="radio" id="wExec" name="wTypeRadio" value="E" checked="checked" /><label for="wExec">실행</label>' +
+						'</span>';
+
+			$('.fc-header-left').append(custom_buttons);
+			/* 달력 변경시 이벤트 발생 */
+			$(':input[name=wTypeRadio]').bind('change', function(){
+				$('#searchWorkType').val( ($(":input:radio[name=wTypeRadio]:checked").val() || 'E'));
+				$('#calendar').fullCalendar('refetchEvents');
+			});
+			
+			 
+		
+
+
+
+			
+			/* 다이얼 로그 설정 */
+			$( "#caledarDetail-form" ).dialog({
+
+				autoOpen: false
+				,height: 'auto'
+				,width: 510
+				,modal: true
+				,resizable: false
+				,draggable: true
+				,position: [250,300]
+				,buttons : [{	// 모달 창에서의 버튼.
+					id : 'btnSave',
+					text : '저장',
+					click : function(){
+						var calendarDetail = $('#calendarDetail');
+
+						if($('#p_id').val() == '-sel-'){
+							message('프로젝트를 선택해주세요');
+							return;
+						}
+							savePersonWork();
+					}
+				},{
+					id : 'btnDelete',
+					text : '삭제',
+					click : function(){
+						if($('#w_id').val() =='') {
+							$( "#caledarDetail-form" ).dialog( "close" );
+							return;
+						}
+						if(confirm('삭제하시겠습니까?')) {
+							ajax('/job/deleteJobSchedule.do', '',
+									{
+										w_id : $('#w_id').val()
+									}, function (data){
+										if(data == 'SUCCESS') {
+											$( "#caledarDetail-form" ).dialog( "close" );
+											$('#calendar').fullCalendar('refetchEvents');
+										} else {
+											message('삭제에 실패하였습니다. \n다시 시도해주세요.');
+										}
+									}
+							);
+						}
+					}
+				},
+				{
+				   id : 'btnMove',
+				   text : '실행옮김',
+				   click : function(){
+					   if(confirm('계획을 실행으로 옮기시겠습니까?')){
+						
+							if($('#p_id').val() == '-sel-'){
+								message('프로젝트를 선택해주세요');
+								return;
+							}
+								
+								if($('#wend_time').val() == '2400'){
+											ajax('/job/saveJobSchedule.do', '',
+													{
+														w_id : "",
+														w_type : "E",
+														w_starttime : $('#wstart_date', calendarDetail).val().replace(/-/g, '')+ $('#wstart_time', calendarDetail).val().substr(0,4),
+														w_endtime : $('#wend_date', calendarDetail).val().replace(/-/g, '')+ "2359",
+														w_work_title : $('#w_work_title', calendarDetail).val(),
+														w_work_memo : $('#w_work_memo', calendarDetail).val(),
+														p_id : $('#p_id').val(),
+														w_bgcolor : $('#w_bgcolor').val(),
+														maintenance_gubun : $('#m_gubun').val(),
+														maintenance_type : $('#m_type').val(),
+														cs_id : $("#cs_id").val(),
+														cs_title: $("#cs_title").val(),
+														p_gubun: $('#p_gubun').val()
+													}, function (data){
+														if(data == 'SUCCESS') {
+															$( "#caledarDetail-form" ).dialog( "close" );
+															message('정상적으로 옮겨졌습니다.');
+															$('#calendar').fullCalendar('refetchEvents');
+														} else {
+															message('등록에 실패하였습니다. \n다시 시도해주세요.');
+														}
+													}
+											);
+									}
+									else{
+	    								ajax('/job/saveJobSchedule.do', '',
+	    										{
+	    											w_id : "",
+	    											w_type : "E",
+	    											w_starttime : $('#wstart_date', calendarDetail).val().replace(/-/g, '')+ $('#wstart_time', calendarDetail).val().substr(0,4),
+	    											w_endtime : $('#wend_date', calendarDetail).val().replace(/-/g, '')+ $('#wend_time', calendarDetail).val().substr(0,4),
+	    											w_work_title : $('#w_work_title', calendarDetail).val(),
+	    											w_work_memo : $('#w_work_memo', calendarDetail).val(),
+	    											p_id : $('#p_id').val(),
+	    											w_bgcolor : $('#w_bgcolor').val(),
+	    											maintenance_gubun : $('#m_gubun').val(),
+													maintenance_type : $('#m_type').val(),
+													cs_id : $("#cs_id").val(),
+													cs_title: $("#cs_title").val(),
+													p_gubun: $('#p_gubun').val()
+	    										}, function (data){
+	    											if(data == 'SUCCESS') {
+	    												$( "#caledarDetail-form" ).dialog( "close" );
+	    												message('정상적으로 옮겨졌습니다.');
+	    												$('#calendar').fullCalendar('refetchEvents');
+	    											} else {
+	    												message('등록에 실패하였습니다. \n다시 시도해주세요.');
+	    											}
+	    										}
+	    								);
+								}
+						}
+				   }
+				}]
+			});
+
+			function savePersonWork(){
+				
+				fnCheck();
+				
+				
+				var id = $('#p_id').val();
+				var color = $('#w_bgcolor').val();
+				var user_id = 'hwjeong';
+				var calendarDetail = $('#calendarDetail');
+				var dataAry = [];
+				dataAry.push({p_id : id, pms_color : color, user_id : user_id});
+				
+				var sysdate = '20260227';
+				var sysyear = sysdate.substring(0,4);
+				var sysmon = sysdate.substring(4,6);
+				var sysdd = sysdate.substring(6,8);
+				
+				var caldate = $('#wstart_date', calendarDetail).val().replace(/-/g, '');
+				var calyear = caldate.substring(0,4);
+				var calmon = caldate.substring(4,6);
+				
+
+				
+				//전월달 데이터는 매달 10일 이후까지만 입력이 가능
+//	 	 	    if(sysyear == calyear && Number(sysmon-1) == calmon && 11 > sysdd || 
+//	 		       sysyear == calyear && sysmon <= calmon || sysyear < calyear){
+
+					if($('#wend_time').val() == '2400'){
+							ajax('/job/saveJobSchedule.do', '',
+									{
+										w_id : $('#w_id').val(),
+										w_type : $('#w_type').val(),
+										w_starttime : $('#wstart_date', calendarDetail).val().replace(/-/g, '')+ $('#wstart_time', calendarDetail).val().substr(0,4),
+										w_endtime : $('#wend_date', calendarDetail).val().replace(/-/g, '')+ "2359",
+										w_work_title : $('#w_work_title', calendarDetail).val(),
+										w_work_memo : $('#w_work_memo', calendarDetail).val(),
+										next_date :$('#next_date').val().replace(/-/g, ''),
+										p_id : id,
+										w_bgcolor : color,
+										holy: $("#holy").val(),
+										maintenance_gubun : $('#m_gubun').val(),
+										maintenance_type : $('#m_type').val(),
+										cs_id : $("#cs_id").val(),
+										cs_title: $("#cs_title").val(),
+										p_gubun: $('#p_gubun').val()
+									}, function (data){
+										if(data == 'SUCCESS') {
+											
+											$.ajax({
+												type:"post",
+												url:"/wims/mypage/colorChangeProject.do",
+												dataType:"JSON",
+												data: {param : JSON.stringify(dataAry)},
+												async: false,
+												
+												success:function(data){
+												}
+											});
+											
+											$( "#caledarDetail-form" ).dialog( "close" );
+											$('#calendar').fullCalendar('refetchEvents');
+											
+										} else {
+											message('등록에 실패하였습니다. \n다시 시도해주세요.');
+										}
+									}
+							);
+					}
+					else{
+							ajax('/job/saveJobSchedule.do', '',
+									{
+										w_id : $('#w_id').val(),
+										w_type : $('#w_type').val(),
+										w_starttime : $('#wstart_date', calendarDetail).val().replace(/-/g, '')+ $('#wstart_time', calendarDetail).val().substr(0,4),
+										w_endtime : $('#wend_date', calendarDetail).val().replace(/-/g, '')+ $('#wend_time', calendarDetail).val().substr(0,4),
+										w_work_title : $('#w_work_title', calendarDetail).val(),
+										w_work_memo : $('#w_work_memo', calendarDetail).val(),
+										next_date :$('#next_date').val().replace(/-/g, ''),
+										p_id : id,
+										w_bgcolor : color,
+										holy: $("#holy").val(),
+										maintenance_gubun : $('#m_gubun').val(),
+										maintenance_type : $('#m_type').val(),
+										cs_id : $("#cs_id").val(),
+										cs_title : $("#cs_title").val(),
+										p_gubun: $('#p_gubun').val()
+									}, function (data){
+										if(data == 'SUCCESS') {
+											
+											$.ajax({
+												type:"post",
+												url:"/wims/mypage/colorChangeProject.do",
+												dataType:"JSON",
+												data: {param : JSON.stringify(dataAry)},
+												async: false,
+												
+												success:function(data){
+												}
+											});
+											
+											$( "#caledarDetail-form" ).dialog( "close" );
+											$('#calendar').fullCalendar('refetchEvents');
+											
+										} else {
+											message('등록에 실패하였습니다. \n다시 시도해주세요.');
+										}
+									}
+							);
+					}
+//	 		     }else{
+//	 		    	alert("매월 10일 이후에는 전월 및 그 이전 데이터에 대한 입력 및\n수정이 불가능 합니다.");
+//	 		    	$( "#caledarDetail-form" ).dialog( "close" );
+//	 		    } 
+			}
+			    
+			
+			
+
+			$('#next_date').datepicker({
+				dateFormat: "yy-mm-dd",
+				showOn: "button",//focus
+				buttonImage: "/jslib/jquery-ui-1.9.0/demos/images/calendar.gif",
+				buttonImageOnly: true,
+				  monthNames: ['1월','2월','3월','4월','5월','6월',
+				  '7월','8월','9월','10월','11월','12월'],
+				  monthNamesShort: ['1월','2월','3월','4월','5월','6월',
+				  '7월','8월','9월','10월','11월','12월'],
+				  dayNames: ['일','월','화','수','목','금','토'],
+				  dayNamesShort: ['일','월','화','수','목','금','토'],
+				  dayNamesMin: ['일','월','화','수','목','금','토'],
+				  weekHeader: 'Wk',
+				  firstDay: 1,
+				  isRTL: false,
+				  showMonthAfterYear: true,
+				  changeMonth: true, // 월선택 select box 표시 (기본은 false)
+		          changeYear: true,  // 년선택 selectbox 표시 (기본은 false)
+		          yearRange: 'c-9:c+1'
+		     });
+			
+			
+		/* 	$("#p_id").change(function(){
+				
+				var id = $(this).val();
+				var user_id = 'hwjeong';
+				var dataAry = [];
+				dataAry.push({p_id : id, user_id : user_id});
+				$.ajax({
+					type:"post",
+					url:"/wims/mypage/getJobsheetProjectColor.do",
+					dataType:"text",
+					data: {param : JSON.stringify(dataAry)},
+					async: false,
+					
+					success:function(data){
+						
+						if ( data != null && data != "" ) {
+							$("#w_bgcolor").spectrum('set', data);
+						} else {
+							$("#w_bgcolor").spectrum('set', "#1266FF");
+						}
+						
+					}
+				});
+				
+			}); */
+			
+		});
+			
+		function fnAllDay(){
+			 
+			$("#wstart_time").val("0900").change();
+			$("#wend_time").val("1800").change();
+			
+		}
+		
+		 function fn_project_select(p_id){
+			 
+			 if($("#p_gubun").val() == 'CD00000206'){
+				 $("#code").attr("disabled",true);
+			 }else{
+				 $("#code").attr("disabled",false);
+			 }
+			 
+			 //유지보수일떄
+			 if($("#p_gubun").val() == 'CD00000204' || $("#p_gubun").val() == 'CD00000200'){
+				 $('#mainten').css('display', 'block'); 	
+			 }else{
+				 $('#mainten').css('display', 'none'); 	
+			 }
+			 
+	
+			 
+			 
+				ajax('/job/projectList.do', 'HTML',
+						{
+							p_gubun : $("#p_gubun").val(),
+							p_code : $("#code").val()
+							
+						}, function (data){
+							$("#p_id").html(data);
+							$("#p_id").val(p_id).change();
+						}
+					);
+		
+	}
+	
+	$('#next_date').datepicker({
+		dateFormat: "yy-mm-dd",
+		showOn: "button",//focus
+		buttonImage: "/jslib/jquery-ui-1.9.0/demos/images/calendar.gif",
+		buttonImageOnly: true,
+		  monthNames: ['1월','2월','3월','4월','5월','6월',
+		  '7월','8월','9월','10월','11월','12월'],
+		  monthNamesShort: ['1월','2월','3월','4월','5월','6월',
+		  '7월','8월','9월','10월','11월','12월'],
+		  dayNames: ['일','월','화','수','목','금','토'],
+		  dayNamesShort: ['일','월','화','수','목','금','토'],
+		  dayNamesMin: ['일','월','화','수','목','금','토'],
+		  weekHeader: 'Wk',
+		  firstDay: 1,
+		  isRTL: false,
+		  showMonthAfterYear: true,
+		  changeMonth: true, // 월선택 select box 표시 (기본은 false)
+          changeYear: true,  // 년선택 selectbox 표시 (기본은 false)
+          yearRange: 'c-9:c+1'
+     });
+	
+	/*  $("#p_id").change(function(){
+	
+		var id = $(this).val();
+		var user_id =  $('#user_id').val();
+		var dataAry = [];
+		dataAry.push({p_id : id, user_id : user_id});
+		$.ajax({
+			type:"post",
+			url:"/wims/mypage/getJobsheetProjectColor.do",
+			dataType:"text",
+			data: {param : JSON.stringify(dataAry)},
+			async: false,
+			
+			success:function(data){
+				
+				if ( data != null && data != "" ) {
+					$("#w_bgcolor").spectrum('set', data);
+				} else {
+					$("#w_bgcolor").spectrum('set', "#1266FF");
+				}
+				
+			}
+		}); 
+		
+		
+	}); */
+}
+
+/* 프로젝트 색상 지정 다이얼 로그 설정 */
+function coloringProjectDialog(){
+	
+ 	$( "#projectColor-form" ).dialog({
+ 		autoOpen: false
+ 		,height: 450
+ 		,width: 600
+ 		,modal: true
+ 		,resizable: false
+ 		,draggable: true
+ 		,position: [150,200]
+	 	,buttons : [{	// 모달 창에서의 버튼.
+				id : 'btnSave',
+				text : '확인',
+				click : function(){
+					var dataAry = [];
+					for ( var i=0; i < ($("#prj_color_tb tr").length - 1); i++ ) {
+						var id = $("#prj_id_" + i).val();
+						var color = $("#hidden_color_" + i).val();
+						var user_id = $("#user_id").val();
+						dataAry.push({p_id : id, pms_color : color, user_id : user_id});
+					}
+					
+					$.ajax({
+						type:"post",
+						url:"/wims/mypage/colorChangeProject.do",
+						dataType:"JSON",
+						data: {param : JSON.stringify(dataAry)},
+						async: false,
+						
+						success:function(data){
+							if ( data['result'] == 0 ) {
+								alert("수정에 실패하였습니다.");
+							} else {
+								alert("해당 프로젝트의 색상을 지정하였습니다.");
+								drawChart();
+								$('#calendar').fullCalendar('refetchEvents');
+							}
+							$("#projectColor-form").dialog( "close" );
+						}
+					});
+				}
+			},
+			{
+				id : 'btnCancel',
+				text : '취소',
+				click : function(){
+					$("#projectColor-form").dialog( "close" );
+				}
+			}
+	 	]
+ 	});
+ 	
+ 	addSpectrum();
+ 	
+}
+
+/* function addSpectrum() {
+
+	$("#palette").spectrum({
+		color:"#1266FF",
+	    showPaletteOnly: true,
+	    change: function(color) {
+	    	var tempText = "09:00 ~ 18:00 [ " + $("#temp_prj_name").val() + " ]";
+	    	
+	    	$("#"+$('#temp_color_id').val()).css('background-color',color.toHexString());
+	    	$("#"+$('#temp_hidden_color').val()).val(color.toHexString());
+	    	$("#prev_0").css('background-color', color.toHexString()).text(tempText);
+	    	$("#prev_1").css('color', color.toHexString()).css('background-color', '#fffdea').text(tempText);
+	    	$("#prev_2").css('color', color.toHexString()).css('background-color', '#eaf7ff').text(tempText);
+	    },
+	    palette: [
+	        ["rgb(18, 102, 255)","rgb(92, 209, 229)","rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
+	        "rgb(204, 204, 204)", "rgb(217, 217, 217)"],
+	        ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
+	        "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"], 
+	        ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)", 
+	        "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)", 
+	        "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)", 
+	        "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)", 
+	        "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)", 
+	        "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
+	        "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
+	        "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
+	        "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)", 
+	        "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
+	    ]
+	});
+
+}
+ */
+function coloringProject(){
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/setProjectColor.do",
+		dataType:"html",
+		async: false,
+		
+		success:function(data){
+			$('#projectColor-form')[0].innerHTML = data;
+		}
+	});
+	
+	coloringProjectDialog(); //프로젝트 색상 팝업 설정
+	$("#projectColor-form").dialog('open');
+	
+}
+
+/* function setProjectColor(p_name, p_hidden_color, p_color_id) {
+	
+	$("#temp_prj_name").val(p_name);
+	$("#temp_hidden_color").val(p_hidden_color);
+	$("#temp_color_id").val(p_color_id);
+	
+	var tempColor = $("#"+p_hidden_color).val();
+	var tempText = "09:00 ~ 18:00 [ " + p_name + " ]";
+	
+	$("#palette").spectrum('set', tempColor);
+	
+	$("#prev_0").css('background-color', tempColor).text(tempText);
+	$("#prev_1").css('color', tempColor).css('background-color', '#fffdea').text(tempText);
+	$("#prev_2").css('color', tempColor).css('background-color', '#eaf7ff').text(tempText);
+} */
+
+function fnSearchProject(){
+	
+	var s_name = $("#search_project").val();
+	
+	$.ajax({
+		type:"post",
+		url:"/wims/mypage/setProjectColor.do",
+		dataType:"html",
+		data: { search_name : s_name },
+		async: false,
+		
+		success:function(data){
+			$('#projectColor-form')[0].innerHTML = data;
+		}
+	});
+	
+	addSpectrum();
+	
+}
+
+function fnAllDay(){
+	 
+	$("#wstart_time").val("0900").change();
+	$("#wend_time").val("1800").change();
+	
+}
+
+function fn_project_select(p_id){
+	
+	 if($("#p_gubun").val() == 'CD00000206'){
+		 $("#code").attr("disabled",true);
+	 }else{
+		 $("#code").attr("disabled",false);
+	 }
+	 
+	 //유지보수일떄
+	 if($("#p_gubun").val() == 'CD00000204' || $("#p_gubun").val() == 'CD00000200'){
+		 $('#mainten').css('display', 'block'); 	
+	 }else{
+		 $('#mainten').css('display', 'none'); 	
+	 }
+	 
+	ajax('/job/projectList.do', 'HTML',
+			{
+				p_gubun : $("#p_gubun").val(),
+				p_code : $("#code").val()
+				
+			}, function (data){
+				$("#p_id").html(data);
+				$("#p_id").val(p_id).change();
+			}
+		);
+	 
+ } 
+ 
+function fnCheck(){
+	 
+
+	 
+		 
+	if($("input:checkbox[id='holy']").is(":checked") == true){
+			 $("#holy").val("true");
+	}else{
+			 $("#holy").val("false");
+	}
+		 
+	 
+	 
+}
+
+function fnCheckbox_able(){
+	 
+	 if(1130 >= Number($("#wstart_time").val()) && 1300 < Number($("#wend_time").val())){
+		 $("#lunch").prop('checked', true);
+		 $("#lunch_div").css("display","block");  
+	 }else if(1300 >= Number($("#wend_time").val())){
+		 $("#lunch_div").css("display","none");
+		 $("#lunch").prop("checked", false);
+	 }
+	 
+	  
+	 if( 1730 >= Number($("#wstart_time").val()) && 1900 < Number($("#wend_time").val())){
+		 $("#dinner").prop("checked", true);
+		 $("#dinner_div").css("display","block");
+	 }else if(2000 > Number($("#wend_time").val())){
+		 $("#dinner_div").css("display","none");
+		 $("#dinner").prop("checked", false);
+	 }  
+}
+
+function fnCsList(){
+	var p_id = $("#p_id option:selected").text();
+	window.open("/wims/cs/getCsBoardListPop.do"+"?p_id=" +p_id+"&content=first", "", "width=810,height=650,status=yes,menubar=no,scollbars=no");		
+}
+
+function getCsListReturnValue(cs_id,title){
+ 
+ $("#cs_id").val(cs_id);
+ $("#cs_title").val(title);
+ 
+}
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42418007-2', 'wemb.co.kr');
+  ga('send', 'pageview');
+
+</script>
+</html>

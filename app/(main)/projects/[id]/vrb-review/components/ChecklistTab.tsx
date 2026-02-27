@@ -297,25 +297,53 @@ export default function ChecklistTab({ projectId, vrbStatus }: { projectId: stri
                 setVrbId(currentVrbId);
 
                 // 체크리스트 항목 로드
-                const [checklistRes, scoresRes] = await Promise.all([
-                    fetch("/api/settings/difficulty-checklist"),
-                    currentVrbId ? fetch(`/api/vrb-reviews/${currentVrbId}/difficulty`) : Promise.resolve(null),
-                ]);
+                // 저장된 점수 로드 시도
+                const scoresRes = currentVrbId
+                    ? await fetch(`/api/vrb-reviews/${currentVrbId}/difficulty`)
+                    : null;
 
-                if (checklistRes.ok) {
-                    const checklistData = await checklistRes.json();
-                    setCategories(checklistData.categories || []);
-                }
+                let usedSnapshot = false;
 
                 if (scoresRes && scoresRes.ok) {
                     const scoresData = await scoresRes.json();
-                    // scores 배열 → ScoreMap 변환
+
+                    if (scoresData.hasSnapshot && (scoresData.scores || []).length > 0) {
+                        // ── 스냅샷 복원: settings API 불필요 ──
+                        // saved scores에서 카테고리 구조 재구성
+                        const catMap = new Map<string, Category>();
+                        (scoresData.scores || []).forEach((s: any) => {
+                            if (!catMap.has(s.categoryId)) {
+                                catMap.set(s.categoryId, {
+                                    id: s.categoryId,
+                                    label: s.categoryLabel || s.categoryId,
+                                    overallWeight: s.categoryWeight || 0,
+                                    items: [],
+                                });
+                            }
+                            catMap.get(s.categoryId)!.items.push({
+                                id: s.itemId,
+                                name: s.itemName,
+                                weight: s.itemWeight || 0,
+                                guide_texts: s.itemGuide || '',
+                            });
+                        });
+                        setCategories(Array.from(catMap.values()));
+                        usedSnapshot = true;
+                    }
+
                     const map: ScoreMap = {};
-                    (scoresData.scores || []).forEach((s: any) => {
-                        map[s.itemId] = s.score;
-                    });
+                    (scoresData.scores || []).forEach((s: any) => { map[s.itemId] = s.score; });
                     setScores(map);
                     setComment(scoresData.comment || "");
+                }
+
+                if (!usedSnapshot) {
+                    // ── 스냅샷 없음: settings에서 로드 ──
+                    const checklistRes = await fetch("/api/settings/difficulty-checklist");
+                    if (checklistRes.ok) {
+                        const checklistData = await checklistRes.json();
+                        setCategories(checklistData.categories || []);
+                    }
                 }
             } catch (e) {
                 console.error("ChecklistTab init error:", e);
@@ -341,9 +369,9 @@ export default function ChecklistTab({ projectId, vrbStatus }: { projectId: stri
         }
         setSaving(true);
         try {
-            // scores ScoreMap → 배열 변환 (항목명 포함)
+            // scores ScoreMap → 배열 변환 (스냅샷 상세 포함)
             const allItems = categories.flatMap((cat) =>
-                cat.items.map((item) => ({ ...item, categoryId: cat.id }))
+                cat.items.map((item) => ({ ...item, categoryId: cat.id, categoryLabel: cat.label, categoryWeight: cat.overallWeight }))
             );
             const scoresPayload = Object.entries(scores)
                 .map(([itemIdStr, score]) => {
@@ -354,6 +382,11 @@ export default function ChecklistTab({ projectId, vrbStatus }: { projectId: stri
                         itemName: item?.name || "",
                         categoryId: item?.categoryId || "",
                         score,
+                        // 스냅샷
+                        categoryLabel: item?.categoryLabel || "",
+                        categoryWeight: item?.categoryWeight || 0,
+                        itemWeight: item?.weight || 0,
+                        itemGuide: item?.guide_texts || "",
                     };
                 })
                 .filter((s) => s.score !== null && s.score !== undefined);

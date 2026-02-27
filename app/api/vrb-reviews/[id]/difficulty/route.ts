@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-// GET: vrb_review_id 기준 난이도 점수 + 의견 조회
+// GET: vrb_review_id 기준 난이도 점수 + 의견 조회 (스냅샷 포함)
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -9,19 +9,18 @@ export async function GET(
     try {
         const { id } = await params;
 
-        // 점수 목록
         const scoresResult = await query(
-            `SELECT item_id, item_name, category_id, score
-       FROM we_vrb_difficulty_scores
-       WHERE vrb_review_id = $1`,
+            `SELECT item_id, item_name, category_id, score,
+                    category_label, category_weight, item_weight, item_guide
+             FROM we_vrb_difficulty_scores
+             WHERE vrb_review_id = $1`,
             [id]
         );
 
-        // 의견 + 종합 점수
         const reviewResult = await query(
             `SELECT difficulty_comment, difficulty_total_score
-       FROM we_project_vrb_reviews
-       WHERE id = $1`,
+             FROM we_project_vrb_reviews
+             WHERE id = $1`,
             [id]
         );
 
@@ -37,9 +36,16 @@ export async function GET(
                 itemName: r.item_name,
                 categoryId: r.category_id,
                 score: r.score,
+                // 스냅샷 필드
+                categoryLabel: r.category_label || '',
+                categoryWeight: parseFloat(r.category_weight) || 0,
+                itemWeight: parseFloat(r.item_weight) || 0,
+                itemGuide: r.item_guide || '',
             })),
             comment: review.difficulty_comment || '',
             totalScore: review.difficulty_total_score ? parseFloat(review.difficulty_total_score) : null,
+            // 스냅샷 여부 판단용 (category_label이 있으면 스냅샷)
+            hasSnapshot: scoresResult.rows.some((r: any) => r.category_label),
         });
     } catch (error: any) {
         console.error('Error fetching VRB difficulty scores:', error);
@@ -50,7 +56,7 @@ export async function GET(
     }
 }
 
-// PUT: 난이도 점수 저장 (기존 삭제 후 재삽입) + 의견/종합점수 업데이트
+// PUT: 난이도 점수 저장 (스냅샷 포함)
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -60,36 +66,36 @@ export async function PUT(
         const body = await request.json();
         const { scores, comment, totalScore } = body;
 
-        // 기존 점수 삭제
-        await query(
-            `DELETE FROM we_vrb_difficulty_scores WHERE vrb_review_id = $1`,
-            [id]
-        );
+        await query(`DELETE FROM we_vrb_difficulty_scores WHERE vrb_review_id = $1`, [id]);
 
-        // 점수 재삽입
         if (Array.isArray(scores) && scores.length > 0) {
             for (const s of scores) {
                 if (s.score === null || s.score === undefined) continue;
                 await query(
                     `INSERT INTO we_vrb_difficulty_scores
-             (vrb_review_id, item_id, item_name, category_id, score)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (vrb_review_id, item_id)
-           DO UPDATE SET score = EXCLUDED.score,
-                         item_name = EXCLUDED.item_name,
-                         updated_at = CURRENT_TIMESTAMP`,
-                    [id, s.itemId, s.itemName || '', s.categoryId, s.score]
+                       (vrb_review_id, item_id, item_name, category_id, score,
+                        category_label, category_weight, item_weight, item_guide)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                     ON CONFLICT (vrb_review_id, item_id)
+                     DO UPDATE SET score = EXCLUDED.score,
+                                   item_name = EXCLUDED.item_name,
+                                   category_label = EXCLUDED.category_label,
+                                   category_weight = EXCLUDED.category_weight,
+                                   item_weight = EXCLUDED.item_weight,
+                                   item_guide = EXCLUDED.item_guide,
+                                   updated_at = CURRENT_TIMESTAMP`,
+                    [id, s.itemId, s.itemName || '', s.categoryId, s.score,
+                        s.categoryLabel || '', s.categoryWeight || 0, s.itemWeight || 0, s.itemGuide || '']
                 );
             }
         }
 
-        // 의견 + 종합 점수 업데이트
         await query(
             `UPDATE we_project_vrb_reviews
-       SET difficulty_comment = $1,
-           difficulty_total_score = $2,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3`,
+             SET difficulty_comment = $1,
+                 difficulty_total_score = $2,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $3`,
             [comment ?? null, totalScore ?? null, id]
         );
 

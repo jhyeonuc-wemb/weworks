@@ -240,15 +240,15 @@ export default function SettlementListPage() {
           <Table className="w-full table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">코드</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
                 <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">계획 매출</TableHead>
-                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">실행 매출</TableHead>
-                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">계획 이익</TableHead>
-                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">실행 이익</TableHead>
-                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center">이익 증감</TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">상태</TableHead>
+                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">고객사</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계획 매출</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">실행 매출</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계획 이익</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">실행 이익</TableHead>
+                <TableHead className="w-[110px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">이익 증감</TableHead>
+                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -300,17 +300,17 @@ export default function SettlementListPage() {
                           {s.customer_name || "-"}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-4 py-3">
+                      <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/40 font-mono italic">
                           {formatCurrency(s.planned_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-4 py-3">
+                      <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80 font-mono">
                           {formatCurrency(s.actual_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-4 py-3">
+                      <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/40 font-mono italic">
                           {formatCurrency(s.planned_profit * 1000, "KRW", false)}
                         </span>
@@ -320,7 +320,7 @@ export default function SettlementListPage() {
                           {formatCurrency(actualProfit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="center" className="px-4 py-3">
+                      <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
                           "text-xs font-bold font-mono px-2 py-1 rounded-md",
                           s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"

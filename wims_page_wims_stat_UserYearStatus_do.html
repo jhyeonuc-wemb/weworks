@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-language" content="ko">
+<title>WIMS</title>
+<script type="text/javascript" src="/jslib/jquery-1.9.0/jquery-1.9.0.min.js"></script>
+<script type="text/javascript" src="/jslib/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+<!-- tab -->
+<link href="/css/jquery-tabslet-master/github.css" rel="stylesheet" type="text/css" >
+<link href="/css/jquery-tabslet-master/reset.css" rel="stylesheet" type="text/css" >
+<link href="/css/jquery-tabslet-master/styles.css" rel="stylesheet" type="text/css" >
+<link href="/css/jquery-tabslet-master/typography.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="/jslib/jquery-tabslet-master/jquery.tabslet.js"></script>
+<script type="text/javascript" src="/jslib/jquery-tabslet-master/jquery.tabslet.min.js"></script>
+<!-- tab -->
+<script type="text/javascript" src="/js/zero9Util.js"></script>
+<script type="text/javascript" src="/js/util.js"></script>
+<script type="text/javascript" src="/js/UtilAjax.js"></script>
+<script type="text/javascript" src="/js/DefaultValue.js"></script>
+<script type="text/javascript" src="/js/googleanalytics.js"></script>
+<!--[if lt IE 8]>
+<script type="text/javascript" src="/js/json/json2.js"></script>
+<![endif]-->
+<link rel="stylesheet" href="/jslib/jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" />
+<link href="/css/spp/xeniview_NX.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="/jslib/amcharts_2.10.0/amcharts/amcharts.js"></script>
+<script type="text/javascript" src="/js/amChartSupport.js"></script>
+<script type="text/javascript" src="/js/egovframework/com/sym/cal/EgovCalPopup.js"></script>
+<script type="text/javascript" src="/js/select/select2.js"></script>
+<script src="/js/select/select2_locale_ko.js"></script>
+<script src="/js/select/select2.js"></script>
+<script src="/js/jquery.tooltip.js" type="text/javascript"></script>
+<link href="/css/select/select2.css" rel="stylesheet"/>
+<link href="/css/tooltip/jquery.tooltip.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+<form id="statUserVO" name="form" action="/wims/stat/UserYearStatus.do?_sid=9AF2C4CDED6F4E49790E31B31ABE2A7D" method="post">
+	<div class="page" id="pg_container"> <!-- pg_container -->
+	<input type="hidden" name="u_id" />
+	<input type="hidden" name="search_type" />
+	<input type="hidden" name="search_val" />
+	<input id="selectMonth" name="selectMonth" type="hidden" value=""/>
+ 	<input id="excel_search_text" name="excel_search_text" type="hidden" value=""/>
+ 	<input id="search_dept_edit" name="search_dept_edit" type="hidden" value=""/>
+	
+	<div class="title" id="page_title" style="width: 1800px"></div>
+	<div class="root" id="page_navi" style="width: 1800px"></div>
+         <!-- 조회조건 Start -->
+	<div class="searchbox"> 
+		<div>
+			<ul>
+				<li style="width: auto;">
+					시작년도
+					<select id="search_year" name="search_year" style="overflow-y:auto; overflow-x:auto; width: 55px" onchange="fnYearChange()">
+						
+							<option value="2015">2015</option>						
+						
+							<option value="2016">2016</option>						
+						
+							<option value="2017">2017</option>						
+						
+							<option value="2018">2018</option>						
+						
+							<option value="2019">2019</option>						
+						
+							<option value="2020">2020</option>						
+						
+							<option value="2021">2021</option>						
+						
+							<option value="2022">2022</option>						
+						
+							<option value="2023">2023</option>						
+						
+							<option value="2024">2024</option>						
+						
+							<option value="2025">2025</option>						
+						
+							<option value="2026">2026</option>						
+						
+					</select> 
+				</li>
+				<li style="width: auto;">
+					시작월
+					<select id="search_month" name="search_month" style="overflow-y:auto; overflow-x:auto; width: 40px">
+						
+							<option value="01">1</option>
+						
+							<option value="02">2</option>
+						
+							<option value="03">3</option>
+						
+							<option value="04">4</option>
+						
+							<option value="05">5</option>
+						
+							<option value="06">6</option>
+						
+							<option value="07">7</option>
+						
+							<option value="08">8</option>
+						
+							<option value="09">9</option>
+						
+						
+							<option value="10">10</option>
+						
+							<option value="11">11</option>
+						
+							<option value="12">12</option>
+						
+					</select> 
+				</li>
+				<li style="width: auto;">
+					종료년도
+					<select id="search_year_end" name="search_year_end" style="overflow-y:auto; overflow-x:auto; width: 55px" onchange="fnYearChange()">
+						
+							<option value="2015">2015</option>						
+						
+							<option value="2016">2016</option>						
+						
+							<option value="2017">2017</option>						
+						
+							<option value="2018">2018</option>						
+						
+							<option value="2019">2019</option>						
+						
+							<option value="2020">2020</option>						
+						
+							<option value="2021">2021</option>						
+						
+							<option value="2022">2022</option>						
+						
+							<option value="2023">2023</option>						
+						
+							<option value="2024">2024</option>						
+						
+							<option value="2025">2025</option>						
+						
+							<option value="2026">2026</option>						
+						
+					</select> 
+				</li>
+				<li style="width: auto;">
+					종료월
+					<select id="search_month_end" name="search_month_end" style="overflow-y:auto; overflow-x:auto; width: 40px">
+						
+							<option value="01">1</option>
+						
+							<option value="02">2</option>
+						
+							<option value="03">3</option>
+						
+							<option value="04">4</option>
+						
+							<option value="05">5</option>
+						
+							<option value="06">6</option>
+						
+							<option value="07">7</option>
+						
+							<option value="08">8</option>
+						
+							<option value="09">9</option>
+						
+						
+							<option value="10">10</option>
+						
+							<option value="11">11</option>
+						
+							<option value="12">12</option>
+						
+					</select> 
+				</li>
+				<li style="width:auto;">
+					팀 
+					<select id="search_dept" cssStyle="width:220px;">
+					</select>
+					
+					
+		
+				</li>
+				<li style="width:auto;height:18px;padding-top: 6px;">
+					분류
+					<select id="search_status" name="search_status" style="width:250px;height:17px;padding-top: 0;" multiple="multiple">
+						<option value="" selected="selected">전체</option>
+						
+							<option value="CD00000181">Presales</option>
+						
+							<option value="CD00000182">일반 프로젝트 계약</option>
+						
+							<option value="CD00000204">무상유지보수</option>
+						
+							<option value="CD00000200">유지보수 계약</option>
+						
+							<option value="CD00000206">일반업무</option>
+						
+							<option value="CD00000201">RnD 프로젝트</option>
+						
+							<option value="CD00000335">연구과제</option>
+						
+							<option value="CD00000203">기타(TFT 활동)</option>
+						
+					</select><input type="hidden" name="_search_status" value="1"/>
+				</li>
+		
+				<li style="width:auto;">
+					이름 
+					<input id="search_user_name" name="search_user_name" onkeypress="if(event.keyCode==13){fnSearch('','');return false;}" type="text" value="" size="7"/>
+				</li>
+				<li style="width:auto;">
+					상태 
+					<select id="search_user_status" name="search_user_status" style="width:62px;">
+						<option value="" selected="selected">전체</option>
+						
+							<option value="CD00000026">휴가</option>
+						
+							<option value="CD00000025">근무중</option>
+						
+							<option value="CD00000029">퇴사</option>
+						
+							<option value="CD00000027">병가</option>
+						
+							<option value="CD00000028">출장</option>
+						
+							<option value="CD00000222">휴직</option>
+						
+					</select>
+				</li>
+			</ul>
+		</div>
+		<table align="right" style="margin:6px;">
+			<tr>
+				<td class="gBtn1" style="padding-right:3px;" onclick="fnSearch('','');"><a href="#"><span>조회</span></a></td>
+				<td class="gBtn2" onclick="fnExcel(this)"><a href="#"><span id="btnExcel" class="btnE" >엑셀</span></a></td>
+			</tr>
+		</table>
+	</div>
+</div>
+	
+	<div style="width: 1800px">
+<div id="tab_group" style="display: inline;">
+
+	<div style="float:right">
+		 <div style="float:left;"class="tabstyle">단위</div>
+			<div id="tabs_val" class="tabs tabs_tab2" style="display: inline;float:left"> 
+				<ul class="tabs">
+					<li><a href="#tab-1" onclick="fnSearch('','hour')">시간</a></li>
+					<li><a href="#tab-1" onclick="fnSearch('','md')">일</a></li>
+					<li><a href="#tab-1" onclick="fnSearch('','mm')">월</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div style="float:right">
+	 <div style="float:left;"class="tabstyle">업무시간기준</div>
+		<div id="tabs_type" class="tabs tabs_tab2" style="display: inline;float:left"> 
+			<ul class="tabs">
+				<li><a href="#tab-1" onclick="fnSearch('A','')" title="시간 - WIMS 총 입력시간</br>제외 - 12:00~13:00(점심)" class="tooltip"  >전체</a></li>
+				<li><a href="#tab-1" onclick="fnSearch('W','')"  title="시간 - 8시간</br>기준 - 09:00 ~ 18:00</br>제외 - 12:00 ~ 13:00(점심), 주말, 공휴일" class="tooltip" >업무시간</a></li>
+				<li><a href="#tab-1" onclick="fnSearch('O','')" title="시간 - 평일) 13시간 59분</br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;주말,공휴일) 
+ 																				21시간59분</br>기준 - 00:00 ~ 23:59</br>제외 - 평일) 09:00 ~ 19:00(업무, 점심, 저녁)</br>
+ 																				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;주말,공휴일) 12:00 ~ 13:00(점심)
+ 																				</br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 																				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;18:00 ~ 19:00(저녁)" class="tooltip">업무 외 시간</a></li> 
+			</ul>
+		</div>
+	</div>
+	</div>
+		<div id='tab-1' class="userGrid" style="height: 500px;padding-top: 5px;"></div>	
+
+<!-- //pg_container -->
+</form>
+</body>
+
+<script type="text/javascript">
+var search_type = '';
+var search_val;
+var form = document.form;
+
+//1. jQuery Init 
+$(function() {
+
+	gfPageTitle();//메뉴제목
+	gfPageGrade(); //권한관리
+	
+	//그리드 호버 색상 세팅 (innerPage.css > tr.hover {})
+	$(".grid_middle table").delegate('td','mouseover mouseleave', function(e) {
+	    if (e.type == 'mouseover') {
+	      $(this).parent().addClass("hover");
+	    } else {
+	        $(this).parent().removeClass("hover");
+	    }
+	});
+	
+	$('#tabs_type').tabslet({
+		active: 2
+	});
+	
+	$('#tabs_val').tabslet({
+		active: 3
+	});
+	
+	$("#search_status").select2({
+		placeholder : '클릭후 입력하세요'
+	}); 
+	
+	$(".tooltip").tooltip({
+		delay : 0,
+		showURL: false,
+		opacity: 1,
+		content:function(){
+            return this.getAttribute("title");
+        }
+	});
+});
+	
+//document.ready 
+$(document).ready(function(){
+
+// 	$("#search_dept").val("236f113d-1878-44ae-9e6e-749ef13421c2");	//  팀 - 컨설팅그룹
+	$("#search_dept").val("");	//  팀 - 컨설팅그룹
+	$("#search_year").val("2026");
+	$("#search_year_end").val("2026");
+	$("#search_month_end").val("12");
+// 	$("#search_status").val("");
+	$("#search_user_status").val('CD00000025');	// 근무중
+	fnSearch('',"mm");
+	fnYearChange();
+});
+
+/**
+ * 조회 
+ * type ; 업무시간기준 / 비업무시간 
+ * unit : 단위 ( hour / Man-Day-mm / Man-Month-mm )
+ */
+function fnSearch(type,val){
+
+	 var strtDate = $("#search_year").val()+$("#search_month").val();
+	 var endDate = $("#search_year_end").val()+$("#search_month_end").val();
+
+	 var strtYear = parseInt(strtDate.substring(0,4));
+	 var strtMonth = parseInt(strtDate.substring(4,6));
+
+	 var endYear = parseInt(endDate.substring(0,4));
+	 var endMonth = parseInt(endDate.substring(4,6));
+
+	 var month = (endYear - strtYear)* 12 + (endMonth - strtMonth)+1;
+	
+	 //유효성검사
+	 if(strtDate>endDate){
+		 alert("시작 년월이 종료 년월보다 클 수 없습니다.");
+		 return false;
+	 }
+	 
+	 //최대 20개월 까지만 검색 가능
+	 if(month>20){
+		 alert("최대 20개월 데이터만 검색 가능합니다.");
+		 return false;
+	 }
+
+	if(type != ""){
+		if(type == "W"){
+			type = "";	
+		}
+		search_type = type;
+	}
+	if(val != ""){
+		search_val = val;
+	}
+	/* grid 데이터 조회 */
+	$.ajax({
+	     type:"POST"
+	    ,dataType: "html"
+	    ,url: "/wims/stat/UserYearStatusGrid.do"
+	    ,data:		
+	    {	
+	    	search_type : search_type,
+			search_val : search_val,
+			search_year : $("#search_year").val()+$("#search_month").val(),
+			search_edt : $("#search_year_end").val()+$("#search_month_end").val(),
+			search_status : $("#search_status").val().join(","),
+			search_user_name : $("#search_user_name").val(),
+			search_dept : $("#search_dept").val(),
+			search_user_status : $("#search_user_status").val(),
+			currYear:'2026',
+			currMonth:'02',
+			selectMonth : month
+		}
+	    ,success:function(res){
+	    	$('.userGrid').html(res);
+	    	
+	    	// 조회결과 별로 월별 현황 td 설정
+	    	setMonth_edit($("#search_year option:selected").text() , $("#search_month option:selected").text() , "2026" , "02" , "monthTh" , "monthTd",month);
+	    }
+	    ,beforeSend:function(){
+	    	fullWidth = document.documentElement.clientWidth;
+			ajaxLoader.send("로딩중입니다.","#aaa","#fff","172",fullWidth);
+	    }
+	    ,complete:function(){
+	    	 ajaxLoader.destroy();
+	    }
+	    ,error:function(e){
+	    	  alert("알수 없는 에러가 발생 하였습니다.\n관리자에게 문의하시기 바랍니다.");
+	    }
+	});
+	
+}
+
+
+function fnYearChange(){
+	
+	 
+	ajax('TeamList.do', 'HTML',
+		{
+			search_year : $("#search_year").val(),
+			
+		}, function (data){
+			$("#search_dept").html(data);
+		}
+	);
+
+
+}
+
+
+
+
+
+//엑셀 다운
+function fnExcel(obj) {
+	var strtDate = $("#search_year").val()+$("#search_month").val();
+	var endDate = $("#search_year_end").val()+$("#search_month_end").val();
+	
+	var strtYear = parseInt(strtDate.substring(0,4));
+	var strtMonth = parseInt(strtDate.substring(4,6));
+	
+	var endYear = parseInt(endDate.substring(0,4));
+	var endMonth = parseInt(endDate.substring(4,6));
+	
+	var month = (endYear - strtYear)* 12 + (endMonth - strtMonth)+1;
+	 
+	var excel_search_text = "";
+	excel_search_text += "시작년도 : "+$("#search_year option:selected").val();
+	excel_search_text += " /  시작월 : "+$("#search_month option:selected").val();
+	excel_search_text += " /  종료년도 : "+$("#search_year_end option:selected").val();
+	excel_search_text += " /  종료월 : "+$("#search_month_end option:selected").val();
+	excel_search_text += " /  분류 : "+$("#search_status option:selected").text();
+	excel_search_text += " /  팀 : "+$("#search_dept option:selected").text();
+	excel_search_text += " /  이름 : "+$("#search_user_name").val();
+	excel_search_text += " /  상태 : "+$("#search_user_status option:selected").text();
+	
+	excel_search_text += " /  업무시간기준 : "+$("#tabs_type").find('.active').text();
+	excel_search_text += " /  단위 : "+$("#tabs_val").find('.active').text();
+
+	form.search_type.value = search_type;
+	form.search_val.value = search_val;
+	form.excel_search_text.value = excel_search_text;
+	form.selectMonth.value = month;
+	form.search_dept_edit.value = $("#search_dept").val();
+	
+	form.action = "/wims/stat/UserYearStatusExcel.do";
+	form.submit();
+}
+
+//페이지 이동
+function fnUserYearDetail(u_name){
+	parent.menuForm.menu_name.value = "인력 운영 현황 상세";
+	parent.menuForm.menu_navi.value = "직원관리 > 인력 운영 현황 상세";
+	
+	form.search_user_name.value = u_name;
+	form.search_type.value = search_type;
+	form.search_val.value = search_val;
+	form.action = "/wims/stat/UserYearDetail.do";
+	form.submit();
+}
+</script>
+</html>
