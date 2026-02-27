@@ -309,7 +309,7 @@ export default function VrbReviewListPage() {
                         <PopoverTrigger asChild onMouseEnter={() => handleMouseEnter('rate')} onMouseLeave={() => handleMouseLeave('rate')}>
                           <HelpCircle className="h-3.5 w-3.5 text-slate-400 hover:text-primary transition-colors cursor-help" />
                         </PopoverTrigger>
-                        <PopoverContent side="top" align="center" className="w-64 p-3 bg-slate-900/95 text-white text-sm rounded-none shadow-2xl backdrop-blur-md border-none font-medium animate-in fade-in zoom-in-95 duration-200 pointer-events-none mb-1">
+                        <PopoverContent side="top" align="center" className="w-64 p-3 bg-slate-900/95 text-white text-sm rounded-md shadow-2xl backdrop-blur-md border-none font-medium animate-in fade-in zoom-in-95 duration-200 pointer-events-none mb-1">
                           <div className="relative">
                             영업이익과 이익률은 Best Case(최선의 시나리오)를 기준으로 산출된 값입니다.
                             <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900/95" />
