@@ -159,8 +159,9 @@ export default function ProfitabilityPage({
   }, [loadUnitPrices]);
 
   // 상태 및 버전 목록 관리
-  const refreshStatus = async () => {
+  const refreshStatus = async (targetVersionId?: number) => {
     if (!id) return;
+    const versionId = targetVersionId !== undefined ? targetVersionId : selectedVersionId;
     try {
       const res = await fetch(`/api/profitability?projectId=${id}`);
       if (res.ok) {
@@ -169,13 +170,13 @@ export default function ProfitabilityPage({
 
         // 만약 선택된 버전이 없으면 최신 버전 선택
         if (data.profitabilities && data.profitabilities.length > 0) {
-          const currentHeader = selectedVersionId
-            ? data.profitabilities.find((v: any) => v.id === selectedVersionId) || data.profitabilities[0]
+          const currentHeader = versionId
+            ? data.profitabilities.find((v: any) => v.id === versionId) || data.profitabilities[0]
             : data.profitabilities[0];
 
           setStatus(currentHeader.status || "STANDBY");
           setHeader(currentHeader);
-          if (!selectedVersionId) setSelectedVersionId(currentHeader.id);
+          if (!versionId) setSelectedVersionId(currentHeader.id);
         } else {
           // 데이터가 하나도 없으면 자동 생성 (버전 1)
           const newHeader = await ProfitabilityService.ensureHeader(parseInt(id), "초기 버전");
@@ -190,7 +191,7 @@ export default function ProfitabilityPage({
 
       // 부가 수익/비용도 함께 로드
       try {
-        const diffData = await ProfitabilityService.fetchProfitabilityDiff(parseInt(id), selectedVersionId);
+        const diffData = await ProfitabilityService.fetchProfitabilityDiff(parseInt(id), versionId);
         setExtraData({
           extraRevenue: diffData.extraRevenue || 0,
           extraExpense: diffData.extraExpense || 0
@@ -204,7 +205,7 @@ export default function ProfitabilityPage({
   };
 
   useEffect(() => {
-    if (id) refreshStatus();
+    if (id) refreshStatus(selectedVersionId);
   }, [id, selectedVersionId]);
 
   // 하위 탭들에서 공통으로 사용할 데이터 로드 (수지분석 연동용)
@@ -484,9 +485,11 @@ export default function ProfitabilityPage({
               onChange={(val) => {
                 const newId = Number(val);
                 setSelectedVersionId(newId);
-                // 버전 전환 시 status를 즉시 동기 업데이트
+                // 버전 전환 시 status를 즉시 동기 업데이트 (UI 즉각 반영)
                 const v = versions.find(v => v.id === newId);
                 if (v) setStatus(v.status || 'STANDBY');
+                // 비동기로 나머지 데이터도 갱신
+                refreshStatus(newId);
               }}
               options={versions.map((v) => ({
                 value: v.id.toString(),
