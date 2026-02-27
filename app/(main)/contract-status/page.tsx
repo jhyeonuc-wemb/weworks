@@ -30,6 +30,8 @@ const sortOptions = [
 export default function ContractListPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchYear, setSearchYear] = useState("전체");
+    const [searchStatus, setSearchStatus] = useState("전체");
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
     // 임시 데이터 (실제 API 연동 전)
@@ -82,12 +84,28 @@ export default function ContractListPage() {
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            filtered = contracts.filter(
+            filtered = filtered.filter(
                 (c) =>
                     c.project_name?.toLowerCase().includes(query) ||
                     c.project_code?.toLowerCase().includes(query) ||
                     c.customer_name?.toLowerCase().includes(query)
             );
+        }
+
+        if (searchYear !== "전체") {
+            filtered = filtered.filter(c => {
+                if (!c.project_code) return false;
+                const match = c.project_code.match(/^P(\d{2})-/);
+                if (match) {
+                    const year = `20${match[1]}`;
+                    return year === searchYear;
+                }
+                return false;
+            });
+        }
+
+        if (searchStatus !== "전체") {
+            filtered = filtered.filter(c => c.status === searchStatus);
         }
 
         return [...filtered].sort((a, b) => {
@@ -105,7 +123,7 @@ export default function ContractListPage() {
                     return b.project_code.localeCompare(a.project_code);
             }
         });
-    }, [contracts, sortOption, searchQuery]);
+    }, [contracts, sortOption, searchQuery, searchYear, searchStatus]);
 
     const paginatedContracts = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -116,7 +134,29 @@ export default function ContractListPage() {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, sortOption, itemsPerPage]);
+    }, [searchQuery, searchYear, searchStatus, sortOption, itemsPerPage]);
+
+    const startYears = useMemo(() => {
+        const years = new Set<string>();
+        contracts.forEach(c => {
+            if (c.project_code) {
+                const match = c.project_code.match(/^P(\d{2})-/);
+                if (match) {
+                    years.add(`20${match[1]}`);
+                }
+            }
+        });
+        return ["전체", ...Array.from(years).sort().reverse()];
+    }, [contracts]);
+
+    const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+
+    const statusOptions = [
+        { value: "전체", label: "전체 상태" },
+        { value: "STANDBY", label: "대기" },
+        { value: "IN_PROGRESS", label: "진행 중" },
+        { value: "COMPLETED", label: "완료" }
+    ];
 
     const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
         if (status === "COMPLETED") return "success";
@@ -159,19 +199,36 @@ export default function ContractListPage() {
             </div>
 
             {/* 검색 및 필터 */}
-            <div className="flex items-center gap-x-4 mx-1">
-                <SearchInput
-                    placeholder="프로젝트, 코드, 고객사 검색..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+            <div className="flex flex-wrap items-center gap-4 mx-1">
+                <div className="w-64">
+                    <SearchInput
+                        placeholder="프로젝트, 코드, 고객사 검색..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <Dropdown
+                    value={searchYear}
+                    onChange={(value) => setSearchYear(value as string)}
+                    options={yearOptions}
+                    className="w-36"
                 />
                 <Dropdown
-                    value={sortOption}
-                    onChange={(value) => setSortOption(value as string)}
-                    options={sortOptions}
-                    className="w-64"
+                    value={searchStatus}
+                    onChange={(value) => setSearchStatus(value as string)}
+                    options={statusOptions}
+                    className="w-40"
                     align="center"
                 />
+                <div className="ml-auto">
+                    <Dropdown
+                        value={sortOption}
+                        onChange={(value) => setSortOption(value as string)}
+                        options={sortOptions}
+                        className="w-56"
+                        align="right"
+                    />
+                </div>
             </div>
 
             {/* 테이블 섹션 */}

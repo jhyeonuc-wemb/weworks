@@ -45,6 +45,8 @@ const sortOptions = [
 export default function ProfitabilityListPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchYear, setSearchYear] = useState("전체");
+    const [searchStatus, setSearchStatus] = useState("전체");
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [profitabilities, setProfitabilities] = useState<Profitability[]>([]);
@@ -87,12 +89,28 @@ export default function ProfitabilityListPage() {
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            filtered = profitabilities.filter(
+            filtered = filtered.filter(
                 (prof) =>
                     prof.project_name?.toLowerCase().includes(query) ||
                     prof.project_code?.toLowerCase().includes(query) ||
                     prof.customer_name?.toLowerCase().includes(query)
             );
+        }
+
+        if (searchYear !== "전체") {
+            filtered = filtered.filter(prof => {
+                if (!prof.project_code) return false;
+                const match = prof.project_code.match(/^P(\d{2})-/);
+                if (match) {
+                    const year = `20${match[1]}`;
+                    return year === searchYear;
+                }
+                return false;
+            });
+        }
+
+        if (searchStatus !== "전체") {
+            filtered = filtered.filter(prof => prof.status === searchStatus);
         }
 
         return [...filtered].sort((a, b) => {
@@ -116,7 +134,7 @@ export default function ProfitabilityListPage() {
                     return b.project_code.localeCompare(a.project_code);
             }
         });
-    }, [profitabilities, sortOption, searchQuery]);
+    }, [profitabilities, sortOption, searchQuery, searchYear, searchStatus]);
 
     const paginatedProfitabilities = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -127,7 +145,29 @@ export default function ProfitabilityListPage() {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, sortOption, itemsPerPage]);
+    }, [searchQuery, searchYear, searchStatus, sortOption, itemsPerPage]);
+
+    const startYears = useMemo(() => {
+        const years = new Set<string>();
+        profitabilities.forEach(p => {
+            if (p.project_code) {
+                const match = p.project_code.match(/^P(\d{2})-/);
+                if (match) {
+                    years.add(`20${match[1]}`);
+                }
+            }
+        });
+        return ["전체", ...Array.from(years).sort().reverse()];
+    }, [profitabilities]);
+
+    const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+
+    const statusOptions = [
+        { value: "전체", label: "전체 상태" },
+        { value: "STANDBY", label: "대기" },
+        { value: "IN_PROGRESS", label: "작성 중" },
+        { value: "COMPLETED", label: "완료" }
+    ];
 
     const handleDelete = async (id: number) => {
         if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -213,19 +253,36 @@ export default function ProfitabilityListPage() {
             </div>
 
             {/* 검색 및 필터 */}
-            <div className="flex items-center gap-x-4 mx-1">
-                <SearchInput
-                    placeholder="프로젝트, 코드, 고객사 검색..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+            <div className="flex flex-wrap items-center gap-4 mx-1">
+                <div className="w-64">
+                    <SearchInput
+                        placeholder="프로젝트, 코드, 고객사 검색..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <Dropdown
+                    value={searchYear}
+                    onChange={(value) => setSearchYear(value as string)}
+                    options={yearOptions}
+                    className="w-36"
                 />
                 <Dropdown
-                    value={sortOption}
-                    onChange={(value) => setSortOption(value as string)}
-                    options={sortOptions}
-                    className="w-64"
+                    value={searchStatus}
+                    onChange={(value) => setSearchStatus(value as string)}
+                    options={statusOptions}
+                    className="w-40"
                     align="center"
                 />
+                <div className="ml-auto">
+                    <Dropdown
+                        value={sortOption}
+                        onChange={(value) => setSortOption(value as string)}
+                        options={sortOptions}
+                        className="w-56"
+                        align="right"
+                    />
+                </div>
             </div>
 
             {/* 테이블 섹션 */}

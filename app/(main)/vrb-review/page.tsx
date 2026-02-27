@@ -50,6 +50,8 @@ const resultFilterOptions = [
 export default function VrbReviewListPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchYear, setSearchYear] = useState("전체");
+  const [searchStatus, setSearchStatus] = useState("전체");
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [reviews, setReviews] = useState<VrbReview[]>([]);
@@ -129,6 +131,22 @@ export default function VrbReviewListPage() {
       });
     }
 
+    if (searchYear !== "전체") {
+      filtered = filtered.filter(review => {
+        if (!review.project_code) return false;
+        const match = review.project_code.match(/^P(\d{2})-/);
+        if (match) {
+          const year = `20${match[1]}`;
+          return year === searchYear;
+        }
+        return false;
+      });
+    }
+
+    if (searchStatus !== "전체") {
+      filtered = filtered.filter(review => review.status === searchStatus);
+    }
+
     return [...filtered].sort((a, b) => {
       switch (sortOption) {
         case "revenue_high":
@@ -150,7 +168,7 @@ export default function VrbReviewListPage() {
           return b.project_code.localeCompare(a.project_code);
       }
     });
-  }, [reviews, sortOption, searchQuery, resultFilter]);
+  }, [reviews, sortOption, searchQuery, resultFilter, searchYear, searchStatus]);
 
   const paginatedReviews = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -161,7 +179,29 @@ export default function VrbReviewListPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortOption, resultFilter, itemsPerPage]);
+  }, [searchQuery, searchYear, searchStatus, sortOption, resultFilter, itemsPerPage]);
+
+  const startYears = useMemo(() => {
+    const years = new Set<string>();
+    reviews.forEach(r => {
+      if (r.project_code) {
+        const match = r.project_code.match(/^P(\d{2})-/);
+        if (match) {
+          years.add(`20${match[1]}`);
+        }
+      }
+    });
+    return ["전체", ...Array.from(years).sort().reverse()];
+  }, [reviews]);
+
+  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+
+  const statusOptions = [
+    { value: "전체", label: "전체 상태" },
+    { value: "STANDBY", label: "대기" },
+    { value: "IN_PROGRESS", label: "작성 중" },
+    { value: "COMPLETED", label: "완료" }
+  ];
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -249,27 +289,43 @@ export default function VrbReviewListPage() {
       </div>
 
       {/* 검색 및 필터 */}
-      <div className="flex items-center gap-x-4 mx-1">
+      <div className="flex flex-wrap items-center gap-4 mx-1">
+        <div className="w-56">
+          <SearchInput
+            placeholder="프로젝트, 코드, 고객사 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Dropdown
+          value={searchYear}
+          onChange={(value) => setSearchYear(value as string)}
+          options={yearOptions}
+          className="w-36"
+        />
         <Dropdown
           value={resultFilter}
           onChange={(value) => setResultFilter(value as string)}
           options={resultFilterOptions}
           className="w-48"
-          align="left"
+          align="center"
           placeholder="심의결과 필터"
         />
-        <SearchInput
-          placeholder="프로젝트, 코드, 고객사 검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
         <Dropdown
-          value={sortOption}
-          onChange={(value) => setSortOption(value as string)}
-          options={sortOptions}
-          className="w-48"
-          align="center"
+          value={searchStatus}
+          onChange={(value) => setSearchStatus(value as string)}
+          options={statusOptions}
+          className="w-40"
         />
+        <div className="ml-auto">
+          <Dropdown
+            value={sortOption}
+            onChange={(value) => setSortOption(value as string)}
+            options={sortOptions}
+            className="w-56"
+            align="right"
+          />
+        </div>
       </div>
 
       {/* 테이블 섹션 */}

@@ -80,6 +80,9 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchYear, setSearchYear] = useState("전체");
+  const [searchPhase, setSearchPhase] = useState("전체");
+  const [searchStatus, setSearchStatus] = useState("전체");
   const [sortOption, setSortOption] = useState("project_code_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -109,11 +112,31 @@ export default function ProjectsPage() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = projects.filter(p =>
+      filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(query) ||
         p.project_code?.toLowerCase().includes(query) ||
         p.customer_name?.toLowerCase().includes(query)
       );
+    }
+
+    if (searchYear !== "전체") {
+      filtered = filtered.filter(p => {
+        if (!p.project_code) return false;
+        const match = p.project_code.match(/^P(\d{2})-/);
+        if (match) {
+          const year = `20${match[1]}`;
+          return year === searchYear;
+        }
+        return false;
+      });
+    }
+
+    if (searchPhase !== "전체") {
+      filtered = filtered.filter(p => p.current_phase === searchPhase);
+    }
+
+    if (searchStatus !== "전체") {
+      filtered = filtered.filter(p => p.status === searchStatus);
     }
 
     return [...filtered].sort((a, b) => {
@@ -129,7 +152,7 @@ export default function ProjectsPage() {
           return b.project_code.localeCompare(a.project_code);
       }
     });
-  }, [projects, sortOption, searchQuery]);
+  }, [projects, sortOption, searchQuery, searchYear, searchPhase, searchStatus]);
 
   const paginatedProjects = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -140,7 +163,35 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortOption, itemsPerPage]);
+  }, [searchQuery, searchYear, searchPhase, searchStatus, sortOption, itemsPerPage]);
+
+  const startYears = useMemo(() => {
+    const years = new Set<string>();
+    projects.forEach(p => {
+      if (p.project_code) {
+        const match = p.project_code.match(/^P(\d{2})-/);
+        if (match) {
+          years.add(`20${match[1]}`);
+        }
+      }
+    });
+    return ["전체", ...Array.from(years).sort().reverse()];
+  }, [projects]);
+
+  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+
+  const phaseOptions = [
+    { value: "전체", label: "전체 단계" },
+    ...Object.entries(phaseLabels).map(([value, label]) => ({ value, label }))
+  ];
+
+  const statusOptions = [
+    { value: "전체", label: "전체 상태" },
+    { value: "STANDBY", label: "대기" },
+    { value: "IN_PROGRESS", label: "작성 중" },
+    { value: "PROGRESSING", label: "진행 중" },
+    { value: "COMPLETED", label: "완료" }
+  ];
 
   useEffect(() => {
     fetchProjects();
@@ -230,19 +281,45 @@ export default function ProjectsPage() {
       </div>
 
       {/* 검색 및 필터 */}
-      <div className="flex items-center gap-x-4 mx-1">
-        <SearchInput
-          placeholder="프로젝트, 코드, 고객사 검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+      <div className="flex flex-wrap items-center gap-4 mx-1">
+        <div className="w-64">
+          <SearchInput
+            placeholder="프로젝트, 코드, 고객사 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Dropdown
+          value={searchYear}
+          onChange={(value) => setSearchYear(value as string)}
+          options={yearOptions}
+          className="w-36"
         />
         <Dropdown
-          value={sortOption}
-          onChange={(value) => setSortOption(value as string)}
-          options={sortOptions}
-          className="w-64"
-          align="center"
+          value={searchPhase}
+          onChange={(value) => {
+            setSearchPhase(value as string);
+            setSearchStatus("전체"); // 단계 변경 시 상태 초기화
+          }}
+          options={phaseOptions}
+          className="w-40"
         />
+        <Dropdown
+          value={searchStatus}
+          onChange={(value) => setSearchStatus(value as string)}
+          options={searchPhase === "전체" ? [{ value: "전체", label: "단계 먼저 선택" }] : statusOptions}
+          className="w-40"
+          disabled={searchPhase === "전체"}
+        />
+        <div className="ml-auto">
+          <Dropdown
+            value={sortOption}
+            onChange={(value) => setSortOption(value as string)}
+            options={sortOptions}
+            className="w-56"
+            align="right"
+          />
+        </div>
       </div>
 
       {/* 테이블 섹션 */}
