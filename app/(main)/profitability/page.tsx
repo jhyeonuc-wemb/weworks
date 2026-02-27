@@ -66,7 +66,7 @@ export default function ProfitabilityListPage() {
             setLoading(true);
             const [projectsRes, profitabilityRes] = await Promise.all([
                 fetch("/api/projects"),
-                fetch("/api/profitability"),
+                fetch("/api/profitability?latestOnly=true"),
             ]);
 
             if (projectsRes.ok) {
