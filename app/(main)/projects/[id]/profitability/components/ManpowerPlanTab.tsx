@@ -652,20 +652,21 @@ export function ManpowerPlanTab({
                     const totalProposed = items.reduce((sum, item) => {
                       if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
                       const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                      return sum + (item.proposedUnitPrice ? Math.round(itemMM * item.proposedUnitPrice) : 0);
+                      return sum + (item.proposedUnitPrice ? itemMM * item.proposedUnitPrice : 0);
                     }, 0);
                     const avgProposed = totalMM > 0 ? Math.round(totalProposed / totalMM) : 0;
                     return avgProposed > 0 ? avgProposed.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700">
-                  {items.reduce((sum, item) => {
-                    if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
-                      return sum + item.proposedAmount;
-                    }
-                    const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
-                  }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {(() => {
+                    const totalProposed = items.reduce((sum, item) => {
+                      if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
+                      const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                      return sum + (item.proposedUnitPrice ? itemMM * item.proposedUnitPrice : 0);
+                    }, 0);
+                    return Math.round(totalProposed).toLocaleString(undefined, { maximumFractionDigits: 0 });
+                  })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
@@ -676,7 +677,7 @@ export function ManpowerPlanTab({
                       if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
                         return sum + item.internalAmount;
                       } else {
-                        return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                        return sum + (item.internalUnitPrice ? itemMM * item.internalUnitPrice : 0);
                       }
                     }, 0);
                     const avgInternal = totalMM > 0 ? Math.round(totalInternal / totalMM) : 0;
@@ -684,15 +685,18 @@ export function ManpowerPlanTab({
                   })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
-                  {items.reduce((sum, item) => {
-                    const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
-                    const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
-                      return sum + item.internalAmount;
-                    } else {
-                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
-                    }
-                  }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {(() => {
+                    const totalInternal = items.reduce((sum, item) => {
+                      const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
+                      const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                      if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                        return sum + item.internalAmount;
+                      } else {
+                        return sum + (item.internalUnitPrice ? itemMM * item.internalUnitPrice : 0);
+                      }
+                    }, 0);
+                    return Math.round(totalInternal).toLocaleString(undefined, { maximumFractionDigits: 0 });
+                  })()}
                 </td>
               </tr>
 
@@ -728,24 +732,23 @@ export function ManpowerPlanTab({
                   {(() => {
                     const totalMM = items.reduce((sum, item) => sum + Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0), 0);
                     const totalAmount = items.reduce((sum, item) => {
-                      if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
-                        return sum + item.proposedAmount;
-                      }
+                      if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
                       const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                      return sum + (item.proposedUnitPrice ? Math.round(itemMM * item.proposedUnitPrice) : 0);
+                      return sum + (item.proposedUnitPrice ? itemMM * item.proposedUnitPrice : 0);
                     }, 0);
                     const avgUnitPrice = totalMM > 0 ? Math.round(totalAmount / totalMM) : 0;
                     return avgUnitPrice > 0 ? avgUnitPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
                   })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700">
-                  {items.reduce((sum, item) => {
-                    if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
-                      return sum + item.proposedAmount;
-                    }
-                    const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
-                  }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {(() => {
+                    const totalProposed = items.reduce((sum, item) => {
+                      if (item.proposedAmount !== null && item.proposedAmount !== undefined) return sum + item.proposedAmount;
+                      const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                      return sum + (item.proposedUnitPrice ? itemMM * item.proposedUnitPrice : 0);
+                    }, 0);
+                    return Math.round(totalProposed).toLocaleString(undefined, { maximumFractionDigits: 0 });
+                  })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                   {(() => {
@@ -756,7 +759,7 @@ export function ManpowerPlanTab({
                       if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
                         return sum + item.internalAmount;
                       } else {
-                        return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
+                        return sum + (item.internalUnitPrice ? itemMM * item.internalUnitPrice : 0);
                       }
                     }, 0);
                     const avgInternalPrice = totalMM > 0 ? Math.round(totalInternal / totalMM) : 0;
@@ -764,15 +767,18 @@ export function ManpowerPlanTab({
                   })()}
                 </td>
                 <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600">
-                  {items.reduce((sum, item) => {
-                    const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
-                    const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                    if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
-                      return sum + item.internalAmount;
-                    } else {
-                      return sum + (item.internalUnitPrice ? Math.round(itemMM * item.internalUnitPrice) : 0);
-                    }
-                  }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {(() => {
+                    const totalInternal = items.reduce((sum, item) => {
+                      const isOutsourcing = item.affiliationGroup === "외주_개발" || item.affiliationGroup === "외주_컨설팅";
+                      const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                      if (isOutsourcing && item.internalAmount !== null && item.internalAmount !== undefined) {
+                        return sum + item.internalAmount;
+                      } else {
+                        return sum + (item.internalUnitPrice ? itemMM * item.internalUnitPrice : 0);
+                      }
+                    }, 0);
+                    return Math.round(totalInternal).toLocaleString(undefined, { maximumFractionDigits: 0 });
+                  })()}
                 </td>
               </tr>
 
@@ -787,8 +793,8 @@ export function ManpowerPlanTab({
                       if (item.proposedAmount !== null && item.proposedAmount !== undefined) {
                         return sum + item.proposedAmount;
                       }
-                      const totalMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
-                      return sum + (item.proposedUnitPrice ? Math.round(totalMM * item.proposedUnitPrice) : 0);
+                      const itemMM = Object.values(item.monthlyAllocation).reduce((isum, val) => isum + (val || 0), 0);
+                      return sum + (item.proposedUnitPrice ? itemMM * item.proposedUnitPrice : 0);
                     }, 0);
                     return Math.round(grandTotal * 1.1).toLocaleString(undefined, { maximumFractionDigits: 0 });
                   })()}
