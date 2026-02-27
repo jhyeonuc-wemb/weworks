@@ -466,7 +466,7 @@ export default function ProfitabilityPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {status === 'IN_PROGRESS' && selectedVersionId && (
+          {versions.find(v => v.id === selectedVersionId)?.status === 'IN_PROGRESS' && selectedVersionId && (
             <Button
               variant="secondary"
               onClick={handleDelete}
@@ -505,7 +505,7 @@ export default function ProfitabilityPage({
             )}
           </div>
 
-          {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'APPROVED') && (
+          {(['IN_PROGRESS', 'COMPLETED', 'APPROVED'].includes(versions.find(v => v.id === selectedVersionId)?.status || '')) && (
             <Button
               variant="secondary"
               onClick={handleExportToExcel}
@@ -517,7 +517,7 @@ export default function ProfitabilityPage({
             </Button>
           )}
 
-          {status === 'IN_PROGRESS' && (
+          {versions.find(v => v.id === selectedVersionId)?.status === 'IN_PROGRESS' && (
             <Button
               variant="primary"
               onClick={async (e) => {
