@@ -466,7 +466,7 @@ export default function ProfitabilityPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {versions.find(v => v.id === selectedVersionId)?.status === 'IN_PROGRESS' && selectedVersionId && (
+          {status === 'IN_PROGRESS' && selectedVersionId && (
             <Button
               variant="secondary"
               onClick={handleDelete}
@@ -481,7 +481,13 @@ export default function ProfitabilityPage({
           <div className="flex items-center gap-1">
             <Dropdown
               value={selectedVersionId?.toString() || ""}
-              onChange={(val) => setSelectedVersionId(Number(val))}
+              onChange={(val) => {
+                const newId = Number(val);
+                setSelectedVersionId(newId);
+                // 버전 전환 시 status를 즉시 동기 업데이트
+                const v = versions.find(v => v.id === newId);
+                if (v) setStatus(v.status || 'STANDBY');
+              }}
               options={versions.map((v) => ({
                 value: v.id.toString(),
                 label: `VERSION ${v.version}`,
@@ -505,7 +511,7 @@ export default function ProfitabilityPage({
             )}
           </div>
 
-          {(['IN_PROGRESS', 'COMPLETED', 'APPROVED'].includes(versions.find(v => v.id === selectedVersionId)?.status || '')) && (
+          {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'APPROVED') && (
             <Button
               variant="secondary"
               onClick={handleExportToExcel}
@@ -517,7 +523,7 @@ export default function ProfitabilityPage({
             </Button>
           )}
 
-          {versions.find(v => v.id === selectedVersionId)?.status === 'IN_PROGRESS' && (
+          {status === 'IN_PROGRESS' && (
             <Button
               variant="primary"
               onClick={async (e) => {
