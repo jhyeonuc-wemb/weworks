@@ -32,6 +32,7 @@ export default function ContractListPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchYear, setSearchYear] = useState("전체");
     const [searchStatus, setSearchStatus] = useState("전체");
+    const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
     // 임시 데이터 (실제 API 연동 전)
@@ -149,14 +150,19 @@ export default function ContractListPage() {
         return ["전체", ...Array.from(years).sort().reverse()];
     }, [contracts]);
 
-    const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+    const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
-    const statusOptions = [
-        { value: "전체", label: "전체 상태" },
-        { value: "STANDBY", label: "대기" },
-        { value: "IN_PROGRESS", label: "진행 중" },
-        { value: "COMPLETED", label: "완료" }
-    ];
+    useEffect(() => {
+        fetch(`/api/codes?parentCode=CONTRACT`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.codes && data.codes.length > 0) {
+                    const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+                    setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
+                }
+            })
+            .catch(console.error);
+    }, []);
 
     const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
         if (status === "COMPLETED") return "success";
@@ -212,12 +218,13 @@ export default function ContractListPage() {
                     onChange={(value) => setSearchYear(value as string)}
                     options={yearOptions}
                     className="w-36"
+                    align="center"
                 />
                 <Dropdown
                     value={searchStatus}
                     onChange={(value) => setSearchStatus(value as string)}
                     options={statusOptions}
-                    className="w-40"
+                    className="w-36"
                     align="center"
                 />
                 <div className="ml-auto">
@@ -226,7 +233,7 @@ export default function ContractListPage() {
                         onChange={(value) => setSortOption(value as string)}
                         options={sortOptions}
                         className="w-56"
-                        align="right"
+                        align="center"
                     />
                 </div>
             </div>

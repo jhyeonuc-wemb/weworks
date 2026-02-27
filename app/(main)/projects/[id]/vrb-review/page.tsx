@@ -102,7 +102,7 @@ export default function VrbReviewPage({
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold tracking-tight text-gray-900 line-clamp-2 max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[800px] leading-snug">
-                VRB - {project?.name || "프로젝트"}
+                <span className="text-blue-600">VRB 심의</span> - {project?.name || "프로젝트"}
               </h1>
               {vrbStatus !== "STANDBY" && <StatusBadge status={vrbStatus} />}
               <ProjectPhaseNav projectId={id} />

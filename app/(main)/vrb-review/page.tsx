@@ -41,7 +41,7 @@ const sortOptions = [
 ];
 
 const resultFilterOptions = [
-  { value: "all", label: "심의결과 전체" },
+  { value: "all", label: "심의결과" },
   { value: "PROCEED", label: "진행" },
   { value: "STOP", label: "미진행" },
   { value: "NONE", label: "미지정" },
@@ -52,6 +52,7 @@ export default function VrbReviewListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchYear, setSearchYear] = useState("전체");
   const [searchStatus, setSearchStatus] = useState("전체");
+  const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [reviews, setReviews] = useState<VrbReview[]>([]);
@@ -194,14 +195,19 @@ export default function VrbReviewListPage() {
     return ["전체", ...Array.from(years).sort().reverse()];
   }, [reviews]);
 
-  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
-  const statusOptions = [
-    { value: "전체", label: "전체 상태" },
-    { value: "STANDBY", label: "대기" },
-    { value: "IN_PROGRESS", label: "작성 중" },
-    { value: "COMPLETED", label: "완료" }
-  ];
+  useEffect(() => {
+    fetch(`/api/codes?parentCode=VRB`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.codes && data.codes.length > 0) {
+          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+          setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -302,20 +308,21 @@ export default function VrbReviewListPage() {
           onChange={(value) => setSearchYear(value as string)}
           options={yearOptions}
           className="w-36"
+          align="center"
         />
         <Dropdown
           value={resultFilter}
           onChange={(value) => setResultFilter(value as string)}
           options={resultFilterOptions}
-          className="w-48"
+          className="w-36"
           align="center"
-          placeholder="심의결과 필터"
         />
         <Dropdown
           value={searchStatus}
           onChange={(value) => setSearchStatus(value as string)}
           options={statusOptions}
-          className="w-40"
+          className="w-36"
+          align="center"
         />
         <div className="ml-auto">
           <Dropdown
@@ -323,7 +330,7 @@ export default function VrbReviewListPage() {
             onChange={(value) => setSortOption(value as string)}
             options={sortOptions}
             className="w-56"
-            align="right"
+            align="center"
           />
         </div>
       </div>

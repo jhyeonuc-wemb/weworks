@@ -174,7 +174,7 @@ export const Dropdown = ({
                     "text-gray-900 hover:bg-slate-50 hover:border-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0",
                     className,
                     isOpen && "border-gray-900 ring-2 ring-gray-900 ring-offset-0",
-                    disabled && "bg-transparent text-gray-900 border-none cursor-default hover:bg-transparent shadow-none",
+                    disabled && "bg-slate-50 text-gray-400 border-gray-200 cursor-not-allowed hover:bg-slate-50 hover:border-gray-200",
                     !isPremium && "justify-between"
                 )}
             >
@@ -184,15 +184,14 @@ export const Dropdown = ({
                 )}>
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
-                {!disabled && (
-                    <ChevronDown
-                        size={16}
-                        className={cn(
-                            "text-gray-400 flex-shrink-0 ml-2 transition-transform duration-200",
-                            isOpen && "rotate-180"
-                        )}
-                    />
-                )}
+                <ChevronDown
+                    size={16}
+                    className={cn(
+                        "flex-shrink-0 ml-2 transition-transform duration-200",
+                        disabled ? "text-gray-300" : "text-gray-400",
+                        isOpen && "rotate-180"
+                    )}
+                />
             </button>
 
             {isOpen && position && createPortal(
@@ -222,7 +221,8 @@ export const Dropdown = ({
                                         setIsOpen(false);
                                     }}
                                     className={cn(
-                                        "w-full px-3 py-2.5 text-left text-sm transition-all hover:bg-slate-50 whitespace-nowrap",
+                                        "w-full px-3 py-2.5 text-sm transition-all hover:bg-slate-50 whitespace-nowrap",
+                                        align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left",
                                         value === option.value
                                             ? "bg-slate-100 text-gray-900 font-bold"
                                             : "text-gray-700 font-medium"

@@ -54,6 +54,7 @@ export default function SettlementListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchYear, setSearchYear] = useState("전체");
   const [searchStatus, setSearchStatus] = useState("전체");
+  const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,14 +166,19 @@ export default function SettlementListPage() {
     return ["전체", ...Array.from(years).sort().reverse()];
   }, [settlements]);
 
-  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
-  const statusOptions = [
-    { value: "전체", label: "전체 상태" },
-    { value: "STANDBY", label: "대기" },
-    { value: "IN_PROGRESS", label: "작성 중" },
-    { value: "COMPLETED", label: "완료" }
-  ];
+  useEffect(() => {
+    fetch(`/api/codes?parentCode=SETTLEMENT`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.codes && data.codes.length > 0) {
+          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+          setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -272,12 +278,13 @@ export default function SettlementListPage() {
           onChange={(value) => setSearchYear(value as string)}
           options={yearOptions}
           className="w-36"
+          align="center"
         />
         <Dropdown
           value={searchStatus}
           onChange={(value) => setSearchStatus(value as string)}
           options={statusOptions}
-          className="w-40"
+          className="w-36"
           align="center"
         />
         <div className="ml-auto">
@@ -286,7 +293,7 @@ export default function SettlementListPage() {
             onChange={(value) => setSortOption(value as string)}
             options={sortOptions}
             className="w-56"
-            align="right"
+            align="center"
           />
         </div>
       </div>

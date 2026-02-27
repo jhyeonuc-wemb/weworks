@@ -1,5 +1,5 @@
 ---
-description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
+description: 프로젝트 단계 관리 및 단계별 상태 표준 가이드
 ---
 
 # 프로젝트 상태 및 단계 전환 표준
@@ -8,11 +8,11 @@ description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
 
 ## 프로젝트 단계 (Project Phases)
 시스템의 프로젝트 단계는 '사업단계' 기준정보에 따라 관리되며, 크게 4개의 그룹으로 나뉩니다.
+아래는 참고로만 활용해주세요.
 
 ### 1. 영업/PS 그룹
 - **리드 (Lead):** 잠재 고객 확보 단계
 - **영업기회 (Sales Opportunity):** 구체적인 사업 제안 및 영업 활동 단계
-- **M/D산정 (M/D Estimation):** 투입 인력 및 공수 산정 단계
 - **VRB 심의 (VRB Review):** 사업 수주 및 리스크 심의 단계
 
 ### 2. 프로젝트 그룹
@@ -28,18 +28,15 @@ description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
 ### 4. 종료 그룹
 - **종료 (Closure):** 프로젝트 종료
 
-**전체 시퀀스:** 리드 → 영업기회 → M/D산정 → VRB 심의 → 계약 → 수지분석 → 프로젝트 진행 → 수지정산 → 하자보증 → 유상유지보수 → 종료
+**전체 시퀀스:** 리드 → 영업기회 → VRB 심의 → 계약 → 수지분석 → 프로젝트 진행 → 수지정산 → 하자보증 → 유상유지보수 → 종료
 
 
 ## 표준 상태 코드 (Common Codes)
-프로젝트의 각 단계별 상태는 `we_codes` 테이블의 `PROJECT_PHASE_STATUS` 하위에 정의되어 관리됩니다.
+프로젝트의 각 단계별 최종 상태는 `we_codes` 테이블의 `PROJECT_PHASE_STATUS` 하위에 정의되어 관리됩니다.
+아래는 참고사항으로만 활용해주세요.
 
 ### 코드 구조
 - **Root:** `PROJECT_PHASE_STATUS`
-  - **MD 산정 (`MD_ESTIMATION`)**
-    - `STANDBY`: 대기
-    - `IN_PROGRESS`: 작성
-    - `COMPLETED`: 완료
   - **VRB 심의 (`VRB`)**
     - `STANDBY`: 대기
     - `IN_PROGRESS`: 작성
@@ -72,13 +69,12 @@ description: 프로젝트 상태 관리 및 단계 전환 표준 가이드
 
 | 현재 완료된 단계 | 변경되는 `current_phase` |
 | :--- | :--- |
-| **MD 산정** | `vrb` |
 | **VRB 검토** | `profitability` |
 | **수지분석서** | `in_progress` |
 | **수지정산서** | `completed` |
 
 ### `we_projects` 필드 역할
-- **`current_phase`**: 현재 어떤 단계인지를 나타냄 (`md_estimation`, `vrb`, `profitability`, `in_progress`, `settlement`, `completed` 등)
+- **`current_phase`**: 현재 어떤 단계인지를 나타냄 (`vrb`, `profitability`, `in_progress`, `settlement`, `completed` 등)
 - **`status`**: 프로젝트 전체 라이프사이클 상태만 표현
   - `active` — 진행 중인 프로젝트
   - `on_hold` — 보류

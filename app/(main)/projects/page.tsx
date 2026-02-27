@@ -55,20 +55,6 @@ interface Project {
 
 const defaultProjects: Project[] = [];
 
-const phaseLabels: Record<string, string> = {
-  lead: "리드",
-  opportunity: "영업기회",
-  md_estimation: "M/D 산정",
-  vrb: "VRB 심의",
-  contract: "계약",
-  profitability: "수지분석",
-  in_progress: "프로젝트 진행",
-  settlement: "수지정산",
-  warranty: "하자보증",
-  paid_maintenance: "유상유지보수",
-  completed: "프로젝트 종료",
-};
-
 const sortOptions = [
   { value: "project_code_desc", label: "프로젝트 코드순 (최신)" },
   { value: "amount_high", label: "계약금액 높은 순" },
@@ -86,6 +72,9 @@ export default function ProjectsPage() {
   const [sortOption, setSortOption] = useState("project_code_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [phaseOptions, setPhaseOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "단계" }]);
+  const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
 
   // 모달 상태관리
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -178,20 +167,43 @@ export default function ProjectsPage() {
     return ["전체", ...Array.from(years).sort().reverse()];
   }, [projects]);
 
-  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "전체 년도" : `${year}년` }));
+  const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
-  const phaseOptions = [
-    { value: "전체", label: "전체 단계" },
-    ...Object.entries(phaseLabels).map(([value, label]) => ({ value, label }))
-  ];
+  useEffect(() => {
+    fetch("/api/settings/phases")
+      .then(res => res.json())
+      .then(data => {
+        if (data.phases) {
+          const opts = data.phases.map((p: any) => ({ value: p.code, label: p.name }));
+          setPhaseOptions([{ value: "전체", label: "단계" }, ...opts]);
+        }
+      })
+      .catch(err => console.error("Error fetching phase options:", err));
+  }, []);
 
-  const statusOptions = [
-    { value: "전체", label: "전체 상태" },
-    { value: "STANDBY", label: "대기" },
-    { value: "IN_PROGRESS", label: "작성 중" },
-    { value: "PROGRESSING", label: "진행 중" },
-    { value: "COMPLETED", label: "완료" }
-  ];
+  useEffect(() => {
+    if (searchPhase === "전체") {
+      setStatusOptions([{ value: "전체", label: "상태" }]);
+      return;
+    }
+
+    // Convert e.g. "md_estimation" -> "MD_ESTIMATION" or "vrb" -> "VRB"
+    const parentCode = searchPhase.toUpperCase();
+    fetch(`/api/codes?parentCode=${parentCode}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.codes && data.codes.length > 0) {
+          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+          setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
+        } else {
+          // If no specific statuses defined, fallback
+          setStatusOptions([{ value: "전체", label: "상태" }]);
+        }
+      })
+      .catch(() => {
+        setStatusOptions([{ value: "전체", label: "상태" }]);
+      });
+  }, [searchPhase]);
 
   useEffect(() => {
     fetchProjects();
@@ -294,6 +306,7 @@ export default function ProjectsPage() {
           onChange={(value) => setSearchYear(value as string)}
           options={yearOptions}
           className="w-36"
+          align="center"
         />
         <Dropdown
           value={searchPhase}
@@ -302,13 +315,15 @@ export default function ProjectsPage() {
             setSearchStatus("전체"); // 단계 변경 시 상태 초기화
           }}
           options={phaseOptions}
-          className="w-40"
+          className="w-36"
+          align="center"
         />
         <Dropdown
           value={searchStatus}
           onChange={(value) => setSearchStatus(value as string)}
-          options={searchPhase === "전체" ? [{ value: "전체", label: "단계 먼저 선택" }] : statusOptions}
-          className="w-40"
+          options={searchPhase === "전체" ? [{ value: "전체", label: "상태" }] : statusOptions}
+          className="w-36"
+          align="center"
           disabled={searchPhase === "전체"}
         />
         <div className="ml-auto">
@@ -317,7 +332,7 @@ export default function ProjectsPage() {
             onChange={(value) => setSortOption(value as string)}
             options={sortOptions}
             className="w-56"
-            align="right"
+            align="center"
           />
         </div>
       </div>
@@ -366,7 +381,7 @@ export default function ProjectsPage() {
               ) : (
                 paginatedProjects.map((project) => {
                   const phase = project.current_phase || "md_estimation";
-                  const phaseLabel = phaseLabels[phase] || phase || "-";
+                  const phaseLabel = phaseOptions.find(o => o.value === phase)?.label || phase || "-";
                   const phaseStyle = getPhaseStyle(phase);
 
                   return (
