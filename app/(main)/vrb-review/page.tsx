@@ -243,10 +243,17 @@ export default function VrbReviewListPage() {
     (project) => !reviews.some((review) => review.project_id === project.id)
   );
 
-  const projectOptions = availableProjects.map((p) => ({
-    value: p.id,
-    label: `${p.project_code || "N/A"}_${p.name}`,
-  }));
+  const projectOptions = availableProjects
+    .slice()
+    .sort((a, b) => {
+      const codeA = a.project_code || "";
+      const codeB = b.project_code || "";
+      return codeB.localeCompare(codeA);
+    })
+    .map((p) => ({
+      value: p.id,
+      label: `${p.project_code || "N/A"}_${p.name}`,
+    }));
 
   const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
     if (status === "COMPLETED") return "success";
@@ -281,6 +288,7 @@ export default function VrbReviewListPage() {
             placeholder="프로젝트 선택"
             className="w-64"
             align="center"
+            listAlign="left"
             listClassName="min-w-[400px]"
           />
           <Button
@@ -296,7 +304,7 @@ export default function VrbReviewListPage() {
 
       {/* 검색 및 필터 */}
       <div className="flex flex-wrap items-center gap-4 mx-1">
-        <div className="w-56">
+        <div className="w-64">
           <SearchInput
             placeholder="프로젝트, 코드, 고객사 검색..."
             value={searchQuery}

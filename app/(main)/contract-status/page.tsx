@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, FolderOpen, ChevronLeft, ChevronRight, FileText, Download } from "lucide-react";
+import { Plus, FolderOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
@@ -20,6 +20,13 @@ interface Contract {
     status: string;
 }
 
+interface Project {
+    id: number;
+    project_code: string | null;
+    name: string;
+    customer_name: string | null;
+}
+
 const sortOptions = [
     { value: "project_code_desc", label: "프로젝트 코드순 (최신)" },
     { value: "amount_high", label: "계약 금액 높은 순" },
@@ -34,6 +41,7 @@ export default function ContractListPage() {
     const [searchStatus, setSearchStatus] = useState("전체");
     const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
 
     // 임시 데이터 (실제 API 연동 전)
     const [contracts, setContracts] = useState<Contract[]>([
@@ -79,6 +87,27 @@ export default function ContractListPage() {
     const [sortOption, setSortOption] = useState("project_code_desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+
+    useEffect(() => {
+        fetch("/api/projects")
+            .then(res => res.json())
+            .then(data => {
+                setProjects(data.projects || []);
+            })
+            .catch(console.error);
+    }, []);
+
+    const projectOptions = projects
+        .slice()
+        .sort((a, b) => {
+            const codeA = a.project_code || "";
+            const codeB = b.project_code || "";
+            return codeB.localeCompare(codeA);
+        })
+        .map((p) => ({
+            value: p.id,
+            label: `${p.project_code || "N/A"}_${p.name}`,
+        }));
 
     const sortedContracts = useMemo(() => {
         let filtered = contracts;
@@ -187,16 +216,19 @@ export default function ContractListPage() {
                     <h1 className="text-2xl font-bold tracking-tight text-foreground">계약 현황</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="secondary"
-                        className="flex items-center gap-2 border-slate-200"
-                    >
-                        <Download className="h-4 w-4 mr-1.5" />
-                        엑셀 다운로드
-                    </Button>
+                    <Dropdown
+                        value={selectedProjectId || ""}
+                        onChange={(value) => setSelectedProjectId(value as number)}
+                        options={projectOptions}
+                        placeholder="프로젝트 선택"
+                        className="w-64"
+                        align="center"
+                        listAlign="left"
+                        listClassName="min-w-[400px]"
+                    />
                     <Button
                         variant="primary"
-                        disabled={true}
+                        disabled={!selectedProjectId}
                     >
                         <Plus className="h-4 w-4 mr-1.5" />
                         계약 등록

@@ -209,10 +209,17 @@ export default function ProfitabilityListPage() {
         (project) => !profitabilities.some((prof) => prof.project_id === project.id)
     );
 
-    const projectOptions = availableProjects.map((p) => ({
-        value: p.id,
-        label: `${p.project_code || "N/A"}_${p.name}`,
-    }));
+    const projectOptions = availableProjects
+        .slice()
+        .sort((a, b) => {
+            const codeA = a.project_code || "";
+            const codeB = b.project_code || "";
+            return codeB.localeCompare(codeA);
+        })
+        .map((p) => ({
+            value: p.id,
+            label: `${p.project_code || "N/A"}_${p.name}`,
+        }));
 
     const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
         if (status === "COMPLETED") return "success";
@@ -245,6 +252,7 @@ export default function ProfitabilityListPage() {
                         placeholder="프로젝트 선택"
                         className="w-64"
                         align="center"
+                        listAlign="left"
                         listClassName="min-w-[400px]"
                     />
                     <Button

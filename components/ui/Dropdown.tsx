@@ -19,6 +19,7 @@ export interface DropdownProps {
     disabled?: boolean;
     variant?: "premium" | "standard";
     align?: "left" | "center" | "right";
+    listAlign?: "left" | "center" | "right";
     listClassName?: string;
 }
 
@@ -31,6 +32,7 @@ export const Dropdown = ({
     disabled = false,
     variant = "premium",
     align = "left",
+    listAlign,
     listClassName,
 }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -222,7 +224,7 @@ export const Dropdown = ({
                                     }}
                                     className={cn(
                                         "w-full px-3 py-2.5 text-sm transition-all hover:bg-slate-50 whitespace-nowrap",
-                                        align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left",
+                                        (listAlign ?? align) === "center" ? "text-center" : (listAlign ?? align) === "right" ? "text-right" : "text-left",
                                         value === option.value
                                             ? "bg-slate-100 text-gray-900 font-bold"
                                             : "text-gray-700 font-medium"
