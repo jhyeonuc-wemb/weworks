@@ -79,7 +79,7 @@ export function useProductPlan(projectId?: number, profitabilityId?: number) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, profitabilityId]);
 
   useEffect(() => {
     loadProductPlan();

@@ -131,7 +131,7 @@ export function useManpowerPlan(
         } finally {
             setLoading(false);
         }
-    }, [projectId]);
+    }, [projectId, profitabilityId]);
 
     useEffect(() => {
         loadManpowerPlan();

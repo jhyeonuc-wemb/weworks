@@ -188,7 +188,7 @@ export function useProjectExpense(
         } finally {
             setLoading(false);
         }
-    }, [projectId]);
+    }, [projectId, profitabilityId, calculateMonthlyValues]);
 
     // 전체 재계산 (수동 갱신 또는 초기 연동)
     const recalculateData = useCallback(() => {

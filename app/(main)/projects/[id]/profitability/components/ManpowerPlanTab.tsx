@@ -136,7 +136,7 @@ export function ManpowerPlanTab({
   onSave,
   profitabilityId,
 }: ManpowerPlanTabProps) {
-  const isReadOnly = status === "completed" || status === "approved" || status === "review";
+  const isReadOnly = status === "COMPLETED" || status === "APPROVED" || status === "review";
   const {
     items,
     users,

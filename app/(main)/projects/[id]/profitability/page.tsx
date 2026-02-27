@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button, Badge, Dropdown, StatusBadge, useToast } from "@/components/ui";
+import { DraggablePanel } from "@/components/ui/DraggablePanel";
 import type { AlertType } from "@/components/ui";
 import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ import { StandardPriceTab } from "./components/StandardPriceTab";
 import { StandardExpenseTab } from "./components/StandardExpenseTab";
 import { ProjectExpenseTab } from "./components/ProjectExpenseTab";
 import { OrderProposalTab } from "./components/OrderProposalTab";
+import VersionCompareTab from "./components/VersionCompareTab";
 import { useManpowerPlan } from "@/hooks/useManpowerPlan";
 import { useStandardExpenses } from "@/hooks/useStandardExpenses";
 import { useProductPlan } from "@/hooks/useProductPlan";
@@ -77,6 +79,7 @@ export default function ProfitabilityPage({
   const [isExporting, setIsExporting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [versionCommentModal, setVersionCommentModal] = useState<{ open: boolean; comment: string }>({ open: false, comment: '' });
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
   const { showToast, confirm } = useToast();
 
@@ -171,12 +174,12 @@ export default function ProfitabilityPage({
         // 만약 선택된 버전이 없으면 최신 버전 선택
         if (data.profitabilities && data.profitabilities.length > 0) {
           const currentHeader = versionId
-            ? data.profitabilities.find((v: any) => v.id === versionId) || data.profitabilities[0]
+            ? data.profitabilities.find((v: any) => String(v.id) === String(versionId)) || data.profitabilities[0]
             : data.profitabilities[0];
 
           setStatus(currentHeader.status || "STANDBY");
           setHeader(currentHeader);
-          if (!versionId) setSelectedVersionId(currentHeader.id);
+          if (!versionId) setSelectedVersionId(Number(currentHeader.id));
         } else {
           // 데이터가 하나도 없으면 자동 생성 (버전 1)
           const newHeader = await ProfitabilityService.ensureHeader(parseInt(id), "초기 버전");
@@ -322,6 +325,7 @@ export default function ProfitabilityPage({
 
       if (res.ok) {
         setStatus(newStatus);
+        refreshStatus(selectedVersionId ?? undefined);
         if (newStatus === 'COMPLETED') {
           showAlert("수지분석서 작성이 완료되었습니다.", "success");
         }
@@ -344,8 +348,9 @@ export default function ProfitabilityPage({
     }
   };
 
-  const handleCreateNewVersion = () => {
+  const handleCreateNewVersion = (e?: React.MouseEvent) => {
     if (!id) return;
+    if (e) setTriggerRect(e.currentTarget.getBoundingClientRect() as DOMRect);
     setVersionCommentModal({ open: true, comment: '' });
   };
 
@@ -432,6 +437,15 @@ export default function ProfitabilityPage({
   if (loading || (activeTab === "project-expense" && (manpowerLoading || expenseLoading)) || (activeTab === "profitability-diff" && (manpowerLoading || productLoading || projectExpenseLoading))) return <div className="flex items-center justify-center py-12 text-sm text-gray-500">로딩 중...</div>;
   if (!project) return <div className="flex items-center justify-center py-12 text-sm text-gray-500">프로젝트를 찾을 수 없습니다.</div>;
 
+  // 선택된 버전의 status를 versions 배열에서 동기적으로 파생 (race condition 없음)
+  const currentVersionStatus = (() => {
+    if (selectedVersionId && versions.length > 0) {
+      const v = versions.find(v => String(v.id) === String(selectedVersionId));
+      if (v) return v.status || 'STANDBY';
+    }
+    return status;
+  })();
+
   const tabs = [
     { id: "summary", label: "요약" },
     { id: "order-proposal", label: "수주품의" },
@@ -441,6 +455,7 @@ export default function ProfitabilityPage({
     { id: "project-expense", label: "프로젝트 경비" },
     { id: "standard-price", label: "기준-단가" },
     { id: "standard-expense", label: "기준-경비" },
+    ...(versions.length >= 2 ? [{ id: "version-compare", label: "버전 비교" }] : []),
   ];
 
   return (
@@ -457,7 +472,7 @@ export default function ProfitabilityPage({
                 <span className="text-blue-600">수지분석서</span> - {project.name}
               </h1>
               <StatusBadge
-                status={status}
+                status={currentVersionStatus}
               />
               <ProjectPhaseNav projectId={id} />
             </div>
@@ -467,7 +482,7 @@ export default function ProfitabilityPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {status === 'IN_PROGRESS' && selectedVersionId && (
+          {currentVersionStatus === 'IN_PROGRESS' && selectedVersionId && (
             <Button
               variant="secondary"
               onClick={handleDelete}
@@ -485,10 +500,6 @@ export default function ProfitabilityPage({
               onChange={(val) => {
                 const newId = Number(val);
                 setSelectedVersionId(newId);
-                // 버전 전환 시 status를 즉시 동기 업데이트 (UI 즉각 반영)
-                const v = versions.find(v => v.id === newId);
-                if (v) setStatus(v.status || 'STANDBY');
-                // 비동기로 나머지 데이터도 갱신
                 refreshStatus(newId);
               }}
               options={versions.map((v) => ({
@@ -499,11 +510,11 @@ export default function ProfitabilityPage({
               variant="standard"
               align="center"
             />
-            {(status === 'COMPLETED' || status === 'APPROVED') && (
+            {versions.length > 0 && versions.every(v => v.status === 'COMPLETED' || v.status === 'APPROVED') && (
               <Button
                 variant="primary"
                 size="md"
-                onClick={handleCreateNewVersion}
+                onClick={(e) => handleCreateNewVersion(e)}
                 disabled={isCreatingVersion}
                 className="flex items-center gap-1 ml-1 px-3"
                 title="새 버전 생성"
@@ -514,7 +525,7 @@ export default function ProfitabilityPage({
             )}
           </div>
 
-          {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'APPROVED') && (
+          {(currentVersionStatus === 'IN_PROGRESS' || currentVersionStatus === 'COMPLETED' || currentVersionStatus === 'APPROVED') && (
             <Button
               variant="secondary"
               onClick={handleExportToExcel}
@@ -526,7 +537,7 @@ export default function ProfitabilityPage({
             </Button>
           )}
 
-          {status === 'IN_PROGRESS' && (
+          {currentVersionStatus === 'IN_PROGRESS' && (
             <Button
               variant="primary"
               onClick={async (e) => {
@@ -590,25 +601,27 @@ export default function ProfitabilityPage({
         )}
         {activeTab === "order-proposal" && (
           <OrderProposalTab
+            key={selectedVersionId}
             project={project}
             manpowerItems={manpowerPlanItems}
             productItems={productPlanItems}
             expenseItems={projectExpenseItems}
             currency={currency}
-            isReadOnly={status === "COMPLETED" || status === "APPROVED" || status === "review"}
+            isReadOnly={currentVersionStatus === "COMPLETED" || currentVersionStatus === "APPROVED" || currentVersionStatus === "review"}
             onSave={refreshStatus}
             profitabilityId={selectedVersionId}
           />
         )}
         {activeTab === "profitability-diff" && (
           <ProfitabilityDiffTab
+            key={selectedVersionId}
             projectId={project.id}
             currency={currency}
             manpowerItems={manpowerPlanItems}
             productItems={productPlanItems}
             expenseItems={projectExpenseItems}
             refreshAllData={refreshAllData}
-            isReadOnly={status === "COMPLETED" || status === "APPROVED" || status === "review"}
+            isReadOnly={currentVersionStatus === "COMPLETED" || currentVersionStatus === "APPROVED" || currentVersionStatus === "review"}
             onSave={refreshStatus}
             profitabilityId={selectedVersionId}
           />
@@ -623,13 +636,13 @@ export default function ProfitabilityPage({
           <StandardExpenseTab
             projectId={project.id}
             onSave={handleSaveStandardExpenses}
-            isReadOnly={status === "COMPLETED" || status === "APPROVED"}
+            isReadOnly={currentVersionStatus === "COMPLETED" || currentVersionStatus === "APPROVED"}
           />
         )}
         {activeTab === "product-plan" && (
           <ProductPlanTab
             projectId={project.id}
-            status={status}
+            status={currentVersionStatus}
             currency={currency}
             onSave={handleSaveProductPlan}
             profitabilityId={selectedVersionId}
@@ -641,7 +654,7 @@ export default function ProfitabilityPage({
             project={project as any}
             projectUnitPrices={projectUnitPrices}
             currency={currency}
-            status={status}
+            status={currentVersionStatus}
             onSave={handleSaveManpower}
             profitabilityId={selectedVersionId}
           />
@@ -654,55 +667,59 @@ export default function ProfitabilityPage({
             manpowerPlanItems={manpowerPlanItems as ManpowerPlanItem[]}
             standardExpenses={standardExpenses as StandardExpense[]}
             currency={currency}
-            status={status}
+            status={currentVersionStatus}
             profitabilityId={selectedVersionId}
+          />
+        )}
+        {activeTab === "version-compare" && versions.length >= 2 && (
+          <VersionCompareTab
+            versions={versions}
+            currentVersionId={selectedVersionId}
           />
         )}
       </div>
 
-      {/* 버전 코멘트 입력 모달 */}
-      {versionCommentModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <h3 className="text-base font-semibold text-gray-900 mb-1">새 버전 생성</h3>
-            <p className="text-sm text-gray-500 mb-4">새 버전에 대한 코멘트를 입력해주세요.</p>
-            <input
-              type="text"
-              value={versionCommentModal.comment}
-              onChange={(e) => setVersionCommentModal(prev => ({ ...prev, comment: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setVersionCommentModal({ open: false, comment: '' });
-                  executeCreateNewVersion(versionCommentModal.comment);
-                } else if (e.key === 'Escape') {
-                  setVersionCommentModal({ open: false, comment: '' });
-                }
+      {/* 버전 코멘트 입력 - 표준 DraggablePanel */}
+      <DraggablePanel
+        open={versionCommentModal.open}
+        onOpenChange={(open) => setVersionCommentModal(prev => ({ ...prev, open }))}
+        title="새 버전 생성"
+        description="새 버전에 대한 코멘트를 입력해주세요."
+        panelWidth={560}
+        triggerRect={triggerRect}
+      >
+        <div className="space-y-4">
+          <textarea
+            rows={4}
+            value={versionCommentModal.comment}
+            onChange={(e) => setVersionCommentModal(prev => ({ ...prev, comment: e.target.value }))}
+            autoFocus
+            placeholder="예: 고객 요청사항 반영"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+          />
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setVersionCommentModal({ open: false, comment: '' })}
+              className="h-11 rounded-xl font-medium"
+            >
+              취소
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                const comment = versionCommentModal.comment;
+                setVersionCommentModal({ open: false, comment: '' });
+                executeCreateNewVersion(comment);
               }}
-              autoFocus
-              placeholder="예: 고객 요청사항 반영"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setVersionCommentModal({ open: false, comment: '' })}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  setVersionCommentModal({ open: false, comment: '' });
-                  executeCreateNewVersion(versionCommentModal.comment);
-                }}
-                disabled={isCreatingVersion}
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
-              >
-                생성
-              </button>
-            </div>
+              disabled={isCreatingVersion}
+              className="h-11 rounded-xl font-semibold"
+            >
+              생성
+            </Button>
           </div>
         </div>
-      )}
+      </DraggablePanel>
     </div>
   );
 }
