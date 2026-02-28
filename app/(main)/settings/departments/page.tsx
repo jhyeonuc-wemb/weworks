@@ -81,8 +81,6 @@ function DepartmentsContent() {
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
     const [dragOverInfo, setDragOverInfo] = useState<{ id: number; position: "before" | "after" | "inside" } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Manager Search States
     const [managerSearch, setManagerSearch] = useState("");
@@ -258,17 +256,6 @@ function DepartmentsContent() {
             return (a.name || "").localeCompare(b.name || "");
         });
     }, [users, selectedDeptId, departments]);
-
-    const paginatedDeptMembers = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return deptMembers.slice(startIndex, startIndex + itemsPerPage);
-    }, [deptMembers, currentPage, itemsPerPage]);
-
-    const totalPages = Math.ceil(deptMembers.length / itemsPerPage);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedDeptId, itemsPerPage]);
 
     const handleSelect = (dept: Department) => {
         setSelectedDeptId(dept.id);
@@ -551,10 +538,10 @@ function DepartmentsContent() {
             </div>
 
             {/* Main Content Container */}
-            <div className="flex flex-col md:flex-row h-[calc(100vh-16rem)] gap-6">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/* Explorer Sidebar */}
                 <aside
-                    className="w-full md:w-[450px] flex flex-col neo-light-card overflow-hidden border border-border/40 bg-white"
+                    className="w-full md:w-[450px] shrink-0 neo-light-card overflow-hidden border border-border/40 bg-white sticky top-6 self-start"
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, null)}
                 >
@@ -570,7 +557,7 @@ function DepartmentsContent() {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar-main bg-white">
+                    <div className="bg-white">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center gap-4">
                                 <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -597,7 +584,7 @@ function DepartmentsContent() {
                 </aside>
 
                 {/* Detail Viewport (Read Only Info) */}
-                <main className="flex-1 flex flex-col neo-light-card overflow-hidden border border-border/40 bg-white relative">
+                <main className="flex-1 neo-light-card overflow-hidden border border-border/40 bg-white relative">
                     {selectedDeptId ? (
                         (() => {
                             const dept = departments.find(d => d.id === selectedDeptId);
@@ -618,7 +605,7 @@ function DepartmentsContent() {
                                     </div>
 
                                     {/* table area */}
-                                    <div className="flex-1 overflow-x-auto custom-scrollbar-main">
+                                    <div className="overflow-x-auto custom-scrollbar-main">
                                         <Table>
                                             <TableHeader className="bg-muted/30">
                                                 <TableRow className="h-[46px]">
@@ -645,9 +632,9 @@ function DepartmentsContent() {
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : (
-                                                    paginatedDeptMembers.map((member, index) => (
+                                                    deptMembers.map((member, index) => (
                                                         <TableRow key={`${member.id}-${index}`} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
-                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-500 text-center font-normal">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-500 text-center font-normal">{index + 1}</TableCell>
                                                             <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-600 font-normal whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
                                                                 {member.department_name || "-"}
                                                             </TableCell>
@@ -680,61 +667,8 @@ function DepartmentsContent() {
                                     </div>
 
                                     {/* table footer */}
-                                    <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
-                                        <div className="absolute left-8 flex items-center gap-6">
-                                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{deptMembers.length}</span></div>
-
-                                            <div className="flex items-center gap-2 border-l border-border/40 pl-6">
-                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
-                                                <select
-                                                    value={itemsPerPage}
-                                                    onChange={(e) => {
-                                                        setItemsPerPage(Number(e.target.value));
-                                                        setCurrentPage(1);
-                                                    }}
-                                                    className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
-                                                >
-                                                    {[10, 20, 30, 50, 100].map(size => (
-                                                        <option key={size} value={size}>{size}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {totalPages > 1 && (
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                                    disabled={currentPage === 1}
-                                                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
-                                                >
-                                                    <ChevronLeft className="h-4 w-4" />
-                                                </button>
-                                                <div className="flex items-center gap-1">
-                                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                                        <button
-                                                            key={page}
-                                                            onClick={() => setCurrentPage(page)}
-                                                            className={cn(
-                                                                "w-8 h-8 rounded-lg text-xs transition-all",
-                                                                currentPage === page
-                                                                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                                                                    : "text-muted-foreground hover:bg-white hover:text-foreground"
-                                                            )}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <button
-                                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                                    disabled={currentPage === totalPages}
-                                                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
-                                                >
-                                                    <ChevronRight className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                    <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center min-h-[56px]">
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{deptMembers.length}</span></div>
                                     </div>
                                 </div>
                             );

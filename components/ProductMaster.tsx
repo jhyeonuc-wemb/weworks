@@ -297,13 +297,14 @@ export function ProductMaster({
                     </TableCell>
                     <TableCell className="px-8 py-0 text-center">
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] tracking-tighter ${p.isActive
-                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                          : "bg-muted text-muted-foreground"
-                          }`}
+                        className={cn(
+                          "pastel-badge",
+                          p.isActive
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100/50"
+                            : "bg-slate-100 text-slate-400 border-slate-200/50"
+                        )}
                       >
-                        <div className={`w-1 h-1 rounded-full ${p.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
-                        {p.isActive ? "사용중" : "미사용"}
+                        {p.isActive ? "사용" : "미사용"}
                       </span>
                     </TableCell>
                     <TableCell className="px-8 py-0 text-right">
@@ -433,28 +434,40 @@ export function ProductMaster({
                     setUnitPriceInput(num.toLocaleString());
                   }}
                   placeholder="0"
-                  className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 text-sm font-mono font-black text-foreground focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+                  className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 text-sm text-foreground focus:border-gray-900 focus:outline-none transition-all focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xs opacity-40">₩</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs opacity-40">₩</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/10 border border-border/20">
-              <input
-                id="product-active"
-                type="checkbox"
-                checked={form.isActive ?? true}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, isActive: e.target.checked }))
-                }
-                className="h-5 w-5 rounded-lg border-border/40 text-primary focus:ring-primary/20 transition-all"
-              />
-              <label
-                htmlFor="product-active"
-                className="text-xs font-bold text-foreground cursor-pointer select-none"
-              >
-                현재 제품/상품을 활성화하여 사용합니다
-              </label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500">사용 여부</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, isActive: true })}
+                  className={cn(
+                    "px-3 rounded-xl text-sm font-medium border transition-all h-10 flex-1",
+                    form.isActive !== false
+                      ? "bg-emerald-500 border-emerald-500 text-white"
+                      : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                  )}
+                >
+                  사용
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, isActive: false })}
+                  className={cn(
+                    "px-3 rounded-xl text-sm font-medium border transition-all h-10 flex-1",
+                    form.isActive === false
+                      ? "bg-rose-500 border-rose-500 text-white"
+                      : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                  )}
+                >
+                  미사용
+                </button>
+              </div>
             </div>
           </div>
 

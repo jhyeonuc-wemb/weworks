@@ -95,13 +95,8 @@ function CodesContent() {
             }));
             setCodes(normalized);
 
-            // Expand root levels by default
-            const rootIds = normalized
-                .filter((c: any) => c.parent_id === null)
-                .map((c: any) => c.id);
-            if (rootIds.length > 0) {
-                setExpandedIds(new Set(rootIds));
-            }
+            // 진입 시 1레벨만 노출 (아무것도 펼치지 않음)
+            setExpandedIds(new Set());
         } catch (error) {
             console.error("Error fetching codes:", error);
         } finally {
@@ -488,10 +483,10 @@ function CodesContent() {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row h-[calc(100vh-16rem)] gap-6">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/* Code Tree Sidebar */}
                 <aside
-                    className="w-full md:w-[450px] flex flex-col neo-light-card overflow-hidden border border-border/40 bg-white"
+                    className="w-full md:w-[450px] shrink-0 neo-light-card overflow-hidden border border-border/40 bg-white sticky top-6 self-start"
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, null)}
                 >
@@ -516,7 +511,7 @@ function CodesContent() {
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar-main bg-white">
+                    <div className="bg-white">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center gap-4">
                                 <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -545,9 +540,9 @@ function CodesContent() {
                 </aside>
 
                 {/* Detail View */}
-                <main className="flex-1 flex flex-col neo-light-card overflow-hidden border border-border/40 bg-white relative">
+                <main className="flex-1 neo-light-card overflow-hidden border border-border/40 bg-white relative">
                     {selectedCodeId ? (
-                        <div className="flex-1 flex flex-col h-full bg-white">
+                        <div className="bg-white">
                             {/* Header */}
                             <div className="px-8 py-5 border-b border-border/10 bg-muted/20 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -561,7 +556,7 @@ function CodesContent() {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-x-auto custom-scrollbar-main">
+                            <div className="overflow-x-auto custom-scrollbar-main">
                                 <Table>
                                     <TableHeader className="bg-muted/30">
                                         <TableRow className="h-[46px]">
@@ -617,7 +612,7 @@ function CodesContent() {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center">
+                        <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center">
                             <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                                 <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                             </div>

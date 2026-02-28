@@ -535,14 +535,14 @@ function UsersContent() {
 
   const getRoleIcon = (roleName: string) => {
     const name = (roleName || "").toLowerCase();
-    if (name.includes("관리자") || name.includes("admin")) return <Shield size={10} className="mr-1" />;
-    if (name.includes("pm") || name.includes("매니저")) return <UserCog size={10} className="mr-1" />;
-    if (name.includes("개발") || name.includes("dev")) return <CodeIcon size={10} className="mr-1" />;
-    if (name.includes("디자인") || name.includes("ux")) return <PenTool size={10} className="mr-1" />;
-    if (name.includes("기획") || name.includes("plan")) return <Layout size={10} className="mr-1" />;
-    if (name.includes("영업") || name.includes("sale")) return <Monitor size={10} className="mr-1" />;
-    if (name.includes("고객") || name.includes("cs")) return <Headphones size={10} className="mr-1" />;
-    return <UserIcon size={10} className="mr-1" />;
+    if (name.includes("관리자") || name.includes("admin")) return <Shield size={12} className="mr-1.5" />;
+    if (name.includes("pm") || name.includes("매니저")) return <UserCog size={12} className="mr-1.5" />;
+    if (name.includes("개발") || name.includes("dev")) return <CodeIcon size={12} className="mr-1.5" />;
+    if (name.includes("디자인") || name.includes("ux")) return <PenTool size={12} className="mr-1.5" />;
+    if (name.includes("기획") || name.includes("plan")) return <Layout size={12} className="mr-1.5" />;
+    if (name.includes("영업") || name.includes("sale")) return <Monitor size={12} className="mr-1.5" />;
+    if (name.includes("고객") || name.includes("cs")) return <Headphones size={12} className="mr-1.5" />;
+    return <UserIcon size={12} className="mr-1.5" />;
   };
 
   const getRoleBadgeStyle = (roleName: string, isPrimary: boolean) => {
@@ -627,7 +627,7 @@ function UsersContent() {
                   <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">전화</TableHead>
                   <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">이메일</TableHead>
                   <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">역할</TableHead>
-                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-center">상태</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-center">사용 여부</TableHead>
                   <TableHead className="px-8 py-0 text-sm text-slate-900 text-right">작업</TableHead>
                 </TableRow>
               </TableHeader>
@@ -698,12 +698,14 @@ function UsersContent() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap px-8 py-0 text-center">
                       <span
-                        className={`pastel-badge ${user.status === "active"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-muted text-muted-foreground opacity-50 grayscale"
-                          }`}
+                        className={cn(
+                          "pastel-badge",
+                          user.status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100/50"
+                            : "bg-slate-100 text-slate-400 border-slate-200/50"
+                        )}
                       >
-                        {user.status === "active" ? "활성" : "비활성"}
+                        {user.status === "active" ? "사용" : "미사용"}
                       </span>
                     </TableCell>
                     <TableCell className="whitespace-nowrap px-8 py-0 text-right">
@@ -991,9 +993,9 @@ function UsersContent() {
                     type="button"
                     onClick={() => setFormData({ ...formData, status: 'active' })}
                     className={cn(
-                      "px-3 rounded-xl text-xs font-bold border transition-all h-10 flex-1 shadow-sm",
+                      "px-3 rounded-xl text-sm font-medium border transition-all h-10 flex-1",
                       formData.status === 'active'
-                        ? "bg-emerald-500 border-emerald-500 text-white shadow-emerald-200 shadow-md"
+                        ? "bg-emerald-500 border-emerald-500 text-white"
                         : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                     )}
                   >
@@ -1003,13 +1005,13 @@ function UsersContent() {
                     type="button"
                     onClick={() => setFormData({ ...formData, status: 'inactive' })}
                     className={cn(
-                      "px-3 rounded-xl text-xs font-bold border transition-all h-10 flex-1 shadow-sm",
+                      "px-3 rounded-xl text-sm font-medium border transition-all h-10 flex-1",
                       formData.status === 'inactive'
-                        ? "bg-rose-500 border-rose-500 text-white shadow-rose-200 shadow-md"
+                        ? "bg-rose-500 border-rose-500 text-white"
                         : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                     )}
                   >
-                    중지
+                    미사용
                   </button>
                 </div>
               </div>

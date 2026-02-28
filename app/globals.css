@@ -162,7 +162,7 @@
   }
 
   .pastel-badge {
-    @apply inline-flex items-center px-4 py-1.5 rounded-2xl text-[11px] font-bold tracking-tight;
+    @apply inline-flex items-center px-3 h-7 rounded-full text-xs font-bold tracking-tight shadow-sm whitespace-nowrap;
   }
 
   .excel-grid-header {
