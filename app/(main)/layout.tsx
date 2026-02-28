@@ -80,7 +80,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <aside
           className={cn(
             "hidden bg-white transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] md:block relative z-30 border-r border-slate-100/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
-            sidebarCollapsed ? "w-20 px-3" : "w-64 px-4"
+            sidebarCollapsed ? "w-20" : "w-64 px-4"
           )}
         >
           <div className={cn(
@@ -88,7 +88,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             sidebarCollapsed ? "justify-center" : "justify-between px-2"
           )}>
             {!sidebarCollapsed ? (
-              <div className="flex w-full items-center justify-between gap-3 animate-in fade-in slide-in-from-left-2 duration-500">
+              <div className="flex w-full items-center justify-between gap-3 animate-in fade-in slide-in-from-left-2 duration-500 px-2">
                 <Link href="/dashboard" className="flex items-center gap-2 group/logo py-2">
                   <div className="flex items-center justify-center transition-transform duration-300 group-hover/logo:scale-105">
                     <img src="/weworks.png" alt="WEWORKS" className="h-[28px] object-contain" />
@@ -96,16 +96,30 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 </Link>
               </div>
             ) : (
-              <button
-                onClick={() => setSidebarCollapsed(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300"
-              >
-                <img src="/weworks.png" alt="W" className="h-[20px] w-auto object-contain" />
-              </button>
+              <div className="flex w-full items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+                <button
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300"
+                  title="메뉴 펴기"
+                >
+                  <img src="/weworks.png" alt="W" className="h-[20px] w-auto object-contain" />
+                </button>
+              </div>
             )}
           </div>
 
-          <div className="py-6 h-[calc(100%-5rem)] overflow-y-auto custom-scrollbar">
+          {/* Desktop Sidebar Toggle Button - Subtle Floating Style (Collapse Only) */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => setSidebarCollapsed(true)}
+              className="absolute -right-3 top-[28px] z-50 hidden md:flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:text-slate-600 hover:border-slate-300 transition-all hover:scale-110 active:scale-95 group"
+              title="메뉴 접기"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+            </button>
+          )}
+
+          <div className="pb-6 pt-0 h-[calc(100%-5rem)] overflow-y-auto custom-scrollbar">
             <Sidebar
               collapsed={sidebarCollapsed}
               onExpand={() => setSidebarCollapsed(false)}
@@ -143,7 +157,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto relative custom-scrollbar-main">
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto relative custom-scrollbar-main bg-[#FBFBFC]">
           <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60">
             <div className="flex items-center gap-4">
               <button
@@ -153,18 +167,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <Menu className="h-5 w-5" />
               </button>
 
-              {!sidebarCollapsed && (
-                <button
-                  onClick={() => setSidebarCollapsed(true)}
-                  className="hidden md:flex h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-100/80 text-slate-400 transition-all active:scale-95 group"
-                >
-                  <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-              )}
-
               <div className="flex flex-col ml-1">
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                  프로젝트 통합관리 시스템
+                <h2 className="text-xl font-black tracking-tight leading-none flex items-center sm:text-2xl whitespace-nowrap">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-500 pb-0.5">
+                    프로젝트 통합관리 시스템
+                  </span>
                 </h2>
               </div>
             </div>
@@ -213,7 +220,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 relative z-10 bg-[#FBFBFC]">
+          <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 relative z-10">
             {/* User Profile Modal */}
             {showProfilePanel && user && (
               <UserProfilePanel
@@ -229,6 +236,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
               {children}
             </div>
           </main>
+
+          <footer className="shrink-0 pb-8 pt-4 px-6">
+            <p className="text-xs font-medium text-slate-400 text-center tracking-tight">
+              본 시스템은 (주)위엠비의 내부 업무용으로, 인가된 인원만 사용할 수 있습니다.
+              <span className="ml-2 font-normal opacity-70">Copyright © 2026 (주)위엠비. All rights reserved.</span>
+            </p>
+          </footer>
         </div>
       </div>
     </div>

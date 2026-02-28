@@ -173,19 +173,9 @@ function DepartmentsContent() {
         };
         sortNodes(roots);
 
-        // (주) 위엠비 루트 노드 숨기기 로직
-        const finalRoots: Department[] = [];
-        roots.forEach(root => {
-            if (root.name === '(주) 위엠비' || root.name === '(주)위엠비') {
-                if (root.children) {
-                    finalRoots.push(...root.children);
-                }
-            } else {
-                finalRoots.push(root);
-            }
-        });
 
-        return finalRoots;
+
+        return roots;
     }, [departments]);
 
     // Handle deep search selection
@@ -541,19 +531,23 @@ function DepartmentsContent() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-start justify-between px-2">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                        부서 관리
-                    </h1>
+                    <div className="h-10 flex items-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            부서 관리
+                        </h1>
+                    </div>
                 </div>
-                <Button
-                    onClick={(e) => handleStartAdd(null, e.currentTarget.getBoundingClientRect())}
-                    variant="primary"
-                >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    부서
-                </Button>
+                <div className="h-10 flex items-center">
+                    <Button
+                        onClick={(e) => handleStartAdd(null, e.currentTarget.getBoundingClientRect())}
+                        variant="primary"
+                    >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        부서
+                    </Button>
+                </div>
             </div>
 
             {/* Main Content Container */}
@@ -597,7 +591,7 @@ function DepartmentsContent() {
                             </div>
                         )}
                     </div>
-                    <div className="bg-muted/30 px-8 py-3 border-t border-border/10 flex items-center">
+                    <div className="bg-muted/30 px-8 py-3 border-t border-border/10 flex items-center min-h-[56px]">
                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{departments.length}</span></div>
                     </div>
                 </aside>
@@ -609,7 +603,7 @@ function DepartmentsContent() {
                             const dept = departments.find(d => d.id === selectedDeptId);
                             if (!dept) return null;
                             return (
-                                <div className="flex-1 flex flex-col h-full bg-white animate-in fade-in slide-in-from-right-4 duration-500">
+                                <div className="flex-1 flex flex-col h-full bg-white">
                                     {/* Header */}
                                     <div className="px-8 py-5 border-b border-border/10 bg-muted/20 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -627,14 +621,14 @@ function DepartmentsContent() {
                                     <div className="flex-1 overflow-x-auto custom-scrollbar-main">
                                         <Table>
                                             <TableHeader className="bg-muted/30">
-                                                <TableRow>
-                                                    <TableHead className="px-2 py-3 text-sm text-slate-900 text-center w-20 whitespace-nowrap">순서</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">부서</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">성명</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">직급</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">사번</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">이메일</TableHead>
-                                                    <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">연락처</TableHead>
+                                                <TableRow className="h-[46px]">
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-center w-20 whitespace-nowrap">순서</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">부서</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">성명</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">직급</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-center">사번</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">이메일</TableHead>
+                                                    <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">연락처</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody className="divide-y divide-border/10">
@@ -652,12 +646,12 @@ function DepartmentsContent() {
                                                     </TableRow>
                                                 ) : (
                                                     paginatedDeptMembers.map((member, index) => (
-                                                        <TableRow key={`${member.id}-${index}`} className="hover:bg-primary/[0.02] transition-colors group">
-                                                            <TableCell className="whitespace-nowrap px-8 py-4 text-sm text-slate-500 text-center font-medium">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4 text-sm text-slate-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                                                        <TableRow key={`${member.id}-${index}`} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-500 text-center font-normal">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-600 font-normal whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
                                                                 {member.department_name || "-"}
                                                             </TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0">
                                                                 <button
                                                                     onClick={() => window.location.href = `/settings/users?search=${encodeURIComponent(member.name)}`}
                                                                     className="text-sm font-bold text-slate-900 hover:text-primary hover:underline transition-colors text-left"
@@ -666,16 +660,16 @@ function DepartmentsContent() {
                                                                     {member.name}
                                                                 </button>
                                                             </TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0">
                                                                 <div className="text-sm text-slate-900">{member.rank_name || "-"}</div>
                                                             </TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4 text-center font-mono text-sm text-slate-600">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-center font-mono text-sm text-slate-600">
                                                                 {member.employee_number || "-"}
                                                             </TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4 text-sm text-slate-600">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-600">
                                                                 {member.email}
                                                             </TableCell>
-                                                            <TableCell className="whitespace-nowrap px-8 py-4 text-sm text-slate-600">
+                                                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-600">
                                                                 {member.phone || "-"}
                                                             </TableCell>
                                                         </TableRow>
@@ -696,6 +690,7 @@ function DepartmentsContent() {
                                                     value={itemsPerPage}
                                                     onChange={(e) => {
                                                         setItemsPerPage(Number(e.target.value));
+                                                        setCurrentPage(1);
                                                     }}
                                                     className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
                                                 >
@@ -706,44 +701,46 @@ function DepartmentsContent() {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                                disabled={currentPage === 1}
-                                                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </button>
-                                            <div className="flex items-center gap-1">
-                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => setCurrentPage(page)}
-                                                        className={cn(
-                                                            "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                                                            currentPage === page
-                                                                ? "bg-primary text-white shadow-md shadow-primary/20"
-                                                                : "text-muted-foreground hover:bg-white hover:text-foreground"
-                                                        )}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                ))}
+                                        {totalPages > 1 && (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                                                >
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                        <button
+                                                            key={page}
+                                                            onClick={() => setCurrentPage(page)}
+                                                            className={cn(
+                                                                "w-8 h-8 rounded-lg text-xs transition-all",
+                                                                currentPage === page
+                                                                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                                                                    : "text-muted-foreground hover:bg-white hover:text-foreground"
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                                                >
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                                disabled={currentPage === totalPages}
-                                                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             );
                         })()
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center animate-in fade-in zoom-in-95 duration-700">
+                        <div className="h-full flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center">
                             <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                                 <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                             </div>
@@ -825,7 +822,7 @@ function DepartmentsContent() {
                             </div>
 
                             {showUserDropdown && (
-                                <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden py-2 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden py-2">
                                     <div className="max-h-48 overflow-y-auto custom-scrollbar-main">
                                         {filteredUsers.length > 0 ? filteredUsers.map(user => (
                                             <button

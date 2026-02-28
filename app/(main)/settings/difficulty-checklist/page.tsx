@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, Trash2, Save } from "lucide-react";
-import { useToast } from "@/components/ui";
+import { useToast, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 // ── AutoResizeTextarea ────────────────────────────────────────────────────────
@@ -229,11 +229,13 @@ export default function DifficultyChecklistPage() {
     ];
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6">
             {/* 헤더 */}
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-start justify-between px-2">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">난이도 체크리스트 관리</h1>
+                    <div className="h-10 flex items-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">난이도 체크리스트 관리</h1>
+                    </div>
                     <p className="mt-1.5 text-sm font-medium text-muted-foreground opacity-70">
                         VRB 심의에 사용되는 난이도 평가 항목과 가중치를 관리합니다.
                     </p>

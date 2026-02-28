@@ -176,7 +176,7 @@ export const Dropdown = ({
                     "text-gray-900 hover:bg-slate-50 hover:border-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0",
                     className,
                     isOpen && "border-gray-900 ring-2 ring-gray-900 ring-offset-0",
-                    disabled && "bg-slate-50 text-gray-400 border-gray-200 cursor-not-allowed hover:bg-slate-50 hover:border-gray-200",
+                    disabled && "bg-slate-50 text-gray-400 border-gray-200 cursor-default hover:bg-slate-50 hover:border-gray-200",
                     !isPremium && "justify-between"
                 )}
             >

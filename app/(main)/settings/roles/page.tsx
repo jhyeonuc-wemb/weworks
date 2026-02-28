@@ -155,20 +155,23 @@ export default function RolesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-start justify-between px-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            인력구분 관리
-          </h1>
+          <div className="h-10 flex items-center">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              인력구분 관리
+            </h1>
+          </div>
         </div>
-        <Button
-          onClick={(e) => handleAdd(e)}
-          variant="primary"
-          className="h-11 px-6"
-        >
-          <Plus className="h-4 w-4 mr-1.5" />
-          인력구분
-        </Button>
+        <div className="h-10 flex items-center">
+          <Button
+            onClick={(e) => handleAdd(e)}
+            variant="primary"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            인력구분
+          </Button>
+        </div>
       </div>
 
       <div className="neo-light-card overflow-hidden border border-border/40">

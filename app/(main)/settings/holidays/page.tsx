@@ -196,23 +196,26 @@ export default function HolidaysPage() {
     return (
         <div className="space-y-8">
             {/* Header Section */}
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-start justify-between px-2">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                        휴일 관리
-                    </h1>
+                    <div className="h-10 flex items-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            휴일 관리
+                        </h1>
+                    </div>
                     <p className="text-sm text-muted-foreground mt-1">
                         시스템 전체 휴일을 관리합니다. (프로젝트 일정 및 작업일지 연동)
                     </p>
                 </div>
-                <Button
-                    onClick={handleAdd}
-                    variant="primary"
-                    className="h-11 px-6"
-                >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    신규 휴일 등록
-                </Button>
+                <div className="h-10 flex items-center">
+                    <Button
+                        onClick={handleAdd}
+                        variant="primary"
+                    >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        휴일
+                    </Button>
+                </div>
             </div>
 
             {/* Filter Section */}
@@ -227,8 +230,11 @@ export default function HolidaysPage() {
                                 { value: "2025", label: "2025년" },
                                 { value: "2026", label: "2026년" },
                                 { value: "2027", label: "2027년" },
+                                { value: "2028", label: "2028년" },
                             ]}
                             variant="premium"
+                            align="center"
+                            listAlign="left"
                             placeholder="연도 선택"
                         />
                     </div>
@@ -247,12 +253,12 @@ export default function HolidaysPage() {
                 <div className="overflow-x-auto custom-scrollbar-main">
                     <Table>
                         <TableHeader className="bg-muted/30">
-                            <TableRow>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[150px] whitespace-nowrap">날짜</TableHead>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 w-[200px] whitespace-nowrap">휴일 이름</TableHead>
-                                <TableHead className="px-4 py-3 text-center text-sm text-slate-900 whitespace-nowrap">매년 반복</TableHead>
-                                <TableHead className="px-8 py-3 text-left text-sm text-slate-900 whitespace-nowrap">설명</TableHead>
-                                <TableHead className="px-8 py-3 text-right text-sm text-slate-900 w-[120px] whitespace-nowrap">작업</TableHead>
+                            <TableRow className="h-[46px]">
+                                <TableHead className="px-8 py-0 text-left text-sm text-slate-900 w-[150px] whitespace-nowrap">날짜</TableHead>
+                                <TableHead className="px-8 py-0 text-left text-sm text-slate-900 w-[200px] whitespace-nowrap">휴일 이름</TableHead>
+                                <TableHead className="px-4 py-0 text-center text-sm text-slate-900 whitespace-nowrap">매년 반복</TableHead>
+                                <TableHead className="px-8 py-0 text-left text-sm text-slate-900 whitespace-nowrap">설명</TableHead>
+                                <TableHead className="px-8 py-0 text-right text-sm text-slate-900 w-[120px] whitespace-nowrap">작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -278,26 +284,26 @@ export default function HolidaysPage() {
                                 </TableRow>
                             ) : (
                                 paginatedHolidays.map((holiday) => (
-                                    <TableRow key={holiday.id} className="hover:bg-primary/[0.02] transition-colors group">
-                                        <TableCell className="whitespace-nowrap px-8 py-4">
-                                            <span className="text-sm font-bold text-foreground/80 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/10 font-mono">
+                                    <TableRow key={holiday.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                                        <TableCell className="whitespace-nowrap px-8 py-0">
+                                            <span className="text-sm text-slate-600 font-mono">
                                                 {holiday.holiday_date}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="whitespace-nowrap px-8 py-4 text-sm font-bold text-foreground tracking-tight">
+                                        <TableCell className="whitespace-nowrap px-8 py-0 text-sm font-bold text-foreground tracking-tight">
                                             {holiday.name}
                                         </TableCell>
-                                        <TableCell className="px-8 py-4 text-center">
+                                        <TableCell className="px-8 py-0 text-center">
                                             {holiday.is_recurring ? (
                                                 <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" />
                                             ) : (
                                                 <span className="text-slate-300">-</span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="px-8 py-4 text-sm font-medium text-muted-foreground/80">
+                                        <TableCell className="px-8 py-0 text-sm font-medium text-muted-foreground/80">
                                             {holiday.description || <span className="text-muted-foreground/30 italic">설명 없음</span>}
                                         </TableCell>
-                                        <TableCell className="whitespace-nowrap px-8 py-4 text-right">
+                                        <TableCell className="whitespace-nowrap px-8 py-0 text-right">
                                             <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
                                                 <button
                                                     onClick={(e) => handleEdit(holiday, e)}
@@ -325,9 +331,8 @@ export default function HolidaysPage() {
                 {/* Pagination Section */}
                 <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
                     <div className="absolute left-8 flex items-center gap-6">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            TOTAL : <span className="text-primary ml-1">{filteredHolidays.length}</span>
-                        </div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{filteredHolidays.length}</span></div>
+
                         <div className="flex items-center gap-2 border-l border-border/40 pl-6">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
                             <select
@@ -338,45 +343,47 @@ export default function HolidaysPage() {
                                 }}
                                 className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
                             >
-                                {[10, 20, 30, 50].map(size => (
+                                {[10, 20, 30, 50, 100].map(size => (
                                     <option key={size} value={size}>{size}</option>
                                 ))}
                             </select>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="p-1.5 rounded-lg border border-border/40 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <div className="flex items-center gap-1">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={cn(
-                                        "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                                        currentPage === page
-                                            ? "bg-slate-900 text-white shadow-md shadow-slate-200"
-                                            : "text-slate-500 hover:bg-white hover:text-slate-900"
-                                    )}
-                                >
-                                    {page}
-                                </button>
-                            ))}
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={cn(
+                                            "w-8 h-8 rounded-lg text-xs transition-all",
+                                            currentPage === page
+                                                ? "bg-primary text-white shadow-md shadow-primary/20"
+                                                : "text-muted-foreground hover:bg-white hover:text-foreground"
+                                        )}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
-                            className="p-1.5 rounded-lg border border-border/40 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
-                    </div>
+                    )}
                 </div>
             </div>
 

@@ -172,16 +172,11 @@ export function UserProfilePanel({ user: initialUser, open, onOpenChange, onLogo
             const children = depts.filter(d => d.parent_department_id === parentId);
 
             children.forEach(dept => {
-                // (주) 위엠비 숨기기 로직 (users/page.tsx와 동일)
-                if (level === 0 && (dept.name === '(주) 위엠비' || dept.name === '(주)위엠비')) {
-                    result.push(...buildHierarchy(depts, dept.id, level));
-                } else {
-                    result.push({
-                        value: dept.id.toString(),
-                        label: `${"　".repeat(level)}${level > 0 ? "└ " : ""}${dept.name}`
-                    });
-                    result.push(...buildHierarchy(depts, dept.id, level + 1));
-                }
+                result.push({
+                    value: dept.id.toString(),
+                    label: `${"　".repeat(level)}${level > 0 ? "└ " : ""}${dept.name}`
+                });
+                result.push(...buildHierarchy(depts, dept.id, level + 1));
             });
             return result;
         };

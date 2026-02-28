@@ -252,12 +252,12 @@ export function ProductMaster({
         <div className="overflow-x-auto custom-scrollbar-main">
           <Table>
             <TableHeader className="bg-muted/30">
-              <TableRow>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">업체명</TableHead>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">제품명</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">단가 (천원)</TableHead>
-                <TableHead className="px-8 py-3 text-center text-sm text-slate-900">사용여부</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
+              <TableRow className="h-[46px]">
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">업체명</TableHead>
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">제품명</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">단가 (천원)</TableHead>
+                <TableHead className="px-8 py-0 text-center text-sm text-slate-900">사용여부</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -283,19 +283,19 @@ export function ProductMaster({
                 </TableRow>
               ) : (
                 paginatedProducts.map((p) => (
-                  <TableRow key={p.id} className="group hover:bg-primary/[0.02] transition-colors">
-                    <TableCell className="px-8 py-3">
+                  <TableRow key={p.id} className="h-[46px] group hover:bg-primary/[0.02] transition-colors">
+                    <TableCell className="px-8 py-0">
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-slate-900 truncate">{p.companyName}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-8 py-3">
+                    <TableCell className="px-8 py-0">
                       <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{p.productName}</span>
                     </TableCell>
-                    <TableCell className="px-8 py-3 text-right">
+                    <TableCell className="px-8 py-0 text-right">
                       <span className="font-mono text-sm text-slate-900">{p.unitPrice.toLocaleString()}</span>
                     </TableCell>
-                    <TableCell className="px-8 py-3 text-center">
+                    <TableCell className="px-8 py-0 text-center">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] tracking-tighter ${p.isActive
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
@@ -306,7 +306,7 @@ export function ProductMaster({
                         {p.isActive ? "사용중" : "미사용"}
                       </span>
                     </TableCell>
-                    <TableCell className="px-8 py-3 text-right">
+                    <TableCell className="px-8 py-0 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                         <button
                           onClick={(e) => openEditForm(p, e)}
@@ -328,9 +328,9 @@ export function ProductMaster({
             </TableBody>
           </Table>
         </div>
-        <div className="bg-muted/30 px-8 py-5 border-t border-border/20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-xs text-slate-500">TOTAL : <span className="text-primary ml-1">{filtered.length}</span></div>
+        <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+          <div className="absolute left-8 flex items-center gap-6">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{filtered.length}</span></div>
           </div>
 
           {totalPages > 1 && (

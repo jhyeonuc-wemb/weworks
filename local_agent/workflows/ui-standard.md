@@ -44,12 +44,16 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 시스템 내 데이터 테이블은 두 가지 유형(목록형, 상세/입력형)으로 구분하여 정형화합니다.
 
 #### 3.1 목록형 테이블 (List Tables)
-기준: **프로젝트 현황 테이블**
+기준: **프로젝트 현황 테이블, 기준 정보 관리 테이블**
 - **컨테이너:** `neo-light-card` 내부에 위치, `overflow-hidden border border-border/40`.
-- **헤더:** `bg-muted/30`, `px-8 py-3 text-sm font-bold`.
-- **행 스타일:** `h-[52px]` 기준 (내부 패딩 `px-8 py-3`).
+- **헤더:** `bg-muted/30`, **`h-[46px]`** 고정 높이, 내부 셀 `px-8 py-0` 적용.
+- **행 스타일:** **`h-[46px]`** 고정 (아이콘, 버튼 등 내부 요소 유무와 상관없이 동일한 높이 유지).
+- **패딩:** 모든 셀(`TableHead`, `TableCell`)에 **`py-0`**을 적용하여 46px 높이 내에서 콘텐츠를 수직 중앙에 배치합니다.
 - **인터랙션:** `hover:bg-primary/[0.02] cursor-pointer`.
-- **푸터:** 페이지네이션 포함, `min-h-[56px]`.
+- **푸터:** 페이지네이션 포함 시 `flex items-center justify-center relative min-h-[56px]` 구조를 사용합니다.
+- **푸터 정보 (Left):** `absolute left-8 flex items-center gap-6` 내부에 `TOTAL` 및 `ROWS` 선택기를 배치합니다.
+- **푸터 텍스트:** `TOTAL` 등 라벨은 `text-xs font-bold text-slate-400 uppercase tracking-widest`를 사용하며, 수치 데이터는 `text-primary`를 적용합니다.
+- **페이지네이션 버튼:** `p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all`을 기본으로 하며, 활성 페이지는 `bg-primary text-white shadow-md shadow-primary/20` 스타일을 적용합니다.
 
 #### 3.2 상세/입력형 테이블 (Detail/Input Tables)
 기준: **수지분석서 프로젝트 경비 탭**
@@ -170,10 +174,21 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
       - 아이콘: `Download`
       - 스타일: `bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm` (진한 녹색 배경, 흰색 텍스트)
       - 텍스트: "엑셀" (한글)
-    - **Create/Save Button (저장/신규):**
-      - **위치:** 헤더가 아닌 **각 탭(Tab) 또는 콘텐츠 영역 내부** 우측 상단에 배치합니다.
-      - **스타일:** `inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`
-      - 헤더는 "완료" 및 "상태 관리"에 집중하고, 수시 저장은 콘텐츠 영역에서 수행합니다.
+    - **Create Button (신규/추가 - 타이틀 라인):**
+      - **위치:** 페이지 타이틀 우측(헤더 영역)에 배치합니다.
+      - **사용 컴포넌트:** `@/components/ui/Button.tsx` (`variant="primary"`) 사용을 원칙으로 합니다. (Tech Blue 스타일)
+      - **높이 (Height):** **`h-10` (40px)**을 기본으로 합니다.
+      - **아이콘:** `Plus` 아이콘을 사용하며 `mr-1.5` 마진을 적용합니다.
+    - **Save Button (저장/확인 - 콘텐츠 영역):**
+      - **위치:** 각 탭(Tab) 또는 카드(Card) 콘텐츠 영역 내부 우측 상단에 배치합니다.
+      - **스타일:** `bg-gray-900` 기반의 검은색 버튼 스타일을 유지하여 타이틀 영역의 신규 버튼과 시각적으로 분리합니다.
+      - **코드 예시:**
+        ```tsx
+        <button className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-9 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors">
+          <Save className="h-4 w-4" />
+          저장
+        </button>
+        ```
     - **Delete Button (삭제):**
       - **위치:** 저장 버튼 좌측 또는 콘텐츠 영역 내 적절한 위치에 배치합니다.
       - **노출 로직:** 현재 단계의 상태가 **`IN_PROGRESS` (작성 중)**일 때만 노출됩니다.
@@ -243,7 +258,11 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
   - **둥글기 (Border Radius):** **`rounded-xl`**을 사용합니다.
 - **구성 요소별 스타일:**
   - **SearchInput:** 왼쪽에 `Search` 아이콘을 배치하고, 배경은 `bg-white`, 테두리는 `border-gray-300`을 사용합니다.
-  - **Dropdown (필터):** `variant="premium"`을 사용하여 `h-10`, `rounded-xl` 스타일을 유지합니다.
+  - **Dropdown (필터) 및 검색 드랍박스:**
+    - **스타일:** `variant="premium"`을 사용하여 `h-10`, `rounded-xl` 스타일을 유지합니다.
+    - **너비 (Width):** 연도 선택 등 일반적인 필터의 경우 **`w-40` (160px)**을 권장 너비로 사용합니다.
+    - **라벨 정렬 (Label Align):** 드랍다운 버튼의 선택값(안내 라벨)은 **가운데 정렬(`align="center"`)**을 적용합니다.
+    - **목록 정렬 (List Align):** 클릭 시 나타나는 옵션 목록은 가독성을 위해 **왼쪽 정렬(`listAlign="left"`)**을 기본으로 합니다.
 - **레이아웃:**
   - 요소 간 간격은 `gap-x-4`를 기본으로 사용합니다.
   - 검색바가 가변 너비를 가질 경우 `flex-1`을 적용합니다.
@@ -283,6 +302,27 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
   - **클릭 피드백 (Active):** 모든 버튼과 클릭 가능한 행(Table Row 등)은 클릭 시 **`active:scale-[0.97]`**을 적용하여 눌리는 피드백을 전달합니다. (기존 95는 과할 수 있으므로 97-98 권장)
   - **전환 속도 (Transition):** 모든 상태 변화는 **`transition-all duration-200`**을 기본으로 사용하여 부드럽게 연결합니다.
 
+
+### 12. 페이지 헤더 레이아웃 (Page Header Layout)
+설정이나 대시보드 등의 일반 페이지 헤더는 타이틀과 액션 버튼의 정렬을 위해 다음 규격을 사용합니다.
+
+- **기본 가이드:** 타이틀과 우측 버튼의 베이스라인을 맞추기 위해 각각 `h-10` 컨테이너로 감싸고, 부모 요소에 `items-start`를 적용합니다. 이는 하단에 설명(`p` 태그)이 추가되어도 버튼이 타이틀 라인(첫 번째 행)에 고정되도록 합니다.
+- **표준 코드 구조:**
+  ```tsx
+  <div className="flex items-start justify-between px-2">
+    <div>
+      <div className="h-10 flex items-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">페이지 타이틀</h1>
+      </div>
+      {/* 설명이 있는 경우에만 p 태그 추가 */}
+      <p className="text-sm text-muted-foreground mt-1">페이지에 대한 상세 설명입니다.</p>
+    </div>
+    <div className="h-10 flex items-center">
+      {/* 버튼이나 액션 요소 배치 */}
+      <Button variant="primary">...</Button>
+    </div>
+  </div>
+  ```
 
 ### 13. 알림 및 확인창 (Alert & Confirm Dialog)
 시스템 내에서 브라우저 기본 `alert()` 및 `confirm()` 사용을 금지하며, 통일된 `AlertDialog` 컴포넌트를 사용합니다.

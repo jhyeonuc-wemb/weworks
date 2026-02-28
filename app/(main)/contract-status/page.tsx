@@ -231,7 +231,7 @@ export default function ContractListPage() {
                         disabled={!selectedProjectId}
                     >
                         <Plus className="h-4 w-4 mr-1.5" />
-                        계약 등록
+                        계약
                     </Button>
                 </div>
             </div>

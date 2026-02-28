@@ -18,7 +18,7 @@ import {
 import { ProductMaster } from "@/components/ProductMaster";
 import { UnitPriceLaborTab, UnitPriceLaborTabHandle } from "@/components/UnitPriceLaborTab";
 import { ProjectPhaseTab, ProjectPhaseTabHandle } from "@/components/ProjectPhaseTab";
-import { SearchInput, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, DraggablePanel } from "@/components/ui";
+import { SearchInput, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, DraggablePanel, Button } from "@/components/ui";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui";
@@ -366,61 +366,63 @@ function ClientsPageContent() {
   }, [laborSearchTerm, laborItemsPerPage]);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between px-2">
+    <div className="space-y-8">
+      <div className="flex items-start justify-between px-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            프로젝트 기준정보 관리
-          </h1>
+          <div className="h-10 flex items-center">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              프로젝트 기준정보 관리
+            </h1>
+          </div>
           <p className="mt-1.5 text-sm font-medium text-muted-foreground opacity-70">
             사업 단계, 고객사, 인력/제품 단가 및 인력 구분 체계를 관리합니다.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="h-10 flex items-center gap-3">
           {activeTab === "phases" && (
-            <button
+            <Button
               onClick={(e) => projectPhaseRef.current?.handleAdd(e.currentTarget.getBoundingClientRect())}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+              variant="primary"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               단계
-            </button>
+            </Button>
           )}
           {activeTab === "unit-price-labor" && (
-            <button
+            <Button
               onClick={() => unitPriceLaborRef.current?.handleAdd()}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+              variant="primary"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               인력 단가
-            </button>
+            </Button>
           )}
           {activeTab === "unit-price-product" && (
-            <button
+            <Button
               onClick={() => setProductNewTrigger((v) => v + 1)}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+              variant="primary"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               제품 단가
-            </button>
+            </Button>
           )}
           {activeTab === "clients" && (
-            <button
+            <Button
               onClick={(e) => handleOpenClientModal(undefined, e.currentTarget.getBoundingClientRect())}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+              variant="primary"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               고객사
-            </button>
+            </Button>
           )}
           {activeTab === "labor" && (
-            <button
+            <Button
               onClick={(e) => handleAddLabor(e.currentTarget.getBoundingClientRect())}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all duration-300"
+              variant="primary"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1.5" />
               인력 구분
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -492,11 +494,11 @@ function ClientsPageContent() {
               <div className="overflow-x-auto custom-scrollbar-main">
                 <Table>
                   <TableHeader className="bg-muted/30">
-                    <TableRow>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">고객사명</TableHead>
-                      <TableHead align="center" className="px-8 py-3 text-sm text-slate-900 text-center">담당자</TableHead>
-                      <TableHead align="center" className="px-8 py-3 text-sm text-slate-900 text-center">연락처 정보</TableHead>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
+                    <TableRow className="h-[46px]">
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">고객사명</TableHead>
+                      <TableHead align="center" className="px-8 py-0 text-sm text-slate-900 text-center">담당자</TableHead>
+                      <TableHead align="center" className="px-8 py-0 text-sm text-slate-900 text-center">연락처 정보</TableHead>
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-right">작업</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-border/10">
@@ -522,24 +524,24 @@ function ClientsPageContent() {
                       </TableRow>
                     ) : (
                       paginatedClients.map((client) => (
-                        <TableRow key={client.id} className="hover:bg-primary/[0.02] transition-colors group">
-                          <TableCell className="px-8 py-3">
+                        <TableRow key={client.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                          <TableCell className="px-8 py-0">
                             <div className="flex items-center">
                               <div className="text-sm text-slate-900">
                                 {client.name}
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell align="center" className="px-8 py-3 text-sm text-slate-700">
+                          <TableCell align="center" className="px-8 py-0 text-sm text-slate-700">
                             {client.contact_person || <span className="text-slate-400">미지정</span>}
                           </TableCell>
-                          <TableCell align="center" className="px-8 py-3">
+                          <TableCell align="center" className="px-8 py-0">
                             <div className="text-sm text-slate-600 truncate max-w-[200px]">
                               {client.contact_email || "-"}
                               {client.contact_phone && <span className="text-[10px] text-slate-400 ml-2 tracking-tighter">({client.contact_phone})</span>}
                             </div>
                           </TableCell>
-                          <TableCell className="px-8 py-3 text-right">
+                          <TableCell className="px-8 py-0 text-right">
                             <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => handleOpenClientModal(client, e.currentTarget.getBoundingClientRect())}
@@ -574,6 +576,7 @@ function ClientsPageContent() {
                       value={clientItemsPerPage}
                       onChange={(e) => {
                         setClientItemsPerPage(Number(e.target.value));
+                        setClientPage(1);
                       }}
                       className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
                     >
@@ -584,38 +587,40 @@ function ClientsPageContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setClientPage(prev => Math.max(1, prev - 1))}
-                    disabled={clientPage === 1}
-                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: clientTotalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setClientPage(page)}
-                        className={cn(
-                          "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                          clientPage === page
-                            ? "bg-primary text-white shadow-md shadow-primary/20"
-                            : "text-muted-foreground hover:bg-white hover:text-foreground"
-                        )}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                {clientTotalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setClientPage(prev => Math.max(1, prev - 1))}
+                      disabled={clientPage === 1}
+                      className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: clientTotalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setClientPage(page)}
+                          className={cn(
+                            "w-8 h-8 rounded-lg text-xs transition-all",
+                            clientPage === page
+                              ? "bg-primary text-white shadow-md shadow-primary/20"
+                              : "text-muted-foreground hover:bg-white hover:text-foreground"
+                          )}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setClientPage(prev => Math.min(clientTotalPages, prev + 1))}
+                      disabled={clientPage === clientTotalPages}
+                      className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setClientPage(prev => Math.min(clientTotalPages, prev + 1))}
-                    disabled={clientPage === clientTotalPages}
-                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -637,11 +642,11 @@ function ClientsPageContent() {
               <div className="overflow-x-auto custom-scrollbar-main">
                 <Table>
                   <TableHeader className="bg-muted/30">
-                    <TableRow>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">구분 코드</TableHead>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">표시 이름</TableHead>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">설명</TableHead>
-                      <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
+                    <TableRow className="h-[46px]">
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">구분 코드</TableHead>
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">표시 이름</TableHead>
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">설명</TableHead>
+                      <TableHead className="px-8 py-0 text-sm text-slate-900 text-right">작업</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-border/10">
@@ -667,19 +672,19 @@ function ClientsPageContent() {
                       </TableRow>
                     ) : (
                       paginatedLabor.map((category) => (
-                        <TableRow key={category.id} className="hover:bg-primary/[0.02] transition-colors group">
-                          <TableCell className="px-8 py-3">
-                            <span className="text-xs text-slate-600 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/10 font-mono">
+                        <TableRow key={category.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                          <TableCell className="px-8 py-0">
+                            <span className="text-sm text-slate-500 font-mono font-medium">
                               {category.code}
                             </span>
                           </TableCell>
-                          <TableCell className="px-8 py-3 text-sm text-slate-900">
+                          <TableCell className="px-8 py-0 text-sm text-slate-900">
                             {category.name}
                           </TableCell>
-                          <TableCell className="px-8 py-3 text-sm text-slate-600">
+                          <TableCell className="px-8 py-0 text-sm text-slate-600">
                             {category.description || <span className="text-slate-400">설명 없음</span>}
                           </TableCell>
-                          <TableCell className="px-8 py-3 text-right">
+                          <TableCell className="px-8 py-0 text-right">
                             <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-1 group-hover:translate-x-0 transition-transform">
                               <button
                                 onClick={(e) => handleEditLabor(category, e.currentTarget.getBoundingClientRect())}
@@ -714,6 +719,7 @@ function ClientsPageContent() {
                       value={laborItemsPerPage}
                       onChange={(e) => {
                         setLaborItemsPerPage(Number(e.target.value));
+                        setLaborPage(1);
                       }}
                       className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors"
                     >
@@ -724,38 +730,40 @@ function ClientsPageContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setLaborPage(prev => Math.max(1, prev - 1))}
-                    disabled={laborPage === 1}
-                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: laborTotalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setLaborPage(page)}
-                        className={cn(
-                          "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                          laborPage === page
-                            ? "bg-primary text-white shadow-md shadow-primary/20"
-                            : "text-muted-foreground hover:bg-white hover:text-foreground"
-                        )}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                {laborTotalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setLaborPage(prev => Math.max(1, prev - 1))}
+                      disabled={laborPage === 1}
+                      className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: laborTotalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setLaborPage(page)}
+                          className={cn(
+                            "w-8 h-8 rounded-lg text-xs transition-all",
+                            laborPage === page
+                              ? "bg-primary text-white shadow-md shadow-primary/20"
+                              : "text-muted-foreground hover:bg-white hover:text-foreground"
+                          )}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setLaborPage(prev => Math.min(laborTotalPages, prev + 1))}
+                      disabled={laborPage === laborTotalPages}
+                      className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setLaborPage(prev => Math.min(laborTotalPages, prev + 1))}
-                    disabled={laborPage === laborTotalPages}
-                    className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           </div>

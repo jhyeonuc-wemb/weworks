@@ -109,8 +109,6 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
   const [copySourceYear, setCopySourceYear] = useState<string>("");
   const [copyTargetYear, setCopyTargetYear] = useState<string>("");
   const [isCopying, setIsCopying] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
   const [formData, setFormData] = useState<Partial<UnitPrice>>({
@@ -185,26 +183,35 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
         const jobGroupOrderB = JOB_GROUPS.indexOf(b.jobGroup);
         return jobGroupOrderA - jobGroupOrderB;
       }
-      const jobLevelOrder = JOB_LEVELS.indexOf(a.jobLevel) - JOB_LEVELS.indexOf(b.jobLevel);
-      if (jobLevelOrder !== 0) {
-        return jobLevelOrder;
+
+      // 소속에 따른 직급 정렬 로직 분기
+      let jobLevelOrderA, jobLevelOrderB;
+      if (a.affiliationGroup.startsWith("위엠비")) {
+        // 위엠비: 코드 기반 정렬 (JOB_LEVELS 배열 순서)
+        jobLevelOrderA = JOB_LEVELS.indexOf(a.jobLevel);
+        jobLevelOrderB = JOB_LEVELS.indexOf(b.jobLevel);
+      } else {
+        // 외주: 요청하신 커스텀 순서 (이사 > 부장 > 차장 > 차부장 > 과장 > 대리)
+        const customOrder = ["이사", "부장", "차장", "차부장", "과장", "대리"];
+        jobLevelOrderA = customOrder.indexOf(a.jobLevel);
+        jobLevelOrderB = customOrder.indexOf(b.jobLevel);
+
+        // 목록에 없는 직급은 뒤로 보냄
+        if (jobLevelOrderA === -1) jobLevelOrderA = 999;
+        if (jobLevelOrderB === -1) jobLevelOrderB = 999;
       }
+
+      if (jobLevelOrderA !== jobLevelOrderB) {
+        return jobLevelOrderA - jobLevelOrderB;
+      }
+
       return GRADES.indexOf(a.grade) - GRADES.indexOf(b.grade);
     });
 
     setFilteredPrices(filtered);
   }, [unitPrices, searchQuery, filterYear, filterAffiliation]);
 
-  const paginatedPrices = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredPrices.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredPrices, currentPage]);
 
-  const totalPages = Math.ceil(filteredPrices.length / ITEMS_PER_PAGE);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterYear, filterAffiliation]);
 
   const calculateGroupAverages = (prices: UnitPrice[], allPrices: UnitPrice[] = unitPrices) => {
     const groups = new Map<string, UnitPrice[]>();
@@ -556,13 +563,14 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
           <Dropdown
             value={filterYear}
             onChange={(val) => setFilterYear(val as string)}
-            options={[
-              { value: "", label: "전체 연도" },
-              ...(availableYears.length > 0
+            options={
+              availableYears.length > 0
                 ? availableYears.map((year) => ({ value: year.toString(), label: `${year}년` }))
-                : YEARS.map((year) => ({ value: year.toString(), label: `${year}년` })))
-            ]}
+                : YEARS.map((year) => ({ value: year.toString(), label: `${year}년` }))
+            }
             className="w-40"
+            align="center"
+            listAlign="left"
           />
           <Dropdown
             value={filterAffiliation}
@@ -571,19 +579,20 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
               { value: "", label: "전체 소속" },
               ...AFFILIATION_GROUPS.map((group) => ({ value: group, label: group }))
             ]}
-            className="w-44"
+            className="w-40"
+            align="center"
+            listAlign="left"
           />
-          <Button
+          <button
             onClick={(e) => {
               setTriggerRect(e.currentTarget.getBoundingClientRect());
               setCopyYearModal(true);
             }}
-            variant="primary"
-            className="h-11 px-6"
+            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors shrink-0"
           >
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="h-4 w-4" />
             연도 복사
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -592,18 +601,18 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
         <div className="overflow-x-auto custom-scrollbar-main">
           <Table>
             <TableHeader className="bg-muted/30">
-              <TableRow>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">소속</TableHead>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">직군</TableHead>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">직급</TableHead>
-                <TableHead className="px-8 py-3 text-left text-sm text-slate-900">등급</TableHead>
-                <TableHead className="px-8 py-3 text-center text-sm text-slate-900">연도</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 기준</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 적용</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">제안단가 할인율</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm font-black text-primary bg-primary/5">내부단가 적용</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">내부단가 인상률</TableHead>
-                <TableHead className="px-8 py-3 text-right text-sm text-slate-900">작업</TableHead>
+              <TableRow className="h-[46px]">
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">소속</TableHead>
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">직군</TableHead>
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">직급</TableHead>
+                <TableHead className="px-8 py-0 text-left text-sm text-slate-900">등급</TableHead>
+                <TableHead className="px-8 py-0 text-center text-sm text-slate-900">연도</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">제안단가 기준</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">제안단가 적용</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">제안단가 할인율</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm font-black text-primary bg-primary/5">내부단가 적용</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">내부단가 인상률</TableHead>
+                <TableHead className="px-8 py-0 text-right text-sm text-slate-900">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/10">
@@ -620,10 +629,10 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                 </TableRow>
               ) : (
                 (() => {
-                  const averages = calculateGroupAverages(paginatedPrices, unitPrices);
+                  const averages = calculateGroupAverages(filteredPrices, unitPrices);
                   const groupedPrices = new Map<string, UnitPrice[]>();
 
-                  paginatedPrices.forEach((price) => {
+                  filteredPrices.forEach((price) => {
                     const key = price.affiliationGroup;
                     if (!groupedPrices.has(key)) {
                       groupedPrices.set(key, []);
@@ -666,45 +675,45 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                         const discountRate = calculateDiscountRate(price.proposedStandard, price.proposedApplied);
 
                         rows.push(
-                          <TableRow key={price.id} className="hover:bg-primary/[0.02] transition-colors group">
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                          <TableRow key={price.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-900">
                               {price.affiliationGroup}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-900">
                               {price.jobGroup}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-900">
                               {price.jobLevel}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-sm text-slate-900">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-900">
                               {price.grade}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-center text-sm text-slate-600">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-center text-sm text-slate-600">
                               {price.year}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-slate-700">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm font-mono text-slate-700">
                               {price.proposedStandard !== null ? price.proposedStandard.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-"}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-slate-700">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm font-mono text-slate-700">
                               {price.proposedApplied !== null ? price.proposedApplied.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-"}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-500">
                               {discountRate !== null ? `${discountRate.toFixed(2)}%` : "-"}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm font-mono text-primary bg-primary/[0.03]">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm font-mono text-primary bg-primary/[0.03]">
                               {price.internalApplied !== null ? price.internalApplied.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-"}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm">
                               {increaseRate !== null ? (
-                                <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${increaseRate >= 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                                  {increaseRate >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                                <div className={`inline-flex items-center gap-1 font-medium ${increaseRate >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                  {increaseRate >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                   {increaseRate.toFixed(2)}%
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground/30">-</span>
                               )}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap px-8 py-3 text-right">
+                            <TableCell className="whitespace-nowrap px-8 py-0 text-right">
                               <div className="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={(e) => handleEdit(price, e)}
@@ -726,31 +735,31 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
 
                       const groupAverage = averages.find(a => a.affiliationGroup === affiliationGroup);
                       groupAverage && rows.push(
-                        <TableRow key={`sum-${affiliationGroup}`} className="bg-muted/30 border-y border-border/10">
-                          <TableCell colSpan={5} className="px-8 py-3 text-sm text-slate-900 text-center">
+                        <TableRow key={`sum-${affiliationGroup}`} className="h-[46px] bg-muted/30 border-y border-border/10">
+                          <TableCell colSpan={5} className="px-8 py-0 text-sm text-slate-900 text-center">
                             {affiliationGroup} 소계
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-700">
                             {groupAverage.proposedStandardAverage > 0 ? groupAverage.proposedStandardAverage.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-700">
                             {groupAverage.proposedAppliedAverage > 0
                               ? groupAverage.proposedAppliedAverage.toLocaleString(undefined, { maximumFractionDigits: 0 })
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-500">
                             {groupAverage.averageDiscountRate !== null
                               ? `${groupAverage.averageDiscountRate.toFixed(2)}%`
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-primary bg-primary/5">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-primary bg-primary/5">
                             {groupAverage.internalAppliedAverage > 0
                               ? groupAverage.internalAppliedAverage.toLocaleString(undefined, { maximumFractionDigits: 0 })
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-foreground">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-foreground">
                             {groupAverage.averageIncreaseRate !== null ? (
-                              <span className={`inline-flex items-center gap-1 ${groupAverage.averageIncreaseRate >= 0 ? 'text-red-600' : 'text-blue-600'}`}>
+                              <span className={`inline-flex items-center gap-1 font-semibold ${groupAverage.averageIncreaseRate >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
                                 {groupAverage.averageIncreaseRate >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                 {groupAverage.averageIncreaseRate.toFixed(2)}%
                               </span>
@@ -758,7 +767,7 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                               <span className="text-muted-foreground/30">-</span>
                             )}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-center text-sm text-foreground">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-center text-sm text-foreground">
                             -
                           </TableCell>
                         </TableRow>
@@ -768,39 +777,39 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
                     if (hasGroups && sectionPrices.length > 0) {
                       const sectionAverages = calculateGroupAverages(sectionPrices, unitPrices)[0];
                       sectionAverages && rows.push(
-                        <TableRow key={`section-sum-${section.name}`} className="bg-muted/30 border-t-2 border-border/20">
-                          <TableCell colSpan={5} className="px-8 py-3 text-sm text-slate-800 text-center">
+                        <TableRow key={`section-sum-${section.name}`} className="h-[46px] bg-muted/30 border-t-2 border-border/20">
+                          <TableCell colSpan={5} className="px-8 py-0 text-sm text-slate-800 text-center">
                             {section.name} 평균
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-500 font-mono">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-500 font-mono">
                             {sectionAverages.proposedStandardAverage > 0 ? sectionAverages.proposedStandardAverage.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700 font-mono">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-700 font-mono">
                             {sectionAverages.proposedAppliedAverage > 0
                               ? sectionAverages.proposedAppliedAverage.toLocaleString(undefined, { maximumFractionDigits: 0 })
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-slate-700">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-slate-700">
                             {sectionAverages.averageDiscountRate !== null
                               ? `${sectionAverages.averageDiscountRate.toFixed(2)}%`
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-3 text-right text-sm text-primary bg-primary/10 font-mono">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm text-primary bg-primary/10 font-mono">
                             {sectionAverages.internalAppliedAverage > 0
                               ? sectionAverages.internalAppliedAverage.toLocaleString(undefined, { maximumFractionDigits: 0 })
                               : "-"}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap px-8 py-5 text-right text-sm">
+                          <TableCell className="whitespace-nowrap px-8 py-0 text-right text-sm">
                             {sectionAverages.averageIncreaseRate !== null ? (
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${sectionAverages.averageIncreaseRate >= 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                                {sectionAverages.averageIncreaseRate >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                              <div className={`inline-flex items-center gap-1 font-bold ${sectionAverages.averageIncreaseRate >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                {sectionAverages.averageIncreaseRate >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                 {sectionAverages.averageIncreaseRate.toFixed(2)}%
                               </div>
                             ) : (
                               <span className="text-muted-foreground/30">-</span>
                             )}
                           </TableCell>
-                          <TableCell className="px-8 py-5"></TableCell>
+                          <TableCell className="px-8 py-0"></TableCell>
                         </TableRow>
                       );
                     }
@@ -814,45 +823,10 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
         </div>
 
         {/* 푸터 - 페이지네이션 및 요약 */}
-        <div className="bg-muted/30 px-8 py-5 border-t border-border/20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-xs text-slate-500">TOTAL : <span className="text-primary ml-1">{filteredPrices.length}</span></div>
+        <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+          <div className="absolute left-8 flex items-center gap-6">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{filteredPrices.length}</span></div>
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-normal"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      "w-8 h-8 rounded-lg text-xs transition-all",
-                      currentPage === page
-                        ? "bg-primary text-white shadow-md shadow-primary/20"
-                        : "text-muted-foreground hover:bg-white hover:text-foreground"
-                    )}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -1100,14 +1074,14 @@ export const UnitPriceLaborTab = forwardRef<UnitPriceLaborTabHandle, UnitPriceLa
             <Button variant="ghost" onClick={() => setCopyYearModal(false)}>
               취소
             </Button>
-            <Button
+            <button
               onClick={handleCopyYear}
               disabled={isCopying}
-              className="px-8 min-w-[120px]"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-8 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors min-w-[120px] justify-center"
             >
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="h-4 w-4" />
               {isCopying ? "복사 중..." : "데이터 복사 실행"}
-            </Button>
+            </button>
           </div>
         </div>
       </DraggablePanel>

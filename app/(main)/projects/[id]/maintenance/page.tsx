@@ -121,7 +121,7 @@ export default function MaintenancePage({
           </button>
           <button className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">
             <Plus className="h-4 w-4" />
-            작업 추가
+            작업
           </button>
         </div>
       </div>
@@ -186,11 +186,10 @@ export default function MaintenancePage({
             <label className="text-sm font-medium text-gray-500">계약 상태</label>
             <p className="mt-1 text-sm">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                  maintenanceData.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${maintenanceData.status === "active"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+                  }`}
               >
                 {maintenanceData.status === "active" ? "활성" : "만료"}
               </span>

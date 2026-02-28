@@ -181,23 +181,26 @@ export default function ProjectPhasesPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-start justify-between px-2">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                        프로젝트 단계 관리
-                    </h1>
+                    <div className="h-10 flex items-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            프로젝트 단계 관리
+                        </h1>
+                    </div>
                     <p className="text-sm text-muted-foreground mt-1">
                         프로젝트 라이프사이클 단계를 정의하고 순서를 관리합니다.
                     </p>
                 </div>
-                <Button
-                    onClick={(e) => handleAdd(e)}
-                    variant="primary"
-                    className="h-11 px-6"
-                >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    신규 단계
-                </Button>
+                <div className="h-10 flex items-center">
+                    <Button
+                        onClick={(e) => handleAdd(e)}
+                        variant="primary"
+                    >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        단계
+                    </Button>
+                </div>
             </div>
 
             <div className="neo-light-card overflow-hidden border border-border/40">

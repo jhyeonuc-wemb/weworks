@@ -469,19 +469,23 @@ function CodesContent() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-start justify-between px-2">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                        공통 코드
-                    </h1>
+                    <div className="h-10 flex items-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            공통 코드 관리
+                        </h1>
+                    </div>
                 </div>
-                <Button
-                    onClick={(e) => handleStartAdd(null, e.currentTarget.getBoundingClientRect())}
-                    variant="primary"
-                >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    코드
-                </Button>
+                <div className="h-10 flex items-center">
+                    <Button
+                        onClick={(e) => handleStartAdd(null, e.currentTarget.getBoundingClientRect())}
+                        variant="primary"
+                    >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        코드
+                    </Button>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row h-[calc(100vh-16rem)] gap-6">
@@ -535,7 +539,7 @@ function CodesContent() {
                             </div>
                         )}
                     </div>
-                    <div className="bg-muted/30 px-8 py-3 border-t border-border/10 flex items-center">
+                    <div className="bg-muted/30 px-8 py-3 border-t border-border/10 flex items-center min-h-[56px]">
                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{codes.length}</span></div>
                     </div>
                 </aside>
@@ -543,7 +547,7 @@ function CodesContent() {
                 {/* Detail View */}
                 <main className="flex-1 flex flex-col neo-light-card overflow-hidden border border-border/40 bg-white relative">
                     {selectedCodeId ? (
-                        <div className="flex-1 flex flex-col h-full bg-white animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="flex-1 flex flex-col h-full bg-white">
                             {/* Header */}
                             <div className="px-8 py-5 border-b border-border/10 bg-muted/20 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -560,25 +564,25 @@ function CodesContent() {
                             <div className="flex-1 overflow-x-auto custom-scrollbar-main">
                                 <Table>
                                     <TableHeader className="bg-muted/30">
-                                        <TableRow>
-                                            <TableHead className="px-2 py-3 text-sm text-slate-900 text-center w-20 whitespace-nowrap">순서</TableHead>
-                                            <TableHead className="px-6 py-3 text-sm text-slate-700 text-left">코드</TableHead>
-                                            <TableHead className="px-6 py-3 text-sm text-slate-700 text-left">코드명</TableHead>
-                                            <TableHead className="px-6 py-3 text-sm text-slate-700 text-left">설명</TableHead>
-                                            <TableHead className="px-6 py-3 text-sm text-slate-700 text-right">작업</TableHead>
+                                        <TableRow className="h-[46px]">
+                                            <TableHead className="px-8 py-0 text-sm text-slate-900 text-center w-20 whitespace-nowrap">순서</TableHead>
+                                            <TableHead className="px-8 py-0 text-sm text-slate-700 text-left">코드</TableHead>
+                                            <TableHead className="px-8 py-0 text-sm text-slate-700 text-left">코드명</TableHead>
+                                            <TableHead className="px-8 py-0 text-sm text-slate-700 text-left">설명</TableHead>
+                                            <TableHead className="px-8 py-0 text-sm text-slate-700 text-right">작업</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody className="divide-y divide-border/10">
                                         {subCodes.length > 0 ? (
                                             subCodes.map((item) => (
-                                                <TableRow key={item.id} className="hover:bg-primary/[0.02] transition-colors group">
-                                                    <TableCell className="whitespace-nowrap px-8 py-4 text-sm text-slate-500 text-center font-normal">{item.display_order}</TableCell>
-                                                    <TableCell className="whitespace-nowrap px-6 py-4">
-                                                        <span className="px-2 py-0.5 rounded-md bg-muted/50 text-xs font-normal text-slate-600 border border-border/10 font-mono">{item.code}</span>
+                                                <TableRow key={item.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                                                    <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-500 text-center font-normal">{item.display_order}</TableCell>
+                                                    <TableCell className="whitespace-nowrap px-8 py-0">
+                                                        <span className="px-2 py-0.5 rounded-md bg-muted/50 text-sm font-normal text-slate-600 border border-border/10 font-mono">{item.code}</span>
                                                     </TableCell>
-                                                    <TableCell className="whitespace-nowrap px-6 py-4 text-sm font-normal text-slate-700">{item.name}</TableCell>
-                                                    <TableCell className="whitespace-nowrap px-6 py-4 text-sm text-slate-500 max-w-[300px] truncate font-normal">{item.description}</TableCell>
-                                                    <TableCell className="whitespace-nowrap px-6 py-4 text-right">
+                                                    <TableCell className="whitespace-nowrap px-8 py-0 text-sm font-normal text-slate-700">{item.name}</TableCell>
+                                                    <TableCell className="whitespace-nowrap px-8 py-0 text-sm text-slate-500 max-w-[300px] truncate font-normal">{item.description}</TableCell>
+                                                    <TableCell className="whitespace-nowrap px-8 py-0 text-right">
                                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                             <button onClick={(e) => handleEditStart(item, e.currentTarget.getBoundingClientRect())} className="p-1.5 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"><Edit size={14} /></button>
                                                             {!item.is_system && (
@@ -606,12 +610,14 @@ function CodesContent() {
                             </div>
 
                             {/* footer */}
-                            <div className="bg-muted/30 px-8 py-3 border-t border-border/10">
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{subCodes.length}</span></div>
+                            <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+                                <div className="absolute left-8 flex items-center gap-6">
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{subCodes.length}</span></div>
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center animate-in fade-in zoom-in-95 duration-700">
+                        <div className="h-full flex flex-col items-center justify-center py-24 gap-4 opacity-40 text-center">
                             <div className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center">
                                 <FolderOpen className="h-10 w-10 text-muted-foreground/30" />
                             </div>

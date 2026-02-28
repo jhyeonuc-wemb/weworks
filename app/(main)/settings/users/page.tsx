@@ -470,17 +470,11 @@ function UsersContent() {
       // children.sort(...) 
 
       children.forEach(dept => {
-        // (주) 위엠비 숨기기 로직
-        if (level === 0 && (dept.name === '(주) 위엠비' || dept.name === '(주)위엠비')) {
-          // Skip this node but process its children at level 0
-          result.push(...buildHierarchy(depts, dept.id, level));
-        } else {
-          result.push({
-            value: dept.id.toString(),
-            label: `${"　".repeat(level)}${level > 0 ? "└ " : ""}${dept.name}`
-          });
-          result.push(...buildHierarchy(depts, dept.id, level + 1));
-        }
+        result.push({
+          value: dept.id.toString(),
+          label: `${"　".repeat(level)}${level > 0 ? "└ " : ""}${dept.name}`
+        });
+        result.push(...buildHierarchy(depts, dept.id, level + 1));
       });
       return result;
     };
@@ -565,20 +559,23 @@ function UsersContent() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-start justify-between px-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            사용자 관리
-          </h1>
+          <div className="h-10 flex items-center">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              사용자 관리
+            </h1>
+          </div>
         </div>
-        <Button
-          onClick={(e) => handleOpenPanel(undefined, e)}
-          variant="primary"
-          className="h-11 px-6"
-        >
-          <Plus className="h-4 w-4 mr-1.5" />
-          사용자
-        </Button>
+        <div className="h-10 flex items-center">
+          <Button
+            onClick={(e) => handleOpenPanel(undefined, e)}
+            variant="primary"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            사용자
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-x-4 mx-1">
@@ -595,6 +592,8 @@ function UsersContent() {
             options={[{ value: "all", label: "전체 부서" }, ...departmentOptions]}
             placeholder="부서 필터"
             variant="standard"
+            align="center"
+            listAlign="left"
           />
         </div>
       </div>
@@ -619,39 +618,39 @@ function UsersContent() {
           <div className="overflow-x-auto custom-scrollbar-main">
             <Table>
               <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">아이디</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">성명</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">직급</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">등급</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">부서</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">전화</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">이메일</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-left">역할</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-center">상태</TableHead>
-                  <TableHead className="px-8 py-3 text-sm text-slate-900 text-right">작업</TableHead>
+                <TableRow className="h-[46px]">
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">아이디</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">성명</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">직급</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">등급</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">부서</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">전화</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">이메일</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-left">역할</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-center">상태</TableHead>
+                  <TableHead className="px-8 py-0 text-sm text-slate-900 text-right">작업</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/10">
                 {paginatedUsers.map((user: User) => (
-                  <TableRow key={user.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <TableCell className="whitespace-nowrap px-8 py-3">
-                      <span className="text-sm text-slate-600 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/10">
+                  <TableRow key={user.id} className="h-[46px] hover:bg-primary/[0.02] transition-colors group">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
+                      <span className="text-sm text-slate-600">
                         {user.username || "-"}
                       </span>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-900">
                         {user.name}
                       </div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-900">{user.rank_name || "-"}</div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-900">{user.grade || "-"}</div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-900">
                         {user.department_name ? (
                           <button
@@ -664,13 +663,13 @@ function UsersContent() {
                         ) : "-"}
                       </div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-600">{user.phone || "-"}</div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="text-sm text-slate-600">{user.email || "-"}</div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3">
+                    <TableCell className="whitespace-nowrap px-8 py-0">
                       <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                         {user.roles && user.roles.length > 0 ? (
                           user.roles.map((role) => (
@@ -697,7 +696,7 @@ function UsersContent() {
                         ) : null}
                       </div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3 text-center">
+                    <TableCell className="whitespace-nowrap px-8 py-0 text-center">
                       <span
                         className={`pastel-badge ${user.status === "active"
                           ? "bg-emerald-100 text-emerald-800"
@@ -707,7 +706,7 @@ function UsersContent() {
                         {user.status === "active" ? "활성" : "비활성"}
                       </span>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap px-8 py-3 text-right">
+                    <TableCell className="whitespace-nowrap px-8 py-0 text-right">
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 transition-transform">
                         <button
                           onClick={(e) => handleOpenPanel(user, e)}
