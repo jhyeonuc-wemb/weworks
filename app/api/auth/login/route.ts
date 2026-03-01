@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { getAccessibleMenuKeys } from '@/lib/utils/permissions';
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,6 +31,38 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
         }
 
+        // 역할별 접근 가능 메뉴 목록 조회 (미들웨어 권한 체크용)
+        const allowedMenuKeys = user.role_id
+            ? Array.from(await getAccessibleMenuKeys(user.role_id))
+            : [];
+
+        // 로그인 후 이동할 첫 번째 허용 경로
+        const MENU_KEY_TO_PATH: Record<string, string> = {
+            'dashboard': '/dashboard',
+            'sales': '/sales',
+            'projects': '/projects',
+            'vrb-review': '/vrb-review',
+            'contract-status': '/contract-status',
+            'profitability': '/profitability',
+            'settlement': '/settlement',
+            'maintenance/free': '/maintenance/free',
+            'maintenance/paid': '/maintenance/paid',
+            'resources/work-logs': '/resources/work-logs',
+            'settings/clients': '/settings/clients',
+            'settings/codes': '/settings/codes',
+            'settings/departments': '/settings/departments',
+            'settings/users': '/settings/users',
+            'settings/permissions': '/settings/permissions',
+            'settings/difficulty-checklist': '/settings/difficulty-checklist',
+            'settings/md-estimation': '/settings/md-estimation',
+            'settings/holidays': '/settings/holidays',
+        };
+        let firstPath = '/dashboard';
+        for (const key of allowedMenuKeys) {
+            const p = MENU_KEY_TO_PATH[key];
+            if (p) { firstPath = p; break; }
+        }
+
         // 로그인 성공 -> 쿠키 설정
         const response = NextResponse.json({
             user: {
@@ -39,17 +71,19 @@ export async function POST(request: NextRequest) {
                 name: user.name,
                 email: user.email,
                 must_change_password: user.must_change_password
-            }
+            },
+            firstPath,
         });
 
         response.cookies.set('session', JSON.stringify({
             id: user.id,
             username: user.username,
             name: user.name,
-            role: user.role_id, // 시스템 역할 (admin, pm, etc)
-            rank: user.rank_name, // 직급 (사원, 대리, 과장, etc)
-            position: user.title, // 직책 (팀장, 본부장, etc)
-            departmentId: user.department_id
+            role: user.role_id,
+            rank: user.rank_name,
+            position: user.title,
+            departmentId: user.department_id,
+            allowedMenuKeys, // 미들웨어 권한 체크용
         }), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',

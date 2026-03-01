@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getRolePermissions } from '@/lib/utils/permissions';
 
 export async function GET(request: NextRequest) {
     try {
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
         const sessionData = JSON.parse(session.value);
         const userId = sessionData.id;
+        const roleId = sessionData.role;
 
         // 상세 사용자 정보 조회
         const userSql = `
@@ -52,7 +54,6 @@ export async function GET(request: NextRequest) {
                 const deptResult = await query(deptSql, [user.department_id]);
                 if (deptResult.rows.length > 0) {
                     let fullName = deptResult.rows[0].full_name;
-                    // (주)위엠비 접두사 제거
                     fullName = fullName.replace(/^\(주\)\s*위엠비\s*>\s*/, '').replace(/^\(주\)\s*위엠비/, '');
                     user.department_name = fullName;
                 }
@@ -69,12 +70,16 @@ export async function GET(request: NextRequest) {
         user.position = user.title;
         user.department = user.department_name;
 
-        return NextResponse.json({ user });
+        // 역할별 권한 맵 조회
+        const permissions = await getRolePermissions(roleId);
+
+        return NextResponse.json({ user, permissions });
     } catch (error) {
         console.error('Error getting user info:', error);
         return NextResponse.json({ user: null }, { status: 500 });
     }
 }
+
 
 export async function PUT(request: NextRequest) {
     try {

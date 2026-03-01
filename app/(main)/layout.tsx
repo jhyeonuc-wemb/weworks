@@ -35,6 +35,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [user, setUser] = useState<User | null>(null);
   const [showProfilePanel, setShowProfilePanel] = useState(false);
   const [profileTriggerRect, setProfileTriggerRect] = useState<DOMRect | null>(null);
+  const [allowedMenuKeys, setAllowedMenuKeys] = useState<Set<string> | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -43,6 +44,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
+          if (data.permissions && Object.keys(data.permissions).length > 0) {
+            const keys = new Set<string>(
+              Object.entries(data.permissions)
+                .filter(([, v]: [string, any]) => v.can_access)
+                .map(([k]) => k)
+            );
+            setAllowedMenuKeys(keys);
+          }
         } else {
           setUser(null);
         }
@@ -123,6 +132,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <Sidebar
               collapsed={sidebarCollapsed}
               onExpand={() => setSidebarCollapsed(false)}
+              allowedMenuKeys={allowedMenuKeys}
             />
           </div>
         </aside>
@@ -153,7 +163,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <Sidebar onLinkClick={() => setMobileMenuOpen(false)} />
+          <Sidebar onLinkClick={() => setMobileMenuOpen(false)} allowedMenuKeys={allowedMenuKeys} />
         </aside>
 
         {/* Main Content Area */}

@@ -10,12 +10,32 @@ interface SidebarProps {
   onLinkClick?: () => void;
   onExpand?: () => void;
   collapsed?: boolean;
+  allowedMenuKeys?: Set<string> | null; // null = 권한 데이터 없음(전체 표시), Set = 필터링
 }
 
-export function Sidebar({ onLinkClick, onExpand, collapsed = false }: SidebarProps) {
+export function Sidebar({ onLinkClick, onExpand, collapsed = false, allowedMenuKeys }: SidebarProps) {
   const pathname = usePathname();
+
+  // 표시할 메뉴 계산 (allowedMenuKeys가 null이면 전체 표시)
+  const visibleMenu = allowedMenuKeys
+    ? SIDEBAR_MENU
+      .map((item) => {
+        if (!hasChildren(item)) {
+          // 단독 메뉴: 해당 menuKey가 허용된 경우만 표시
+          return allowedMenuKeys.has(item.menuKey) ? item : null;
+        }
+        // 그룹 메뉴: 자식 중 허용된 것만 남김
+        const visibleChildren = item.children!.filter((child) =>
+          allowedMenuKeys.has(child.menuKey)
+        );
+        if (visibleChildren.length === 0) return null;
+        return { ...item, children: visibleChildren };
+      })
+      .filter(Boolean) as SidebarMenuItem[]
+    : SIDEBAR_MENU;
+
   const [expandedItems, setExpandedItems] = useState<string[]>(() => {
-    const item = SIDEBAR_MENU.find(
+    const item = visibleMenu.find(
       (i) =>
         hasChildren(i) &&
         (pathname === i.href ||
@@ -47,7 +67,7 @@ export function Sidebar({ onLinkClick, onExpand, collapsed = false }: SidebarPro
 
   return (
     <nav className="flex flex-col gap-1">
-      {SIDEBAR_MENU.map((item) => {
+      {visibleMenu.map((item) => {
         const Icon = item.icon;
         const isGroup = hasChildren(item);
         const hasActiveChild =

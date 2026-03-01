@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-interface RouteContext {
-    params: { roleCode: string };
-}
+type RouteContext = { params: Promise<{ roleCode: string }> };
 
 // GET /api/permissions/[roleCode] — 특정 역할 권한 조회
 export async function GET(request: NextRequest, { params }: RouteContext) {
     try {
-        const { roleCode } = params;
+        const { roleCode } = await params;
 
         const sql = `
       SELECT menu_key, can_access, can_create, can_update, can_delete
@@ -30,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 // PUT /api/permissions/[roleCode] — 역할 권한 일괄 저장 (upsert)
 export async function PUT(request: NextRequest, { params }: RouteContext) {
     try {
-        const { roleCode } = params;
+        const { roleCode } = await params;
         const body = await request.json();
         const { permissions } = body as {
             permissions: Array<{
@@ -51,7 +49,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
         if (permissions.length > 0) {
             const values = permissions
-                .map((_, i) => `($1, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4}, $${i * 4 + 5}, $${i * 4 + 6})`)
+                .map((_, i) => `($1, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5}, $${i * 5 + 6})`)
                 .join(', ');
 
             const flatParams: any[] = [roleCode];

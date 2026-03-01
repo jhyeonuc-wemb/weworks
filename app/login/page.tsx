@@ -62,8 +62,7 @@ export default function LoginPage() {
           showToast("보안을 위해 비밀번호를 변경해주세요.", "info");
         } else {
           showToast("환영합니다!", "success");
-          router.push("/");
-          router.refresh();
+          window.location.href = data.firstPath || "/dashboard";
         }
       } else {
         showToast(data.error || "로그인 실패", "error");
@@ -128,7 +127,7 @@ export default function LoginPage() {
       if (res.ok) {
         showToast("비밀번호가 변경되었습니다.", "success");
         setShowChangePassword(false);
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       } else {
         const data = await res.json();

@@ -249,7 +249,7 @@ export default function PermissionsPage() {
                         {roles.length === 0 ? (
                             <div className="px-4 py-20 text-center">
                                 <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">로딩 중...</p>
+                                <p className="text-[10px] text-muted-foreground font-bold">로딩 중...</p>
                             </div>
                         ) : (
                             roles.map((role) => {
@@ -329,10 +329,10 @@ export default function PermissionsPage() {
                             </div>
                         </div>
                     ) : loading ? (
-                        <div className="flex-1 flex flex-col items-center justify-center">
+                        <div className="flex-1 flex flex-col items-center justify-center py-20">
                             <div className="flex flex-col items-center gap-4">
                                 <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">권한 로드 중...</p>
+                                <p className="text-sm text-slate-400">권한 로드 중...</p>
                             </div>
                         </div>
                     ) : (
