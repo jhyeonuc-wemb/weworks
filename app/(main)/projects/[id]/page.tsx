@@ -36,31 +36,31 @@ import { ProjectAiAnalysis } from "./components/ProjectAiAnalysis";
 
 interface Project {
   id: number;
-  project_code: string | null;
+  projectCode: string | null;
   name: string;
-  customer_name: string | null;
-  orderer_name: string | null;
-  customer_id: number | null;
-  orderer_id: number | null;
+  customerName: string | null;
+  ordererName: string | null;
+  customerId: number | null;
+  ordererId: number | null;
   category_id: number | null;
   description: string | null;
   status: string;
-  current_phase: string | null;
-  manager_name: string | null;
-  manager_id: number | null;
-  sales_representative_name: string | null;
-  sales_representative_id: number | null;
-  contract_start_date: string | null;
-  contract_end_date: string | null;
-  actual_start_date: string | null;
-  actual_end_date: string | null;
+  currentPhase: string | null;
+  managerName: string | null;
+  managerId: number | null;
+  salesRepresentativeName: string | null;
+  salesRepresentativeId: number | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
   currency: string;
-  expected_amount: number | null;
-  process_status: string | null;
-  risk_level: string | null;
-  category_name: string | null;
+  expectedAmount: number | null;
+  processStatus: string | null;
+  riskLevel: string | null;
+  categoryName: string | null;
   field_id: number | null;
-  field_name: string | null;
+  fieldName: string | null;
 }
 
 interface User {
@@ -112,27 +112,6 @@ function toStepperStatus(phaseStatus: string): "completed" | "current" | "pendin
   return 'pending';
 }
 
-
-function getNextAction(currentPhase: string, projectId: string) {
-  switch (currentPhase) {
-    case 'lead':
-    case 'opportunity':
-      return { label: 'VRB 심의', href: `/projects/${projectId}/vrb-review` };
-    case 'vrb':
-      return { label: 'VRB 작성', href: `/projects/${projectId}/vrb-review` };
-    case 'contract':
-    case 'profitability':
-      return { label: '수지분석서 작성', href: `/projects/${projectId}/profitability` };
-    case 'in_progress':
-      return { label: '수지정산서 작성', href: `/projects/${projectId}/settlement` };
-    case 'settlement':
-      return { label: '수지정산서 승인 요청', href: `/projects/${projectId}/settlement/review` };
-    case 'warranty':
-      return { label: '하자보증 관리', href: '#' };
-    default:
-      return null;
-  }
-}
 
 
 // 날짜 포맷팅 함수 (YYYY-MM-DD 형식으로 통일)
@@ -294,8 +273,15 @@ export default function ProjectDetailPage({
     );
   }
 
-  const currentStepIndex = getCurrentStepIndex(phaseProgress, currentPhaseCode || project.current_phase || '');
-  const nextAction = getNextAction(currentPhaseCode || project.current_phase || '', id);
+  const currentStep = phaseProgress.find(p => p.code === (currentPhaseCode || project.currentPhase));
+  const currentStepIndex = getCurrentStepIndex(phaseProgress, currentPhaseCode || project.currentPhase || '');
+
+  // phase-status API의 path 기반 동적 next action 계산
+  const nextAction = (() => {
+    if (!currentStep || !currentStep.path) return null;
+    const href = currentStep.path.replace(':id', id);
+    return { label: currentStep.name, href };
+  })();
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-1000">
@@ -312,8 +298,8 @@ export default function ProjectDetailPage({
               </h1>
             </div>
             <p className="text-sm text-gray-600">
-              {project.project_code} | {project.customer_name}
-              {project.orderer_name && project.orderer_name !== project.customer_name && ` | ${project.orderer_name}`}
+              {project.projectCode} | {project.customerName}
+              {project.ordererName && project.ordererName !== project.customerName && ` | ${project.ordererName}`}
             </p>
           </div>
         </div>
@@ -355,8 +341,9 @@ export default function ProjectDetailPage({
 
               const currentConfig = statusConfigs[stepStatus];
 
-              const showGroupLabel = index === 0 || phaseProgress[index - 1].phaseGroup !== step.phaseGroup;
-              const groupLabel = step.phaseGroup === 'sales_ps' ? '영업/PS' : step.phaseGroup === 'maintenance' ? '유지보수' : step.phaseGroup === 'closure' ? '종료' : '프로젝트';
+              const showGroupLabel = index === 0 || phaseProgress[index - 1]?.phaseGroup !== step.phaseGroup;
+              // groupName은 API에서 받아온 동적 값 사용
+              const groupLabel = step.groupName || step.phaseGroup;
 
               return (
                 <div key={step.code} className="flex-1 relative flex flex-col items-center group/step mt-12">
@@ -491,17 +478,17 @@ export default function ProjectDetailPage({
       {/* 프로젝트 기본 정보 - Neo Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
         {[
-          { label: "분야(EESD)", value: project.category_name, icon: Folder, color: "blue" },
-          { label: "영역", value: project.field_name, icon: Folder, color: "violet" },
+          { label: "분야(EESD)", value: project.categoryName, icon: Folder, color: "blue" },
+          { label: "영역", value: project.fieldName, icon: Folder, color: "violet" },
           {
             label: "매출",
-            value: project.expected_amount ? formatCurrency(project.expected_amount, project.currency as any) : "-",
+            value: project.expectedAmount ? formatCurrency(project.expectedAmount, project.currency as any) : "-",
             icon: DollarSign,
             color: "emerald"
           },
           {
             label: "PM / 영업대표",
-            value: `${project.manager_name || "-"} / ${project.sales_representative_name || "-"}`,
+            value: `${project.managerName || "-"} / ${project.salesRepresentativeName || "-"}`,
             icon: Users,
             color: "indigo"
           },
@@ -509,8 +496,8 @@ export default function ProjectDetailPage({
             label: "계약기간",
             value: (
               <div className="flex flex-col text-sm text-gray-900">
-                <span>{formatDate(project.contract_start_date)}</span>
-                <span>~ {formatDate(project.contract_end_date)}</span>
+                <span>{formatDate(project.contractStartDate)}</span>
+                <span>~ {formatDate(project.contractEndDate)}</span>
               </div>
             ),
             icon: Calendar, color: "emerald"
@@ -521,13 +508,13 @@ export default function ProjectDetailPage({
             value: (
               <span className={cn(
                 "font-bold tracking-widest",
-                project.risk_level === "high" ? "text-red-600" :
-                  project.risk_level === "medium" ? "text-amber-600" :
-                    project.risk_level === "low" ? "text-emerald-600" : "text-gray-900"
+                project.riskLevel === "high" ? "text-red-600" :
+                  project.riskLevel === "medium" ? "text-amber-600" :
+                    project.riskLevel === "low" ? "text-emerald-600" : "text-gray-900"
               )}>
-                {project.risk_level === "high" ? "상" :
-                  project.risk_level === "medium" ? "중" :
-                    project.risk_level === "low" ? "하" : "-"}
+                {project.riskLevel === "high" ? "상" :
+                  project.riskLevel === "medium" ? "중" :
+                    project.riskLevel === "low" ? "하" : "-"}
               </span>
             ),
             icon: Shield, color: "rose"

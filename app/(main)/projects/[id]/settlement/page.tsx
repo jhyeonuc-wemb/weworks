@@ -13,6 +13,7 @@ import {
   determineAffiliationGroup,
 } from '@/lib/utils/rank-mapping';
 import type { ProjectUnitPrice } from "@/types/profitability";
+import { useProjectPhase } from "@/hooks/useProjectPhase";
 
 interface SettlementData {
   id?: number;
@@ -152,6 +153,14 @@ export default function ProjectSettlementPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = parseInt(params.id as string);
+
+  // ✅ 중앙집중 단계/상태 관리 훅 (단일 소스: we_project_phase_progress)
+  // isInitialStatus: 아직 시작 안 한 상태 (구 STANDBY 역할)
+  // isFinalStatus: 완료된 상태 (구 COMPLETED 역할)
+  const { status: phaseStatus, isInitialStatus, isFinalStatus, finalStatus, onSaveSuccess, onCompleteSuccess } = useProjectPhase(
+    isNaN(projectId) ? undefined : projectId,
+    'settlement'
+  );
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -341,24 +350,24 @@ export default function ProjectSettlementPage() {
         const projectData = await projectRes.json();
         const project = projectData.project;
         setProjectName(project.name || "");
-        setProjectCode(project.project_code || "");
-        setCustomerName(project.customer_name || "");
-        setContractStartDate(project.actual_start_date ? project.actual_start_date.split('T')[0] : (project.contract_start_date ? project.contract_start_date.split('T')[0] : ""));
-        setContractEndDate(project.actual_end_date ? project.actual_end_date.split('T')[0] : (project.contract_end_date ? project.contract_end_date.split('T')[0] : ""));
-        setManagerName(project.manager_name || "");
-        setSalesPersonName(project.sales_representative_name || "");
+        setProjectCode(project.projectCode || "");
+        setCustomerName(project.customerName || "");
+        setContractStartDate(project.actualStartDate ? project.actualStartDate.split('T')[0] : (project.contractStartDate ? project.contractStartDate.split('T')[0] : ""));
+        setContractEndDate(project.actualEndDate ? project.actualEndDate.split('T')[0] : (project.contractEndDate ? project.contractEndDate.split('T')[0] : ""));
+        setManagerName(project.managerName || "");
+        setSalesPersonName(project.salesRepresentativeName || "");
 
         // 담당자 정보 조회 (직급 포함)
-        if (project.manager_id) {
-          const managerRes = await fetch(`/api/users/${project.manager_id}`);
+        if (project.managerId) {
+          const managerRes = await fetch(`/api/users/${project.managerId}`);
           if (managerRes.ok) {
             const managerData = await managerRes.json();
             setManagerPosition(managerData.user?.rank_name || managerData.user?.position || "");
           }
         }
 
-        if (project.sales_representative_id) {
-          const salesRes = await fetch(`/api/users/${project.sales_representative_id}`);
+        if (project.salesRepresentativeId) {
+          const salesRes = await fetch(`/api/users/${project.salesRepresentativeId}`);
           if (salesRes.ok) {
             const salesData = await salesRes.json();
             setSalesPersonPosition(salesData.user?.rank_name || salesData.user?.position || "");
@@ -480,13 +489,26 @@ export default function ProjectSettlementPage() {
       }
 
       // 정산서 조회 (있으면)
-      const settlementRes = await fetch(`/api/projects/${projectId}/settlement`);
+      const [settlementRes, phaseRes] = await Promise.all([
+        fetch(`/api/projects/${projectId}/settlement`),
+        fetch(`/api/projects/${projectId}/phase-status`),  // 단일 소스
+      ]);
+
+      // phase-status API에서 settlement 상태 로드 (단일 소스)
+      let settlementPhaseStatus = 'STANDBY';
+      if (phaseRes.ok) {
+        const phaseData = await phaseRes.json();
+        const settlementPhase = phaseData.phases?.find((p: any) => p.code === 'settlement');
+        settlementPhaseStatus = settlementPhase?.status || 'STANDBY';
+      }
+
       if (settlementRes.ok) {
         const data = await settlementRes.json();
         if (data.settlement) {
           const s = data.settlement;
           setSettlement({
             ...s,
+            status: settlementPhaseStatus,  // phase-status API(단일 소스)에서 덮어씀
             planned_revenue: Number(s.planned_revenue || 0),
             planned_cost: Number(s.planned_cost || 0),
             planned_labor_cost: Number(s.planned_labor_cost || 0),
@@ -674,8 +696,8 @@ export default function ProjectSettlementPage() {
       return;
     }
 
-    // 완료 상태로 변경 시 확인
-    if (newStatus === 'COMPLETED') {
+    // 완료(마지막 상태) 변경 시 확인
+    if (newStatus === finalStatus || isFinalStatus) {
       showAlert(
         "정산서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.",
         "confirm",
@@ -692,21 +714,25 @@ export default function ProjectSettlementPage() {
 
   const executeStatusChange = async (newStatus: string) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/settlement/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
+      if (newStatus === finalStatus) {
+        // ✅ 마지막 상태 = 완료: advance-phase (onCompleteSuccess)
         setSettlement(prev => ({ ...prev, status: newStatus }));
-        if (newStatus === 'COMPLETED') {
-          showToast("정산 작성이 완료되었습니다.", "success");
-        } else {
-          showToast("상태가 변경되었습니다.", "success");
-        }
+        showToast("정산 작성이 완료되었습니다.", "success");
+        await onCompleteSuccess();
       } else {
-        const err = await res.json();
-        showToast(err.message || "상태 변경 실패", "error");
+        // ✅ 중간 상태 변경: phase-progress PATCH
+        const res = await fetch(`/api/projects/${projectId}/phase-progress`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phaseCode: "settlement", status: newStatus }),
+        });
+        if (res.ok) {
+          setSettlement(prev => ({ ...prev, status: newStatus }));
+          showToast("상태가 변경되었습니다.", "success");
+        } else {
+          const err = await res.json();
+          showToast(err.message || "상태 변경 실패", "error");
+        }
       }
     } catch (e) {
       console.error(e);
@@ -794,6 +820,8 @@ export default function ProjectSettlementPage() {
 
       if (response.ok) {
         showToast("수지정산서가 저장되었습니다.", "success");
+        // ✅ 훅 표준 메서드 사용: STANDBY → IN_PROGRESS 자동 전환
+        await onSaveSuccess();
         fetchData();
       } else {
         showToast("저장 실패", "error");

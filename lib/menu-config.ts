@@ -18,6 +18,9 @@ import {
     Briefcase,
     Wrench,
     Calendar,
+    GitBranch,
+    Target,
+    TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -53,11 +56,15 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
         // children을 추가하면 자동으로 그룹 메뉴로 전환됩니다.
     },
     {
-        menuKey: "sales",
+        menuKey: "sales-group",
         href: "/sales",
         label: "영업/PS",
         icon: Briefcase,
         displayOrder: 20,
+        children: [
+            { menuKey: "sales/leads", href: "/sales/leads", label: "리드 현황", icon: Target, displayOrder: 21 },
+            { menuKey: "sales/opportunities", href: "/sales/opportunities", label: "영업기회 현황", icon: TrendingUp, displayOrder: 22 },
+        ],
     },
     {
         menuKey: "projects-group",
@@ -101,6 +108,7 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
         icon: Settings,
         displayOrder: 60,
         children: [
+            { menuKey: "settings/business-phases", href: "/settings/business-phases", label: "사업 단계", icon: GitBranch, displayOrder: 60 },
             { menuKey: "settings/clients", href: "/settings/clients", label: "프로젝트 기준정보", icon: Building2, displayOrder: 61 },
             { menuKey: "settings/codes", href: "/settings/codes", label: "공통 코드", icon: Boxes, displayOrder: 62 },
             { menuKey: "settings/departments", href: "/settings/departments", label: "부서", icon: Building2, displayOrder: 63 },

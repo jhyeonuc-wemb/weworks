@@ -37,20 +37,20 @@ const formatDate = (dateString: string | null | undefined): string => {
 
 interface Project {
   id: number;
-  project_code: string | null;
+  projectCode: string | null;
   name: string;
-  customer_name: string | null;
-  orderer_name: string | null;
+  customerName: string | null;
+  ordererName: string | null;
   status: string;
-  current_phase: string | null;
-  manager_name: string | null;
-  sales_representative_name: string | null;
-  contract_start_date: string | null;
-  contract_end_date: string | null;
-  expected_amount?: number;
+  currentPhase: string | null;
+  managerName: string | null;
+  salesRepresentativeName: string | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
+  expectedAmount?: number;
   net_profit?: number;
   profit_rate?: number;
-  category_name: string | null;
+  categoryName: string | null;
 }
 
 const defaultProjects: Project[] = [];
@@ -103,15 +103,15 @@ export default function ProjectsPage() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(query) ||
-        p.project_code?.toLowerCase().includes(query) ||
-        p.customer_name?.toLowerCase().includes(query)
+        p.projectCode?.toLowerCase().includes(query) ||
+        p.customerName?.toLowerCase().includes(query)
       );
     }
 
     if (searchYear !== "전체") {
       filtered = filtered.filter(p => {
-        if (!p.project_code) return false;
-        const match = p.project_code.match(/^P(\d{2})-/);
+        if (!p.projectCode) return false;
+        const match = p.projectCode.match(/^P(\d{2})-/);
         if (match) {
           const year = `20${match[1]}`;
           return year === searchYear;
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
     }
 
     if (searchPhase !== "전체") {
-      filtered = filtered.filter(p => p.current_phase === searchPhase);
+      filtered = filtered.filter(p => p.currentPhase === searchPhase);
     }
 
     if (searchStatus !== "전체") {
@@ -131,14 +131,14 @@ export default function ProjectsPage() {
     return [...filtered].sort((a, b) => {
       switch (sortOption) {
         case "amount_high":
-          return (b.expected_amount || 0) - (a.expected_amount || 0);
+          return (b.expectedAmount || 0) - (a.expectedAmount || 0);
         case "amount_low":
-          return (a.expected_amount || 0) - (b.expected_amount || 0);
+          return (a.expectedAmount || 0) - (b.expectedAmount || 0);
         case "project_code_desc":
         default:
-          if (!a.project_code) return 1;
-          if (!b.project_code) return -1;
-          return b.project_code.localeCompare(a.project_code);
+          if (!a.projectCode) return 1;
+          if (!b.projectCode) return -1;
+          return b.projectCode.localeCompare(a.projectCode);
       }
     });
   }, [projects, sortOption, searchQuery, searchYear, searchPhase, searchStatus]);
@@ -157,8 +157,8 @@ export default function ProjectsPage() {
   const startYears = useMemo(() => {
     const years = new Set<string>();
     projects.forEach(p => {
-      if (p.project_code) {
-        const match = p.project_code.match(/^P(\d{2})-/);
+      if (p.projectCode) {
+        const match = p.projectCode.match(/^P(\d{2})-/);
         if (match) {
           years.add(`20${match[1]}`);
         }
@@ -187,16 +187,14 @@ export default function ProjectsPage() {
       return;
     }
 
-    // Convert e.g. "md_estimation" -> "MD_ESTIMATION" or "vrb" -> "VRB"
-    const parentCode = searchPhase.toUpperCase();
-    fetch(`/api/codes?parentCode=${parentCode}`)
+    // 새 사업단계 시스템의 phase statuses 사용
+    fetch(`/api/settings/phase-statuses?phaseCode=${searchPhase}`)
       .then(res => res.json())
       .then(data => {
-        if (data.codes && data.codes.length > 0) {
-          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+        if (data.statuses && data.statuses.length > 0) {
+          const opts = data.statuses.map((s: any) => ({ value: s.code, label: s.name }));
           setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
         } else {
-          // If no specific statuses defined, fallback
           setStatusOptions([{ value: "전체", label: "상태" }]);
         }
       })
@@ -380,7 +378,7 @@ export default function ProjectsPage() {
                 </TableRow>
               ) : (
                 paginatedProjects.map((project) => {
-                  const phase = project.current_phase || "md_estimation";
+                  const phase = project.currentPhase || "md_estimation";
                   const phaseLabel = phaseOptions.find(o => o.value === phase)?.label || phase || "-";
                   const phaseStyle = getPhaseStyle(phase);
 
@@ -392,7 +390,7 @@ export default function ProjectsPage() {
                     >
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80 font-mono">
-                          {project.project_code || "-"}
+                          {project.projectCode || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="left" className="px-4 py-3">
@@ -402,24 +400,24 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80">
-                          {project.category_name || "-"}
+                          {project.categoryName || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80">
-                          {project.customer_name || "-"}
+                          {project.customerName || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80 font-mono">
-                          {project.expected_amount ? formatCurrency(project.expected_amount, "KRW", false) : "-"}
+                          {project.expectedAmount ? formatCurrency(project.expectedAmount, "KRW", false) : "-"}
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm text-foreground/80">
-                          {project.contract_start_date ? formatDate(project.contract_start_date) : "-"}
+                          {project.contractStartDate ? formatDate(project.contractStartDate) : "-"}
                           {" ~ "}
-                          {project.contract_end_date ? formatDate(project.contract_end_date) : "-"}
+                          {project.contractEndDate ? formatDate(project.contractEndDate) : "-"}
                         </div>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
@@ -432,12 +430,12 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80">
-                          {project.manager_name || "-"}
+                          {project.managerName || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80">
-                          {project.sales_representative_name || "-"}
+                          {project.salesRepresentativeName || "-"}
                         </span>
                       </TableCell>
                     </TableRow>

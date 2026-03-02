@@ -4,10 +4,11 @@ import { query } from '@/lib/db';
 // 휴일 정보 수정
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
+        const { id: paramId } = await params;
+        const id = parseInt(paramId);
         const data = await request.json();
         const { holiday_date, name, is_recurring, description } = data;
 
@@ -47,10 +48,11 @@ export async function PUT(
 // 휴일 삭제
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
+        const { id: paramId } = await params;
+        const id = parseInt(paramId);
 
         const sql = `DELETE FROM holidays WHERE id = $1`;
         const result = await query(sql, [id]);

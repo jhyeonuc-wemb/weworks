@@ -360,12 +360,12 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
             proj = {
               id: projectData.project.id,
               name: projectData.project.name,
-              projectCode: projectData.project.project_code,
-              customerName: projectData.project.customer_name || "미지정",
-              contractStartDate: projectData.project.contract_start_date,
-              contractEndDate: projectData.project.contract_end_date,
+              projectCode: projectData.project.projectCode,
+              customerName: projectData.project.customerName || "미지정",
+              contractStartDate: projectData.project.contractStartDate,
+              contractEndDate: projectData.project.contractEndDate,
               currency: projectData.project.currency || "KRW",
-              salesRepresentativeName: projectData.project.sales_representative_name,
+              salesRepresentativeName: projectData.project.salesRepresentativeName,
             };
             setProject(proj);
           }
@@ -439,7 +439,7 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                 setRejectionReason(review.rejection_reason || "");
 
                 // 저장된 이름으로 검색어 초기화 (없으면 프로젝트 기본 정보 사용)
-                const customerName = review.customer_name || proj?.customerName || "";
+                const customerName = review.customerName || proj?.customerName || "";
                 setCustomerSearch(customerName);
 
                 const salesName = review.sales_manager || proj?.salesRepresentativeName || "";
@@ -587,8 +587,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                   ...prev,
                   customerName: customerName,
                   salesManager: salesName,
-                  expectedStartDate: proj.contract_start_date ? proj.contract_start_date.split('T')[0].substring(0, 7) : "",
-                  expectedEndDate: proj.contract_end_date ? proj.contract_end_date.split('T')[0].substring(0, 7) : "",
+                  expectedStartDate: proj.contractStartDate ? proj.contractStartDate.split('T')[0].substring(0, 7) : "",
+                  expectedEndDate: proj.contractEndDate ? proj.contractEndDate.split('T')[0].substring(0, 7) : "",
                 }));
               }
 
@@ -1112,7 +1112,7 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             project_id: parseInt(id), // 프로젝트 ID 검증을 위해 포함
-            customer_name: vrbData.customerName,
+            customerName: vrbData.customerName,
             project_budget: vrbData.projectBudget,
             win_probability: vrbData.winProbability,
             win_date: vrbData.winDate ? `${vrbData.winDate}-01` : null,
@@ -1214,6 +1214,23 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
         if (updateResponse.ok) {
           if (vrbStatus === 'STANDBY' || vrbStatus === 'draft') {
             setVrbStatus('IN_PROGRESS');
+          }
+          // 사업단계 시스템: 저장 시 we_project_phase_progress를 IN_PROGRESS로 업데이트
+          try {
+            const phaseRes = await fetch(`/api/projects/${id}/phase-status`);
+            if (phaseRes.ok) {
+              const phaseData = await phaseRes.json();
+              const currentPhaseCode = phaseData.currentPhaseCode;
+              if (currentPhaseCode && (vrbStatus === 'STANDBY' || vrbStatus === 'draft')) {
+                await fetch(`/api/projects/${id}/phase-progress`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ phaseCode: currentPhaseCode, status: 'IN_PROGRESS' }),
+                });
+              }
+            }
+          } catch (e) {
+            console.warn('phase-progress update error:', e);
           }
         }
 

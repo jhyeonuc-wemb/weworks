@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAccessibleMenuKeys } from '@/lib/utils/permissions';
+import bcrypt from 'bcrypt';
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,10 +25,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
         }
 
-        // 비밀번호 검증 (평문 비교 - 초기 비밀번호는 username과 동일)
+        // 비밀번호 검증 (bcrypt 비교)
         const storedPassword = user.password_hash || user.username;
+        let isMatch = false;
 
-        if (password !== storedPassword) {
+        if (storedPassword.startsWith('$2')) {
+            // 이미 해시된 비밀번호인 경우
+            isMatch = await bcrypt.compare(password, storedPassword);
+        } else {
+            // 마이그레이션 전 평문 비밀번호인 경우 (안전망)
+            isMatch = password === storedPassword;
+        }
+
+        if (!isMatch) {
             return NextResponse.json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
         }
 

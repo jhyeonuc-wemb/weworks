@@ -126,7 +126,12 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             }
             if (phasesRes.ok) {
                 const data = await phasesRes.json();
-                setPhases(data.phases?.filter((p: any) => p.is_active) || []);
+                const activePhases = data.phases?.filter((p: any) => p.is_active) || [];
+                setPhases(activePhases);
+                // 신규 등록 모드: 첫 번째 단계를 기본값으로 설정
+                if (!project && activePhases.length > 0) {
+                    setFormData(prev => ({ ...prev, processStatus: activePhases[0].code }));
+                }
             }
             if (categoryCodesRes.ok) {
                 const data = await categoryCodesRes.json();
@@ -140,30 +145,30 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             // 수정 모드일 때 초기 바인딩
             if (project) {
                 setFormData({
-                    projectCode: project.project_code || "",
+                    projectCode: project.projectCode || "",
                     name: project.name || "",
                     category: project.category_id?.toString() || "",
                     field: project.field_id?.toString() || "", // field -> field_id로 매핑 변경
-                    customerId: project.customer_id?.toString() || "",
-                    ordererId: project.orderer_id?.toString() || "",
+                    customerId: project.customerId?.toString() || "",
+                    ordererId: project.ordererId?.toString() || "",
                     description: project.description || "",
-                    managerId: project.manager_id?.toString() || "",
-                    salesRepresentativeId: project.sales_representative_id?.toString() || "",
-                    contractStartDate: project.contract_start_date || "",
-                    contractEndDate: project.contract_end_date || "",
-                    actualStartDate: project.actual_start_date || "",
-                    actualEndDate: project.actual_end_date || "",
+                    managerId: project.managerId?.toString() || "",
+                    salesRepresentativeId: project.salesRepresentativeId?.toString() || "",
+                    contractStartDate: project.contractStartDate || "",
+                    contractEndDate: project.contractEndDate || "",
+                    actualStartDate: project.actualStartDate || "",
+                    actualEndDate: project.actualEndDate || "",
                     currency: (project.currency || "KRW") as Currency,
-                    expectedAmount: project.expected_amount?.toString() || "",
-                    processStatus: project.process_status?.toLowerCase() || "",
-                    riskLevel: project.risk_level || "",
+                    expectedAmount: project.expectedAmount?.toString() || "",
+                    processStatus: project.processStatus?.toLowerCase() || "",
+                    riskLevel: project.riskLevel || "",
                 });
 
                 // 이름 검색 필드 초기화
-                const pm = loadedUsers.find(u => u.id === project.manager_id);
-                const sales = loadedUsers.find(u => u.id === project.sales_representative_id);
-                const customer = loadedClients.find(c => c.id === project.customer_id);
-                const orderer = loadedClients.find(c => c.id === project.orderer_id);
+                const pm = loadedUsers.find(u => u.id === project.managerId);
+                const sales = loadedUsers.find(u => u.id === project.salesRepresentativeId);
+                const customer = loadedClients.find(c => c.id === project.customerId);
+                const orderer = loadedClients.find(c => c.id === project.ordererId);
 
                 setPmSearch(pm?.name || "");
                 setSalesSearch(sales?.name || "");
@@ -187,7 +192,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     actualEndDate: "",
                     currency: "KRW" as Currency,
                     expectedAmount: "",
-                    processStatus: "md_estimation",
+                    processStatus: "", // 새 시스템의 첫 번째 단계가 아래에서 동적으로 설정됨
                     riskLevel: "",
                 });
                 setPmSearch("");
@@ -212,22 +217,22 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
         // API 규격에 맞는 페이로드 생성 (new/page.tsx의 mapping 로직과 동일)
         const payload = {
             name: formData.name,
-            project_code: formData.projectCode || null,
+            projectCode: formData.projectCode || null,
             category_id: formData.category ? parseInt(formData.category) : null,
             field_id: formData.field ? parseInt(formData.field) : null, // field_id 추가
-            customer_id: formData.customerId ? parseInt(formData.customerId) : null,
-            orderer_id: formData.ordererId ? parseInt(formData.ordererId) : null,
+            customerId: formData.customerId ? parseInt(formData.customerId) : null,
+            ordererId: formData.ordererId ? parseInt(formData.ordererId) : null,
             description: formData.description,
-            contract_start_date: formData.contractStartDate || null,
-            contract_end_date: formData.contractEndDate || null,
-            actual_start_date: formData.actualStartDate || null,
-            actual_end_date: formData.actualEndDate || null,
-            expected_amount: formData.expectedAmount ? parseFloat(formData.expectedAmount) : null,
+            contractStartDate: formData.contractStartDate || null,
+            contractEndDate: formData.contractEndDate || null,
+            actualStartDate: formData.actualStartDate || null,
+            actualEndDate: formData.actualEndDate || null,
+            expectedAmount: formData.expectedAmount ? parseFloat(formData.expectedAmount) : null,
             currency: formData.currency,
-            manager_id: formData.managerId ? parseInt(formData.managerId) : null,
-            sales_representative_id: formData.salesRepresentativeId ? parseInt(formData.salesRepresentativeId) : null,
-            process_status: formData.processStatus || null,
-            risk_level: formData.riskLevel || null,
+            managerId: formData.managerId ? parseInt(formData.managerId) : null,
+            salesRepresentativeId: formData.salesRepresentativeId ? parseInt(formData.salesRepresentativeId) : null,
+            processStatus: formData.processStatus || null,
+            riskLevel: formData.riskLevel || null,
         };
         onSave(payload);
     };

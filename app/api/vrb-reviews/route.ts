@@ -166,6 +166,8 @@ export async function GET(request: NextRequest) {
 
         return {
           ...review,
+          projectCode: review.project_code,
+          customerName: review.customer_name,
           keyContents: contentsResult.rows,
           keyActivities: activitiesResult.rows,
           worstCase: {

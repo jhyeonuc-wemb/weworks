@@ -40,8 +40,8 @@ interface Department {
     id: number;
     name: string;
     parent_department_id: number | null;
-    manager_id: number | null;
-    manager_name?: string;
+    managerId: number | null;
+    managerName?: string;
     manager_email?: string;
     description: string | null;
     display_order: number;
@@ -92,7 +92,7 @@ function DepartmentsContent() {
     const [formData, setFormData] = useState({
         name: "",
         parent_department_id: "" as string | number,
-        manager_id: "" as string | number,
+        managerId: "" as string | number,
         description: "",
     });
 
@@ -121,13 +121,13 @@ function DepartmentsContent() {
             setUsers(allUsers);
 
             const normalized = (deptData.departments || []).map((d: any) => {
-                const manager = allUsers.find((u: any) => Number(u.id) === Number(d.manager_id));
+                const manager = allUsers.find((u: any) => Number(u.id) === Number(d.managerId));
                 return {
                     ...d,
                     id: Number(d.id),
                     parent_department_id: d.parent_department_id !== null ? Number(d.parent_department_id) : null,
-                    manager_id: d.manager_id !== null ? Number(d.manager_id) : null,
-                    manager_name: manager ? manager.name : undefined,
+                    managerId: d.managerId !== null ? Number(d.managerId) : null,
+                    managerName: manager ? manager.name : undefined,
                     manager_email: manager ? manager.email : undefined,
                     display_order: typeof d.display_order === "number" ? d.display_order : 0
                 };
@@ -202,7 +202,7 @@ function DepartmentsContent() {
         const term = managerSearch.trim().toLowerCase();
 
         // Find current selected user
-        const selectedUser = users.find(u => Number(u.id) === Number(formData.manager_id));
+        const selectedUser = users.find(u => Number(u.id) === Number(formData.managerId));
         const selectedStr = selectedUser ? `${selectedUser.name} (${selectedUser.email})`.toLowerCase() : "";
 
         // If nothing typed or typing matches the current selection exactly, show initial set
@@ -212,7 +212,7 @@ function DepartmentsContent() {
             (u.name || "").toLowerCase().includes(term) ||
             (u.email || "").toLowerCase().includes(term)
         ).slice(0, 10);
-    }, [users, managerSearch, formData.manager_id]);
+    }, [users, managerSearch, formData.managerId]);
 
     const getAllSubDeptIds = useCallback((deptId: number): number[] => {
         const ids = [deptId];
@@ -264,10 +264,10 @@ function DepartmentsContent() {
         setFormData({
             name: dept.name,
             parent_department_id: dept.parent_department_id ?? "",
-            manager_id: dept.manager_id ?? "",
+            managerId: dept.managerId ?? "",
             description: dept.description ?? "",
         });
-        setManagerSearch(dept.manager_name ? `${dept.manager_name} (${dept.manager_email})` : "");
+        setManagerSearch(dept.managerName ? `${dept.managerName} (${dept.manager_email})` : "");
     };
 
     const handleStartAdd = (parentId: number | null = null, rect?: DOMRect) => {
@@ -278,7 +278,7 @@ function DepartmentsContent() {
         setFormData({
             name: "",
             parent_department_id: parentId ?? "",
-            manager_id: "",
+            managerId: "",
             description: "",
         });
         setManagerSearch("");
@@ -293,19 +293,19 @@ function DepartmentsContent() {
         setFormData({
             name: dept.name,
             parent_department_id: dept.parent_department_id ?? "",
-            manager_id: dept.manager_id ?? "",
+            managerId: dept.managerId ?? "",
             description: dept.description ?? "",
         });
-        setManagerSearch(dept.manager_name ? `${dept.manager_name} (${dept.manager_email})` : "");
+        setManagerSearch(dept.managerName ? `${dept.managerName} (${dept.manager_email})` : "");
         setIsModalOpen(true);
     };
 
     const handleUserSelect = (user: User | null) => {
         if (user) {
-            setFormData(prev => ({ ...prev, manager_id: user.id }));
+            setFormData(prev => ({ ...prev, managerId: user.id }));
             setManagerSearch(`${user.name} (${user.email})`);
         } else {
-            setFormData(prev => ({ ...prev, manager_id: "" }));
+            setFormData(prev => ({ ...prev, managerId: "" }));
             setManagerSearch("");
         }
         setShowUserDropdown(false);
@@ -335,7 +335,7 @@ function DepartmentsContent() {
                 body: JSON.stringify({
                     ...formData,
                     parent_department_id: formData.parent_department_id === "" ? null : Number(formData.parent_department_id),
-                    manager_id: formData.manager_id === "" ? null : Number(formData.manager_id),
+                    managerId: formData.managerId === "" ? null : Number(formData.managerId),
                     ...(isAdding ? { display_order } : {})
                 }),
             });
@@ -763,7 +763,7 @@ function DepartmentsContent() {
                                                 key={user.id}
                                                 type="button"
                                                 onClick={() => handleUserSelect(user)}
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-all text-left ${Number(formData.manager_id) === Number(user.id) ? "bg-primary/5" : ""}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-all text-left ${Number(formData.managerId) === Number(user.id) ? "bg-primary/5" : ""}`}
                                             >
                                                 <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200">
                                                     <UserIcon size={14} />
@@ -779,7 +779,7 @@ function DepartmentsContent() {
                                                     </div>
                                                     <p className="text-[9px] text-muted-foreground truncate opacity-60">{user.email}</p>
                                                 </div>
-                                                {Number(formData.manager_id) === Number(user.id) && <Check size={14} className="text-primary" />}
+                                                {Number(formData.managerId) === Number(user.id) && <Check size={14} className="text-primary" />}
                                             </button>
                                         )) : (
                                             <div className="px-4 py-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">결과 없음</div>

@@ -10,20 +10,20 @@ import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow,
 
 interface Project {
   id: number;
-  project_code: string | null;
+  projectCode: string | null;
   name: string;
-  customer_name: string | null;
+  customerName: string | null;
 }
 
 interface VrbReview {
   id: number;
   project_id: number;
-  project_code: string | null;
+  projectCode: string | null;
   project_name: string | null;
   version: number;
   status: string;
   created_at: string;
-  customer_name?: string | null;
+  customerName?: string | null;
   best_estimated_revenue_services?: number | null;
   best_operating_profit?: number | null;
   best_operating_profit_percent?: number | null;
@@ -120,8 +120,8 @@ export default function VrbReviewListPage() {
       filtered = filtered.filter(
         (review) =>
           review.project_name?.toLowerCase().includes(query) ||
-          review.project_code?.toLowerCase().includes(query) ||
-          review.customer_name?.toLowerCase().includes(query)
+          review.projectCode?.toLowerCase().includes(query) ||
+          review.customerName?.toLowerCase().includes(query)
       );
     }
 
@@ -134,8 +134,8 @@ export default function VrbReviewListPage() {
 
     if (searchYear !== "전체") {
       filtered = filtered.filter(review => {
-        if (!review.project_code) return false;
-        const match = review.project_code.match(/^P(\d{2})-/);
+        if (!review.projectCode) return false;
+        const match = review.projectCode.match(/^P(\d{2})-/);
         if (match) {
           const year = `20${match[1]}`;
           return year === searchYear;
@@ -164,9 +164,9 @@ export default function VrbReviewListPage() {
           return (a.best_operating_profit_percent || 0) - (b.best_operating_profit_percent || 0);
         case "project_code_desc":
         default:
-          if (!a.project_code) return 1;
-          if (!b.project_code) return -1;
-          return b.project_code.localeCompare(a.project_code);
+          if (!a.projectCode) return 1;
+          if (!b.projectCode) return -1;
+          return b.projectCode.localeCompare(a.projectCode);
       }
     });
   }, [reviews, sortOption, searchQuery, resultFilter, searchYear, searchStatus]);
@@ -185,8 +185,8 @@ export default function VrbReviewListPage() {
   const startYears = useMemo(() => {
     const years = new Set<string>();
     reviews.forEach(r => {
-      if (r.project_code) {
-        const match = r.project_code.match(/^P(\d{2})-/);
+      if (r.projectCode) {
+        const match = r.projectCode.match(/^P(\d{2})-/);
         if (match) {
           years.add(`20${match[1]}`);
         }
@@ -246,13 +246,13 @@ export default function VrbReviewListPage() {
   const projectOptions = availableProjects
     .slice()
     .sort((a, b) => {
-      const codeA = a.project_code || "";
-      const codeB = b.project_code || "";
+      const codeA = a.projectCode || "";
+      const codeB = b.projectCode || "";
       return codeB.localeCompare(codeA);
     })
     .map((p) => ({
       value: p.id,
-      label: `${p.project_code || "N/A"}_${p.name}`,
+      label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
   const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
@@ -427,7 +427,7 @@ export default function VrbReviewListPage() {
                   >
                     <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80 font-mono">
-                        {review.project_code || "-"}
+                        {review.projectCode || "-"}
                       </span>
                     </TableCell>
                     <TableCell align="left" className="px-4 py-3">
@@ -461,7 +461,7 @@ export default function VrbReviewListPage() {
                     </TableCell>
                     <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm text-foreground/80">
-                        {review.customer_name || "-"}
+                        {review.customerName || "-"}
                       </span>
                     </TableCell>
                     <TableCell align="right" className="px-4 py-3 whitespace-nowrap">

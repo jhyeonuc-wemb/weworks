@@ -66,7 +66,13 @@ export async function GET(request: NextRequest) {
       }))
     });
 
-    return NextResponse.json({ estimations: result.rows });
+    return NextResponse.json({
+      estimations: result.rows.map((row: any) => ({
+        ...row,
+        projectCode: row.project_code,
+        customerName: row.customer_name
+      }))
+    });
   } catch (error: any) {
     console.error('Error fetching MD estimations:', error);
     return NextResponse.json(

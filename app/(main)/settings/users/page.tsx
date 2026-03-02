@@ -406,7 +406,7 @@ function UsersContent() {
         } else {
           const error = await response.json();
           let errorMsg = error.message || "알 수 없는 오류";
-          if (errorMsg.includes("we_projects_created_by_fkey") || errorMsg.includes("manager_id") || errorMsg.includes("sales_representative_id")) {
+          if (errorMsg.includes("we_projects_created_by_fkey") || errorMsg.includes("managerId") || errorMsg.includes("salesRepresentativeId")) {
             errorMsg = "이 사용자가 생성했거나 담당(PM/영업)하고 있는 프로젝트가 존재하여 삭제할 수 없습니다. 관련 프로젝트의 담당자를 먼저 변경해 주세요.";
           } else if (errorMsg.includes("we_departments_manager_id_fkey")) {
             errorMsg = "이 사용자가 부서장으로 등록되어 있는 부서가 존재하여 삭제할 수 없습니다. 부서 관리에서 부서장을 먼저 변경해 주세요.";

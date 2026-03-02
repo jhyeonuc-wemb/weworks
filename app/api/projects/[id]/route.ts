@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { mapToCamelCase, mapToSnakeCase } from '@/lib/utils/mapper';
 
 // 프로젝트 상세 조회
 export async function GET(
@@ -20,31 +21,10 @@ export async function GET(
         u1.id as manager_id,
         u2.name as sales_representative_name,
         u2.id as sales_representative_id,
-        prof.status as profitability_status,
-        -- 동적으로 computed_phase 계산 (current_phase 우선 사용)
-        CASE
-          WHEN p.current_phase = 'completed' THEN 'completed'
-          WHEN p.current_phase = 'settlement' OR settle.status IS NOT NULL THEN 'settlement'
-          WHEN p.current_phase = 'in_progress' THEN 'in_progress'
-          WHEN p.current_phase = 'profitability' OR prof.status IS NOT NULL THEN 'profitability'
-          WHEN p.current_phase = 'vrb' OR vrb.status IS NOT NULL THEN 'vrb'
-          WHEN p.current_phase = 'md_estimation' OR md.status IS NOT NULL THEN 'md_estimation'
-          ELSE COALESCE(p.current_phase, 'md_estimation')
-        END as computed_phase,
-        -- 동적으로 computed_status 계산 (현재 단계의 모듈 테이블 실제 상태 반영)
-        CASE
-          WHEN p.current_phase = 'completed' THEN 'COMPLETED'
-          WHEN p.current_phase = 'in_progress' THEN 'PROGRESSING'
-          WHEN p.current_phase = 'settlement' OR settle.status IS NOT NULL
-            THEN COALESCE(settle.status, 'STANDBY')
-          WHEN p.current_phase = 'profitability' OR prof.status IS NOT NULL
-            THEN COALESCE(prof.status, 'STANDBY')
-          WHEN p.current_phase = 'vrb' OR vrb.status IS NOT NULL
-            THEN COALESCE(vrb.status, 'STANDBY')
-          WHEN p.current_phase = 'md_estimation' OR md.status IS NOT NULL
-            THEN COALESCE(md.status, 'STANDBY')
-          ELSE 'STANDBY'
-        END as computed_status
+        -- 현재 단계 (we_projects.current_phase 직접 사용)
+        COALESCE(p.current_phase, 'unknown') as computed_phase,
+        -- 현재 단계의 phase_progress 상태 (단일 소스)
+        COALESCE(wpp.status, 'STANDBY') as computed_status
       FROM we_projects p
       LEFT JOIN we_project_categories pc ON p.category_id = pc.id
       LEFT JOIN we_codes cat_code ON p.category_id = cat_code.id
@@ -54,26 +34,9 @@ export async function GET(
       LEFT JOIN we_users u1 ON p.manager_id = u1.id
       LEFT JOIN we_codes rk1 ON u1.rank_id = rk1.id
       LEFT JOIN we_users u2 ON p.sales_representative_id = u2.id
-      LEFT JOIN (
-        SELECT DISTINCT ON (project_id) project_id, status
-        FROM we_project_profitability
-        ORDER BY project_id, version DESC
-      ) prof ON p.id = prof.project_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (project_id) project_id, status
-        FROM we_project_md_estimations
-        ORDER BY project_id, version DESC
-      ) md ON p.id = md.project_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (project_id) project_id, status
-        FROM we_project_vrb_reviews
-        ORDER BY project_id, id DESC
-      ) vrb ON p.id = vrb.project_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (project_id) project_id, status
-        FROM we_project_settlement
-        ORDER BY project_id, id DESC
-      ) settle ON p.id = settle.project_id
+      -- 현재 단계의 phase_progress 상태만 참조 (단일 소스)
+      LEFT JOIN we_project_phase_progress wpp
+        ON wpp.project_id = p.id AND wpp.phase_code = p.current_phase
       WHERE p.id = $1
     `;
 
@@ -81,11 +44,11 @@ export async function GET(
 
     const project = result.rows[0];
     return NextResponse.json({
-      project: {
+      project: mapToCamelCase({
         ...project,
         current_phase: project.computed_phase,
         status: project.computed_status
-      }
+      })
     });
   } catch (error: any) {
     console.error('Error fetching project:', error);
@@ -103,7 +66,8 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = mapToSnakeCase(rawBody) as Record<string, any>;
 
     const updateFields: string[] = [];
     const values: any[] = [];

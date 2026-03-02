@@ -10,21 +10,21 @@ import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow,
 interface Contract {
     id: number;
     project_id: number;
-    project_code: string | null;
+    projectCode: string | null;
     project_name: string;
-    customer_name: string | null;
-    orderer_name: string | null;
+    customerName: string | null;
+    ordererName: string | null;
     contract_amount: number | null;
-    contract_start_date: string | null;
-    contract_end_date: string | null;
+    contractStartDate: string | null;
+    contractEndDate: string | null;
     status: string;
 }
 
 interface Project {
     id: number;
-    project_code: string | null;
+    projectCode: string | null;
     name: string;
-    customer_name: string | null;
+    customerName: string | null;
 }
 
 const sortOptions = [
@@ -48,37 +48,37 @@ export default function ContractListPage() {
         {
             id: 1,
             project_id: 101,
-            project_code: "P2024-001",
+            projectCode: "P2024-001",
             project_name: "AI 기반 스마트 팩토리 대시보드 구축",
-            customer_name: "(주)현대자동차",
-            orderer_name: "(주)현대자동차",
+            customerName: "(주)현대자동차",
+            ordererName: "(주)현대자동차",
             contract_amount: 150000000,
-            contract_start_date: "2024-03-01",
-            contract_end_date: "2024-08-31",
+            contractStartDate: "2024-03-01",
+            contractEndDate: "2024-08-31",
             status: "COMPLETED",
         },
         {
             id: 2,
             project_id: 102,
-            project_code: "P2024-002",
+            projectCode: "P2024-002",
             project_name: "차세대 메타버스 컨퍼런스 시스템",
-            customer_name: "SK텔레콤",
-            orderer_name: "SK텔레콤",
+            customerName: "SK텔레콤",
+            ordererName: "SK텔레콤",
             contract_amount: 85000000,
-            contract_start_date: "2024-04-15",
-            contract_end_date: "2024-10-14",
+            contractStartDate: "2024-04-15",
+            contractEndDate: "2024-10-14",
             status: "IN_PROGRESS",
         },
         {
             id: 3,
             project_id: 103,
-            project_code: "P2024-003",
+            projectCode: "P2024-003",
             project_name: "IoT 센서 데이터 통합 관리 시스템",
-            customer_name: "LG전자",
-            orderer_name: "LG전자",
+            customerName: "LG전자",
+            ordererName: "LG전자",
             contract_amount: 120000000,
-            contract_start_date: "2024-05-01",
-            contract_end_date: "2024-12-31",
+            contractStartDate: "2024-05-01",
+            contractEndDate: "2024-12-31",
             status: "STANDBY",
         }
     ]);
@@ -100,13 +100,13 @@ export default function ContractListPage() {
     const projectOptions = projects
         .slice()
         .sort((a, b) => {
-            const codeA = a.project_code || "";
-            const codeB = b.project_code || "";
+            const codeA = a.projectCode || "";
+            const codeB = b.projectCode || "";
             return codeB.localeCompare(codeA);
         })
         .map((p) => ({
             value: p.id,
-            label: `${p.project_code || "N/A"}_${p.name}`,
+            label: `${p.projectCode || "N/A"}_${p.name}`,
         }));
 
     const sortedContracts = useMemo(() => {
@@ -117,15 +117,15 @@ export default function ContractListPage() {
             filtered = filtered.filter(
                 (c) =>
                     c.project_name?.toLowerCase().includes(query) ||
-                    c.project_code?.toLowerCase().includes(query) ||
-                    c.customer_name?.toLowerCase().includes(query)
+                    c.projectCode?.toLowerCase().includes(query) ||
+                    c.customerName?.toLowerCase().includes(query)
             );
         }
 
         if (searchYear !== "전체") {
             filtered = filtered.filter(c => {
-                if (!c.project_code) return false;
-                const match = c.project_code.match(/^P(\d{2})-/);
+                if (!c.projectCode) return false;
+                const match = c.projectCode.match(/^P(\d{2})-/);
                 if (match) {
                     const year = `20${match[1]}`;
                     return year === searchYear;
@@ -145,12 +145,12 @@ export default function ContractListPage() {
                 case "amount_low":
                     return (a.contract_amount || 0) - (b.contract_amount || 0);
                 case "date_recent":
-                    return (b.contract_start_date || "").localeCompare(a.contract_start_date || "");
+                    return (b.contractStartDate || "").localeCompare(a.contractStartDate || "");
                 case "project_code_desc":
                 default:
-                    if (!a.project_code) return 1;
-                    if (!b.project_code) return -1;
-                    return b.project_code.localeCompare(a.project_code);
+                    if (!a.projectCode) return 1;
+                    if (!b.projectCode) return -1;
+                    return b.projectCode.localeCompare(a.projectCode);
             }
         });
     }, [contracts, sortOption, searchQuery, searchYear, searchStatus]);
@@ -169,8 +169,8 @@ export default function ContractListPage() {
     const startYears = useMemo(() => {
         const years = new Set<string>();
         contracts.forEach(c => {
-            if (c.project_code) {
-                const match = c.project_code.match(/^P(\d{2})-/);
+            if (c.projectCode) {
+                const match = c.projectCode.match(/^P(\d{2})-/);
                 if (match) {
                     years.add(`20${match[1]}`);
                 }
@@ -316,7 +316,7 @@ export default function ContractListPage() {
                                     >
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
-                                                {contract.project_code || "-"}
+                                                {contract.projectCode || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="left" className="px-4 py-3">
@@ -326,7 +326,7 @@ export default function ContractListPage() {
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-medium">
-                                                {contract.customer_name || "-"}
+                                                {contract.customerName || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
@@ -336,7 +336,7 @@ export default function ContractListPage() {
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/60 font-mono">
-                                                {contract.contract_start_date ? `${contract.contract_start_date} ~ ${contract.contract_end_date}` : "-"}
+                                                {contract.contractStartDate ? `${contract.contractStartDate} ~ ${contract.contractEndDate}` : "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">

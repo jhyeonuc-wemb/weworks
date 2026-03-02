@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
         `);
 
         return NextResponse.json({
-            settlements: result.rows,
+            settlements: result.rows.map(row => ({
+                ...row,
+                projectCode: row.project_code,
+                customerName: row.customer_name
+            }))
         });
     } catch (error) {
         console.error("Error fetching settlements:", error);

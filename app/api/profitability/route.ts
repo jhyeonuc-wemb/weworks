@@ -70,7 +70,13 @@ export async function GET(request: NextRequest) {
 
     const result = await query(sql, params);
 
-    return NextResponse.json({ profitabilities: result.rows });
+    return NextResponse.json({
+      profitabilities: result.rows.map((row: any) => ({
+        ...row,
+        projectCode: row.project_code,
+        customerName: row.customer_name
+      }))
+    });
   } catch (error: any) {
     console.error("Error fetching profitabilities:", error);
     return NextResponse.json(

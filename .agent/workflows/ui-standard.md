@@ -20,7 +20,6 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 1. **Neo-Modern Light:** 밝고 공기가 잘 통하는(Airy) 느낌을 지향합니다.
 2. **Backdrop Blur:** 모달, 카드, 헤더에 `backdrop-blur`를 적극 활용하여 깊이감을 줍니다.
 3. **Rounded Corners:** 기본적으로 `rounded-xl` 이상을 사용하며, 버튼과 입력창에는 `rounded-2xl`을 권장합니다.
-4. **Exception (예외):** 상세 데이터 그리드(엑셀 스타일) 사용 시 라운드를 제거하고 직각(sharp) 모서리를 사용하여 전문적인 느낌을 줍니다.
 
 ## 주요 디자인 토큰
 - **Primary Color:** `oklch(0.55 0.15 250)` (Tech Blue)
@@ -45,58 +44,101 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 시스템 내 데이터 테이블은 두 가지 유형(목록형, 상세/입력형)으로 구분하여 정형화합니다.
 
 #### 3.1 목록형 테이블 (List Tables)
-기준: **프로젝트 현황 테이블**
+기준: **프로젝트 현황 테이블, 기준 정보 관리 테이블**
 - **컨테이너:** `neo-light-card` 내부에 위치, `overflow-hidden border border-border/40`.
-- **헤더:** `bg-muted/30`, `px-8 py-3 text-sm font-bold`.
-- **행 스타일:** `h-[52px]` 기준 (내부 패딩 `px-8 py-3`).
-- **데이터 행 폰트:**
-    - **기본 텍스트:** `text-sm text-foreground/80` (일반 정보).
-    - **강조 항목(예: 프로젝트명):** `text-sm font-bold text-foreground tracking-tight`.
-    - **데이터 성격(코드, 수치, 날짜):** `font-mono` 적용.
-    - **상태/배지:** `text-xs font-bold`.
+- **헤더:** `bg-muted/30`, **`h-[46px]`** 고정 높이, 내부 셀 `px-8 py-0` 적용.
+- **행 스타일:** **`h-[46px]`** 고정 (아이콘, 버튼 등 내부 요소 유무와 상관없이 동일한 높이 유지).
+- **패딩:** 모든 셀(`TableHead`, `TableCell`)에 **`py-0`**을 적용하여 46px 높이 내에서 콘텐츠를 수직 중앙에 배치합니다.
 - **인터랙션:** `hover:bg-primary/[0.02] cursor-pointer`.
-- **푸터:** 페이지네이션 포함, `min-h-[56px]`.
+- **푸터:** 페이지네이션 포함 시 `flex items-center justify-center relative min-h-[56px]` 구조를 사용합니다.
+- **푸터 정보 (Left):** `absolute left-8 flex items-center gap-6` 내부에 `TOTAL` 및 `ROWS` 선택기를 배치합니다.
+- **푸터 텍스트:** `TOTAL` 등 라벨은 `text-xs font-bold text-slate-400 uppercase tracking-widest`를 사용하며, 수치 데이터는 `text-primary`를 적용합니다.
+- **페이지네이션 버튼:** `p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all`을 기본으로 하며, 활성 페이지는 `bg-primary text-white shadow-md shadow-primary/20` 스타일을 적용합니다.
 
 #### 3.2 상세/입력형 테이블 (Detail/Input Tables)
-기준: **수지분석서 프로젝트 경비 탭, M/D 산정 난이도 탭**
-- **구조 및 레이아웃:**
-  - **테두리(Border):** `border-collapse`를 사용하며, 테이블 요소(`table`) 자체에는 테두리를 적용하지 않습니다. (컨테이너 div에도 테두리 없음)
-  - **셀 테두리:** 모든 셀(`th`, `td`)에 `border border-gray-300`을 적용하여 **1px 두께**의 실선 그리드를 구현합니다. (Tailwind 기본 `border` 클래스 사용)
-  - **둥글기(Radius):** 컨테이너와 내부 요소 모두 **`rounded-none`** (직각)을 사용하여 엑셀과 같은 전문적인 느낌을 줍니다.
-  - **그림자(Shadow):** **`shadow-none`** (그림자 없음)을 원칙으로 합니다.
-  - **인터랙션(Interaction):**
-    - **행 호버 효과 제거:** 데이터 입력의 집중도를 위해 행 전체 호버 효과는 제거합니다.
-  - 셀 호버 효과:** 데이터 입력이 가능한 셀(Input/Select)에는 `hover:bg-blue-50/50`을 적용하여 상호작용 가능함을 표시합니다.
+기준: **수지분석서 프로젝트 경비 탭**
 - **헤더 및 세션 구분:**
-  - 헤더 배경: `bg-blue-50/50` (또는 `bg-slate-50/50`).
-  - **행 및 셀 높이:** `tr`뿐만 아니라 **입력 필드가 포함된 `td`에도 `h-[35px]`를 명시**하여, 내부 `h-full` 요소가 정확한 높이를 가지도록 합니다.
-  - **셀 패딩:** 
-    - 일반 텍스트 셀: `px-[10px] py-1`.
-    - **입력 셀 (Input/Select):** **`p-0`를 필수 적용**하여 입력 필드가 셀 전체를 채우도록 합니다. (내부 `input`에는 `px-[10px]` 적용)
+  - 헤더 배경: **`bg-blue-50/50`**.
+  - 셀 배경: 
+    - 기본(입력/데이터/구분): **`bg-white`**.
+    - 소계 행: `bg-gray-50`.
+    - 합계 행: `bg-orange-100` (강조).
+  - 행 높이: **`h-[35px]`**를 고정 높이로 사용합니다.
+  - 테두리: 모든 셀(합계 행 포함)에 `border border-gray-300` (1px)을 적용하여 전체 그리드 색상을 통일합니다.
+  - 패딩 및 정렬:
+    - 기본 패딩: **`px-[10px]`** (좌우 10px)로 통일.
+    - 텍스트 정렬: 기본 Left Align. 단, **"소계", "합계" 라벨은 Center Align**.
+    - 숫자 정렬: Right Align.
 - **폰트 및 텍스트:**
   - 기본 텍스트: `text-sm` (Pretendard).
-  - 수치/금액: `text-sm text-right` (천 단위 콤마 필수).
-- **선택 열 (Selection Column):**
-  - **헤더:** `w-12`, `text-center`, `text-sm font-bold`.
-  - **데이터 셀:** `p-0`, `text-center`.
-  - **UI:** 라디오 버튼 형태의 직관적인 선택 UI 사용 (`rounded-full`, 선택 시 색상 변경).
-- **작업/삭제 열 (Action Column):**
-  - **헤더:** 타이틀 **"작업"** 사용, `w-12`, `text-center`.
-  - **데이터 셀:** `p-0`, `text-center` (아이콘 버튼 배치).
-  - **입력 컴포넌트 (Interactive Elements):**
-    > ※ 주의: 이 섹션의 스타일은 **테이블 내부**에만 적용됩니다. 일반적인 폼 입력은 **[8. 폼 입력 컴포넌트 표준]**을 따르십시오.
-  - **Dropdown:** 
-    - 높이: `h-[35px]`, 패딩: `p-0` (셀 내부 꽉 채움).
-    - 스타일: `border-none`, `bg-transparent`, `rounded-none`.
-    - 목록 팝업: `listClassName="rounded-none border-gray-300 shadow-md"`를 적용하여 직각 스타일 및 일관된 테두리 유지.
-  - **Input/Select:** 
-    - 기본: `border-none`, `bg-transparent`, `h-full`, `w-full`, `rounded-none`, `p-0`.
-    - 패딩 및 폰트: `px-[10px]`, `text-sm` (기본 사이즈 유지).
-    - 포커스: `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-blue-50/50`.
-  - **행 추가 버튼 (Add Row):**
-    - 위치: `tbody`의 최하단에 별도 `tr`로 구성.
-    - 스타일: `w-full h-[35px] flex items-center justify-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors`.
-    - 테두리: `border-none` (셀 내부 `p-0` 및 통합).
+  - 수치/금액: `text-sm text-right px-[10px]` (천 단위 콤마 필수, 우측 여백 확보).
+- **입력 필드 스타일 (Inline Input): [표준 확정]**
+  - **컨테이너 셀(`td`):** `p-0`를 적용하여 셀 전체를 입력 영역으로 사용합니다.
+  - **Input 컴포넌트:**
+    - `w-full border-none bg-transparent` (평소).
+    - `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white` (포커스 시).
+    - `px-[10px]` (텍스트 정렬을 일반 셀과 맞춤).
+    - `text-right` (숫자), `text-left` (텍스트).
+    - **반드시 `block` 클래스를 명시**합니다 (display: block 강제).
+  - **Hover:** `hover:bg-blue-50`을 적용하여 입력 가능함을 시각적으로 힌트 제공.
+
+- **⚠️ CSS 트릭 — 인라인 Input의 셀 높이 꽉 채우기 [필수]**
+  - **문제 1 — Strut(유령 공간):** `td` 안의 inline 요소는 브라우저가 line-height 기반의 보이지 않는 공간(strut)을 만들어 상하 여백이 생깁니다.
+    - **해결:** input이 들어있는 `td`에 `style={{ lineHeight: 0, fontSize: 0 }}`을 추가합니다.
+    - input 자체의 `text-sm` 등 폰트 클래스는 그대로 유지됩니다.
+  - **문제 2 — `height: 100%` 미동작:** table cell은 명시적 height가 없으면 자식의 `height: 100%`가 동작하지 않습니다.
+    - **해결:** `td`에 `style={{ height: "1px" }}`을 추가합니다. 실제 렌더 높이는 행 content에 맞게 자동 확장되므로 레이아웃에 영향을 주지 않습니다.
+    - 자식 input에는 `style={{ height: "100%", minHeight: "35px" }}`을 적용합니다.
+  - **종합 적용 예시 (td + input):**
+    ```tsx
+    // ✅ 올바른 패턴 — 셀을 꽉 채우는 인라인 Input
+    <td className="border border-gray-300 p-0"
+        style={{ lineHeight: 0, fontSize: 0, height: "1px" }}>
+      <input
+        className="w-full border-none bg-transparent px-[10px] text-sm
+                   hover:bg-blue-50 focus:outline-none focus:ring-2
+                   focus:ring-inset focus:ring-blue-500 focus:bg-white block"
+        style={{ height: "100%", minHeight: "35px" }}
+      />
+    </td>
+    ```
+
+- **가변 높이 Textarea — AutoResizeTextarea 패턴:**
+  - 내용 길이가 가변인 셀(안내 문구 등)은 `textarea`를 사용하고, 마운트·값 변경 시 `scrollHeight`로 높이를 자동 조정합니다.
+  - 아래 컴포넌트를 복사하여 사용하세요:
+    ```tsx
+    function AutoResizeTextarea({ value, onChange, placeholder, className }) {
+      const ref = useRef(null);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = "0px";
+        el.style.height = `${el.scrollHeight}px`;
+      }, [value]);
+      return (
+        <textarea ref={ref} rows={1} value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            e.target.style.height = "0px";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          placeholder={placeholder} className={className}
+          style={{ minHeight: "35px", overflow: "hidden" }} />
+      );
+    }
+    // td: style={{ verticalAlign: "top" }}
+    ```
+
+- **`<colgroup>` 주의사항:**
+  - JSX 주석(`{/* ... */}`)을 `<colgroup>` 안에 넣으면 HTML whitespace text node로 처리되어 **hydration 오류**가 발생합니다.
+  - `<col>` 태그 뒤에는 주석을 절대 붙이지 않습니다.
+  - ✅ 올바른 예: `<col style={{ width: "40px" }} />`
+  - ❌ 잘못된 예: `<col style={{ width: "40px" }} />  {/* No */}`
+
+- **특화 레이아웃:**
+  - 좌측 구분 컬럼은 `bg-gray-50/50 font-bold` 처리하여 시각적 위계를 줍니다.
+
+
 
 ### 4. 상태 배지 (Badge)
 - `@/components/ui/Badge.tsx` 사용
@@ -132,10 +174,21 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
       - 아이콘: `Download`
       - 스타일: `bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm` (진한 녹색 배경, 흰색 텍스트)
       - 텍스트: "엑셀" (한글)
-    - **Create/Save Button (저장/신규):**
-      - **위치:** 헤더가 아닌 **각 탭(Tab) 또는 콘텐츠 영역 내부** 우측 상단에 배치합니다.
-      - **스타일:** `inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`
-      - 헤더는 "완료" 및 "상태 관리"에 집중하고, 수시 저장은 콘텐츠 영역에서 수행합니다.
+    - **Create Button (신규/추가 - 타이틀 라인):**
+      - **위치:** 페이지 타이틀 우측(헤더 영역)에 배치합니다.
+      - **사용 컴포넌트:** `@/components/ui/Button.tsx` (`variant="primary"`) 사용을 원칙으로 합니다. (Tech Blue 스타일)
+      - **높이 (Height):** **`h-10` (40px)**을 기본으로 합니다.
+      - **아이콘:** `Plus` 아이콘을 사용하며 `mr-1.5` 마진을 적용합니다.
+    - **Save Button (저장/확인 - 콘텐츠 영역):**
+      - **위치:** 각 탭(Tab) 또는 카드(Card) 콘텐츠 영역 내부 우측 상단에 배치합니다.
+      - **스타일:** `bg-gray-900` 기반의 검은색 버튼 스타일을 유지하여 타이틀 영역의 신규 버튼과 시각적으로 분리합니다.
+      - **코드 예시:**
+        ```tsx
+        <button className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-9 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors">
+          <Save className="h-4 w-4" />
+          저장
+        </button>
+        ```
     - **Delete Button (삭제):**
       - **위치:** 저장 버튼 좌측 또는 콘텐츠 영역 내 적절한 위치에 배치합니다.
       - **노출 로직:** 현재 단계의 상태가 **`IN_PROGRESS` (작성 중)**일 때만 노출됩니다.
@@ -205,7 +258,11 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
   - **둥글기 (Border Radius):** **`rounded-xl`**을 사용합니다.
 - **구성 요소별 스타일:**
   - **SearchInput:** 왼쪽에 `Search` 아이콘을 배치하고, 배경은 `bg-white`, 테두리는 `border-gray-300`을 사용합니다.
-  - **Dropdown (필터):** `variant="premium"`을 사용하여 `h-10`, `rounded-xl` 스타일을 유지합니다.
+  - **Dropdown (필터) 및 검색 드랍박스:**
+    - **스타일:** `variant="premium"`을 사용하여 `h-10`, `rounded-xl` 스타일을 유지합니다.
+    - **너비 (Width):** 연도 선택 등 일반적인 필터의 경우 **`w-40` (160px)**을 권장 너비로 사용합니다.
+    - **라벨 정렬 (Label Align):** 드랍다운 버튼의 선택값(안내 라벨)은 **가운데 정렬(`align="center"`)**을 적용합니다.
+    - **목록 정렬 (List Align):** 클릭 시 나타나는 옵션 목록은 가독성을 위해 **왼쪽 정렬(`listAlign="left"`)**을 기본으로 합니다.
 - **레이아웃:**
   - 요소 간 간격은 `gap-x-4`를 기본으로 사용합니다.
   - 검색바가 가변 너비를 가질 경우 `flex-1`을 적용합니다.
@@ -246,6 +303,27 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
   - **전환 속도 (Transition):** 모든 상태 변화는 **`transition-all duration-200`**을 기본으로 사용하여 부드럽게 연결합니다.
 
 
+### 12. 페이지 헤더 레이아웃 (Page Header Layout)
+설정이나 대시보드 등의 일반 페이지 헤더는 타이틀과 액션 버튼의 정렬을 위해 다음 규격을 사용합니다.
+
+- **기본 가이드:** 타이틀과 우측 버튼의 베이스라인을 맞추기 위해 각각 `h-10` 컨테이너로 감싸고, 부모 요소에 `items-start`를 적용합니다. 이는 하단에 설명(`p` 태그)이 추가되어도 버튼이 타이틀 라인(첫 번째 행)에 고정되도록 합니다.
+- **표준 코드 구조:**
+  ```tsx
+  <div className="flex items-start justify-between px-2">
+    <div>
+      <div className="h-10 flex items-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">페이지 타이틀</h1>
+      </div>
+      {/* 설명이 있는 경우에만 p 태그 추가 */}
+      <p className="text-sm text-muted-foreground mt-1">페이지에 대한 상세 설명입니다.</p>
+    </div>
+    <div className="h-10 flex items-center">
+      {/* 버튼이나 액션 요소 배치 */}
+      <Button variant="primary">...</Button>
+    </div>
+  </div>
+  ```
+
 ### 13. 알림 및 확인창 (Alert & Confirm Dialog)
 시스템 내에서 브라우저 기본 `alert()` 및 `confirm()` 사용을 금지하며, 통일된 `AlertDialog` 컴포넌트를 사용합니다.
 
@@ -275,3 +353,8 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
     onConfirm={handleSave}
   />
   ```
+
+## 작업 시 주의사항
+- 인라인 스타일보다는 Tailwind CSS 클래스를 우선 사용합니다.
+- `oklch` 색상 체계를 깨지 않도록 주의합니다.
+- 하드코딩된 색상보다는 CSS 변수(`--primary`, `--border` 등)를 사용합니다.

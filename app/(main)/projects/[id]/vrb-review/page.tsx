@@ -8,6 +8,7 @@ import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import VrbReviewTab, { VrbReviewTabHandle } from "./components/VrbReviewTab";
 import ChecklistTab from "./components/ChecklistTab";
 import MdEstimationTab from "./components/MdEstimationTab";
+import { useProjectPhase } from "@/hooks/useProjectPhase";
 
 const TABS = [
   { id: "vrb", label: "VRB 심의" },
@@ -27,14 +28,16 @@ export default function VrbReviewPage({
     projectCode?: string;
     customerName?: string;
   } | null>(null);
-
-  // VRB 상태 — 페이지 전체 공통
-  const [vrbStatus, setVrbStatus] = useState<string>("STANDBY");
   const [vrbId, setVrbId] = useState<number | null>(null);
   const [vrbReviewResult, setVrbReviewResult] = useState<string | undefined>(undefined);
   const vrbRef = useRef<VrbReviewTabHandle | null>(null);
 
-  // 페이지 레벨에서 프로젝트 정보 + VRB 상태를 직접 fetch
+  // ✅ 중앙집중 단계/상태 관리 훅 (단일 소스: we_project_phase_progress)
+  // isInitialStatus: 아직 시작 안 한 상태 (구 STANDBY 역할)
+  // isFinalStatus: 완료된 상태 (구 COMPLETED 역할)
+  const { status: vrbStatus, isInitialStatus, isFinalStatus, onSaveSuccess, onCompleteSuccess, loadPhaseStatus } = useProjectPhase(id, "vrb");
+
+  // 프로젝트 정보 + VRB ID/review_result 로드
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,11 +50,12 @@ export default function VrbReviewPage({
           const data = await projectRes.json();
           setProject({
             name: data.project.name,
-            projectCode: data.project.project_code,
-            customerName: data.project.customer_name || "미지정",
+            projectCode: data.project.projectCode,
+            customerName: data.project.customerName || "미지정",
           });
         }
 
+        // VRB ID와 review_result만 vrb_reviews 테이블에서 로드
         if (vrbRes.ok) {
           const vrbData = await vrbRes.json();
           const reviews = (vrbData.reviews || []).filter((r: any) => {
@@ -64,14 +68,10 @@ export default function VrbReviewPage({
           if (reviews.length > 0) {
             const latest = reviews[0];
             setVrbId(latest.id);
-            setVrbStatus(latest.status || "STANDBY");
-
-            // 상세 조회로 review_result 가져오기
             const detailRes = await fetch(`/api/vrb-reviews/${latest.id}`);
             if (detailRes.ok) {
               const detailData = await detailRes.json();
-              const reviewResult = detailData.review?.review_result;
-              setVrbReviewResult(reviewResult || undefined);
+              setVrbReviewResult(detailData.review?.review_result || undefined);
             }
           }
         }
@@ -83,10 +83,11 @@ export default function VrbReviewPage({
   }, [id]);
 
   const isVrbTab = activeTab === "vrb";
-  const canDelete = vrbStatus === "IN_PROGRESS" && !!vrbId && isVrbTab;
-  const canExcel = vrbStatus === "IN_PROGRESS" || vrbStatus === "COMPLETED";
-  const canComplete = vrbStatus === "IN_PROGRESS";
-  const showReviewResult = vrbStatus === "COMPLETED" && !!vrbReviewResult;
+  // ✅ 동적 상태 조건 (project_phase_statuses 기반, 하드코딩 없음)
+  const canDelete = !isInitialStatus && !isFinalStatus && !!vrbId && isVrbTab; // 진행 중 상태
+  const canExcel = !isInitialStatus; // 시작 이후
+  const canComplete = !isFinalStatus && !isInitialStatus; // 진행 중
+  const showReviewResult = isFinalStatus && !!vrbReviewResult; // 완료 상태
 
   return (
     <div className="space-y-6">
@@ -190,10 +191,15 @@ export default function VrbReviewPage({
             ref={vrbRef}
             projectId={id}
             onTabChange={(tabId) => setActiveTab(tabId)}
-            onStatusChange={(status, vid, reviewResult) => {
-              setVrbStatus(status);
+            onStatusChange={async (status, vid, reviewResult) => {
               setVrbId(vid);
               setVrbReviewResult(reviewResult);
+              // ✅ 훅의 표준 메서드 사용
+              if (status === "COMPLETED") {
+                await onCompleteSuccess();
+              } else {
+                await loadPhaseStatus();
+              }
             }}
           />
         )}

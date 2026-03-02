@@ -41,6 +41,7 @@ import { useManpowerPlan } from "@/hooks/useManpowerPlan";
 import { useStandardExpenses } from "@/hooks/useStandardExpenses";
 import { useProductPlan } from "@/hooks/useProductPlan";
 import { useProjectExpense } from "@/hooks/useProjectExpense";
+import { useProjectPhase } from "@/hooks/useProjectPhase";
 import { ProjectUnitPrice, ManpowerPlanItem, StandardExpense } from "@/types/profitability";
 import { ProfitabilityService } from "@/services/profitability.service";
 import { exportProfitabilityToExcel } from "@/lib/utils/excel-export";
@@ -68,7 +69,6 @@ export default function ProfitabilityPage({
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("summary");
-  const [status, setStatus] = useState<string>("STANDBY");
   const [currency] = useState<Currency>("KRW");
   // 버전 관리 상태
   const [versions, setVersions] = useState<any[]>([]);
@@ -82,6 +82,11 @@ export default function ProfitabilityPage({
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
   const { showToast, confirm } = useToast();
+
+  // ✅ 중앙집중 단계/상태 관리 훅 (단일 소스: we_project_phase_progress)
+  // isInitialStatus: 아직 시작 안 한 상태 (구 STANDBY 역할)
+  // isFinalStatus: 완료된 상태 (구 COMPLETED 역할)
+  const { status, isInitialStatus, isFinalStatus, finalStatus, onSaveSuccess, onCompleteSuccess, loadPhaseStatus } = useProjectPhase(id, "profitability");
 
   const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
     if (type === "confirm") {
@@ -118,12 +123,12 @@ export default function ProfitabilityPage({
           setProject({
             id: data.project.id,
             name: data.project.name,
-            projectCode: data.project.project_code,
-            customerName: data.project.customer_name || "미지정",
-            contractStartDate: data.project.contract_start_date,
-            contractEndDate: data.project.contract_end_date,
+            projectCode: data.project.projectCode,
+            customerName: data.project.customerName || "미지정",
+            contractStartDate: data.project.contractStartDate,
+            contractEndDate: data.project.contractEndDate,
             currency: (data.project.currency || "KRW") as any,
-            managerName: data.project.manager_name || "미지정",
+            managerName: data.project.managerName || "미지정",
             managerRank: data.project.manager_rank_name || "",
           });
         }
@@ -161,38 +166,38 @@ export default function ProfitabilityPage({
     loadUnitPrices();
   }, [loadUnitPrices]);
 
-  // 상태 및 버전 목록 관리
+  // 버전 목록 및 부가 수익/비용 관리 (loadPhaseStatus는 훅에서 자동 처리)
   const refreshStatus = async (targetVersionId?: number) => {
     if (!id) return;
     const versionId = targetVersionId !== undefined ? targetVersionId : selectedVersionId;
     try {
+      // 1. 버전 목록 로드 (화면 표시용)
       const res = await fetch(`/api/profitability?projectId=${id}`);
       if (res.ok) {
         const data = await res.json();
         setVersions(data.profitabilities || []);
 
-        // 만약 선택된 버전이 없으면 최신 버전 선택
         if (data.profitabilities && data.profitabilities.length > 0) {
           const currentHeader = versionId
             ? data.profitabilities.find((v: any) => String(v.id) === String(versionId)) || data.profitabilities[0]
             : data.profitabilities[0];
-
-          setStatus(currentHeader.status || "STANDBY");
           setHeader(currentHeader);
           if (!versionId) setSelectedVersionId(Number(currentHeader.id));
         } else {
-          // 데이터가 하나도 없으면 자동 생성 (버전 1)
+          // 데이터가 없으면 자동 생성
           const newHeader = await ProfitabilityService.ensureHeader(parseInt(id), "초기 버전");
           if (newHeader) {
             setVersions([newHeader]);
             setSelectedVersionId(newHeader.id);
-            setStatus(newHeader.status || "STANDBY");
             setHeader(newHeader);
           }
         }
       }
 
-      // 부가 수익/비용도 함께 로드
+      // 2. 상태는 훅에서 자동 로드됨 (loadPhaseStatus)
+      await loadPhaseStatus();
+
+      // 3. 부가 수익/비용 로드
       try {
         const diffData = await ProfitabilityService.fetchProfitabilityDiff(parseInt(id), versionId);
         setExtraData({
@@ -299,8 +304,8 @@ export default function ProfitabilityPage({
   const handleStatusChange = async (newStatus: string) => {
     if (!id) return;
 
-    // 완료 상태로 변경 시 확인
-    if (newStatus === 'COMPLETED') {
+    // 완료(마지막 상태) 변경 시 확인
+    if (isFinalStatus || newStatus === finalStatus) {
       showAlert(
         "수지분석서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.",
         "confirm",
@@ -317,21 +322,24 @@ export default function ProfitabilityPage({
 
   const executeStatusChange = async (newStatus: string) => {
     try {
-      const res = await fetch(`/api/profitability/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: parseInt(id), status: newStatus }),
-      });
-
-      if (res.ok) {
-        setStatus(newStatus);
-        refreshStatus(selectedVersionId ?? undefined);
-        if (newStatus === 'COMPLETED') {
-          showAlert("수지분석서 작성이 완료되었습니다.", "success");
-        }
+      if (newStatus === finalStatus) {
+        // ✅ 마지막 상태 = 완료: advance-phase API (onCompleteSuccess)
+        showAlert("수지분석서 작성이 완료되었습니다.", "success");
+        await onCompleteSuccess();
       } else {
-        const errorData = await res.json().catch(() => ({}));
-        showAlert(`상태 변경 실패: ${errorData.message || '알 수 없는 오류'}`, "error");
+        // ✅ 중간 상태 변경: phase-progress PATCH
+        const res = await fetch(`/api/projects/${id}/phase-progress`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phaseCode: "profitability", status: newStatus }),
+        });
+        if (res.ok) {
+          await loadPhaseStatus();
+          refreshStatus(selectedVersionId ?? undefined);
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          showAlert(`상태 변경 실패: ${errorData.message || '알 수 없는 오류'}`, "error");
+        }
       }
     } catch (error) {
       console.error(error);

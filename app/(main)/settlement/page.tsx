@@ -11,9 +11,9 @@ import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow,
 interface Settlement {
   id: number;
   project_id: number;
-  project_code: string | null;
+  projectCode: string | null;
   project_name: string | null;
-  customer_name: string | null;
+  customerName: string | null;
   settlement_date: string;
   planned_revenue: number;
   planned_profit: number;
@@ -34,9 +34,9 @@ interface Settlement {
 
 interface Project {
   id: number;
-  project_code: string | null;
+  projectCode: string | null;
   name: string;
-  customer_name: string | null;
+  customerName: string | null;
 }
 
 const sortOptions = [
@@ -98,15 +98,15 @@ export default function SettlementListPage() {
       filtered = filtered.filter(
         (settlement) =>
           settlement.project_name?.toLowerCase().includes(query) ||
-          settlement.project_code?.toLowerCase().includes(query) ||
-          settlement.customer_name?.toLowerCase().includes(query)
+          settlement.projectCode?.toLowerCase().includes(query) ||
+          settlement.customerName?.toLowerCase().includes(query)
       );
     }
 
     if (searchYear !== "전체") {
       filtered = filtered.filter(settlement => {
-        if (!settlement.project_code) return false;
-        const match = settlement.project_code.match(/^P(\d{2})-/);
+        if (!settlement.projectCode) return false;
+        const match = settlement.projectCode.match(/^P(\d{2})-/);
         if (match) {
           const year = `20${match[1]}`;
           return year === searchYear;
@@ -135,9 +135,9 @@ export default function SettlementListPage() {
           return (a.profit_diff || 0) - (b.profit_diff || 0);
         case "project_code_desc":
         default:
-          if (!a.project_code) return 1;
-          if (!b.project_code) return -1;
-          return b.project_code.localeCompare(a.project_code);
+          if (!a.projectCode) return 1;
+          if (!b.projectCode) return -1;
+          return b.projectCode.localeCompare(a.projectCode);
       }
     });
   }, [settlements, sortOption, searchQuery, searchYear, searchStatus]);
@@ -156,8 +156,8 @@ export default function SettlementListPage() {
   const startYears = useMemo(() => {
     const years = new Set<string>();
     settlements.forEach(s => {
-      if (s.project_code) {
-        const match = s.project_code.match(/^P(\d{2})-/);
+      if (s.projectCode) {
+        const match = s.projectCode.match(/^P(\d{2})-/);
         if (match) {
           years.add(`20${match[1]}`);
         }
@@ -217,13 +217,13 @@ export default function SettlementListPage() {
   const projectOptions = availableProjects
     .slice()
     .sort((a, b) => {
-      const codeA = a.project_code || "";
-      const codeB = b.project_code || "";
+      const codeA = a.projectCode || "";
+      const codeB = b.projectCode || "";
       return codeB.localeCompare(codeA);
     })
     .map((p) => ({
       value: p.id,
-      label: `${p.project_code || "N/A"}_${p.name}`,
+      label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
   const getStatusVariant = (status: string): "success" | "warning" | "error" | "default" => {
@@ -359,7 +359,7 @@ export default function SettlementListPage() {
                     >
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80 font-mono">
-                          {s.project_code || "-"}
+                          {s.projectCode || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="left" className="px-4 py-3">
@@ -369,7 +369,7 @@ export default function SettlementListPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-foreground/80">
-                          {s.customer_name || "-"}
+                          {s.customerName || "-"}
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">

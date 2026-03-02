@@ -327,7 +327,7 @@ export async function PUT(
       console.log('[API PUT] 업데이트 SQL:', updateSql);
       console.log('[API PUT] 업데이트 값:', updateValues);
 
-      // VRB 저장 시 STANDBY → IN_PROGRESS 자동 전환
+      // VRB 저장 시 phase_progress를 STANDBY → IN_PROGRESS 자동 전환 (단일 소스)
       if (body.status === undefined) {
         const vrbProjRes = await query(
           `SELECT project_id FROM we_project_vrb_reviews WHERE id = $1`, [id]
@@ -335,17 +335,15 @@ export async function PUT(
         if (vrbProjRes.rows.length > 0) {
           const pid = parseInt(String(vrbProjRes.rows[0].project_id), 10);
           await query(
-            `UPDATE we_project_phase_progress
-             SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP
-             WHERE project_id = $1 AND phase_code = 'vrb' AND status = 'STANDBY'`,
+            `INSERT INTO we_project_phase_progress (project_id, phase_code, status, started_at, updated_at)
+             VALUES ($1, 'vrb', 'IN_PROGRESS', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+             ON CONFLICT (project_id, phase_code) DO UPDATE
+             SET status = CASE WHEN we_project_phase_progress.status = 'STANDBY' THEN 'IN_PROGRESS' ELSE we_project_phase_progress.status END,
+                 started_at = COALESCE(we_project_phase_progress.started_at, CURRENT_TIMESTAMP),
+                 updated_at = CURRENT_TIMESTAMP`,
             [pid]
           );
         }
-        // 모듈 테이블의 status도 IN_PROGRESS로 전환
-        await query(
-          `UPDATE we_project_vrb_reviews SET status = CASE WHEN status = 'STANDBY' THEN 'IN_PROGRESS' ELSE status END WHERE id = $1`,
-          [id]
-        );
       }
 
       await query(updateSql, updateValues);

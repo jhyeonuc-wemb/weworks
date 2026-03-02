@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { ProductMaster } from "@/components/ProductMaster";
 import { UnitPriceLaborTab, UnitPriceLaborTabHandle } from "@/components/UnitPriceLaborTab";
-import { ProjectPhaseTab, ProjectPhaseTabHandle } from "@/components/ProjectPhaseTab";
 import { SearchInput, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, DraggablePanel, Button } from "@/components/ui";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -45,8 +44,7 @@ interface LaborCategory {
 
 function ClientsPageContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"phases" | "unit-price-labor" | "unit-price-product" | "clients" | "labor">("phases");
-  const projectPhaseRef = useRef<ProjectPhaseTabHandle>(null);
+  const [activeTab, setActiveTab] = useState<"unit-price-labor" | "unit-price-product" | "clients" | "labor">("unit-price-labor");
   const unitPriceLaborRef = useRef<UnitPriceLaborTabHandle>(null);
 
   const { showToast, confirm } = useToast();
@@ -101,7 +99,7 @@ function ClientsPageContent() {
   // Read tab from URL on mount
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "phases" || tab === "unit-price-labor" || tab === "unit-price-product" || tab === "clients" || tab === "labor") {
+    if (tab === "unit-price-labor" || tab === "unit-price-product" || tab === "clients" || tab === "labor") {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
@@ -375,19 +373,11 @@ function ClientsPageContent() {
             </h1>
           </div>
           <p className="mt-1.5 text-sm font-medium text-muted-foreground opacity-70">
-            사업 단계, 고객사, 인력/제품 단가 및 인력 구분 체계를 관리합니다.
+            고객사, 인력/제품 단가 및 인력 구분 체계를 관리합니다.
           </p>
         </div>
         <div className="h-10 flex items-center gap-3">
-          {activeTab === "phases" && (
-            <Button
-              onClick={(e) => projectPhaseRef.current?.handleAdd(e.currentTarget.getBoundingClientRect())}
-              variant="primary"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              단계
-            </Button>
-          )}
+
           {activeTab === "unit-price-labor" && (
             <Button
               onClick={() => unitPriceLaborRef.current?.handleAdd()}
@@ -431,7 +421,6 @@ function ClientsPageContent() {
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { id: "phases", label: "사업 단계" },
             { id: "unit-price-labor", label: "인력 단가" },
             { id: "unit-price-product", label: "제품 단가" },
             { id: "clients", label: "고객사" },
@@ -456,12 +445,7 @@ function ClientsPageContent() {
 
       {/* Tab content */}
       <div className="space-y-8">
-        {/* 사업 단계 탭 */}
-        {activeTab === "phases" && (
-          <div className="p-1">
-            <ProjectPhaseTab ref={projectPhaseRef} />
-          </div>
-        )}
+
 
         {/* 인력 단가 탭 */}
         {activeTab === "unit-price-labor" && (

@@ -10,17 +10,17 @@ import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow,
 
 interface Project {
     id: number;
-    project_code: string | null;
+    projectCode: string | null;
     name: string;
-    customer_name: string | null;
+    customerName: string | null;
 }
 
 interface Profitability {
     id: number;
     project_id: number;
-    project_code: string | null;
+    projectCode: string | null;
     project_name: string | null;
-    customer_name: string | null;
+    customerName: string | null;
     version: number;
     status: string;
     created_at: string;
@@ -93,15 +93,15 @@ export default function ProfitabilityListPage() {
             filtered = filtered.filter(
                 (prof) =>
                     prof.project_name?.toLowerCase().includes(query) ||
-                    prof.project_code?.toLowerCase().includes(query) ||
-                    prof.customer_name?.toLowerCase().includes(query)
+                    prof.projectCode?.toLowerCase().includes(query) ||
+                    prof.customerName?.toLowerCase().includes(query)
             );
         }
 
         if (searchYear !== "전체") {
             filtered = filtered.filter(prof => {
-                if (!prof.project_code) return false;
-                const match = prof.project_code.match(/^P(\d{2})-/);
+                if (!prof.projectCode) return false;
+                const match = prof.projectCode.match(/^P(\d{2})-/);
                 if (match) {
                     const year = `20${match[1]}`;
                     return year === searchYear;
@@ -130,9 +130,9 @@ export default function ProfitabilityListPage() {
                     return (a.operating_profit_rate || 0) - (b.operating_profit_rate || 0);
                 case "project_code_desc":
                 default:
-                    if (!a.project_code) return 1;
-                    if (!b.project_code) return -1;
-                    return b.project_code.localeCompare(a.project_code);
+                    if (!a.projectCode) return 1;
+                    if (!b.projectCode) return -1;
+                    return b.projectCode.localeCompare(a.projectCode);
             }
         });
     }, [profitabilities, sortOption, searchQuery, searchYear, searchStatus]);
@@ -151,8 +151,8 @@ export default function ProfitabilityListPage() {
     const startYears = useMemo(() => {
         const years = new Set<string>();
         profitabilities.forEach(p => {
-            if (p.project_code) {
-                const match = p.project_code.match(/^P(\d{2})-/);
+            if (p.projectCode) {
+                const match = p.projectCode.match(/^P(\d{2})-/);
                 if (match) {
                     years.add(`20${match[1]}`);
                 }
@@ -212,13 +212,13 @@ export default function ProfitabilityListPage() {
     const projectOptions = availableProjects
         .slice()
         .sort((a, b) => {
-            const codeA = a.project_code || "";
-            const codeB = b.project_code || "";
+            const codeA = a.projectCode || "";
+            const codeB = b.projectCode || "";
             return codeB.localeCompare(codeA);
         })
         .map((p) => ({
             value: p.id,
-            label: `${p.project_code || "N/A"}_${p.name}`,
+            label: `${p.projectCode || "N/A"}_${p.name}`,
         }));
 
     const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
@@ -351,7 +351,7 @@ export default function ProfitabilityListPage() {
                                     >
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80 font-mono">
-                                                {p.project_code || "-"}
+                                                {p.projectCode || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="left" className="px-4 py-3">
@@ -361,7 +361,7 @@ export default function ProfitabilityListPage() {
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                                             <span className="text-sm text-foreground/80">
-                                                {p.customer_name || "-"}
+                                                {p.customerName || "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="right" className="px-4 py-3 whitespace-nowrap">

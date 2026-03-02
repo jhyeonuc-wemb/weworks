@@ -333,11 +333,11 @@ const MdEstimationTabs = forwardRef<MdEstimationTabsHandle, { projectId: string;
             setProject({
               id: projectData.project.id,
               name: projectData.project.name,
-              projectCode: projectData.project.project_code,
-              customerName: projectData.project.customer_name || "미지정",
+              projectCode: projectData.project.projectCode,
+              customerName: projectData.project.customerName || "미지정",
               currency: (projectData.project.currency || "KRW") as Currency,
-              fieldName: projectData.project.field_name,
-              categoryName: projectData.project.category_name,
+              fieldName: projectData.project.fieldName,
+              categoryName: projectData.project.categoryName,
             });
           }
 
