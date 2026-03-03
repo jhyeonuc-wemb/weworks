@@ -130,7 +130,7 @@ export default function WorkLogCalendar({
 
   return (
     <div className="fc-wrapper relative">
-      <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-[200px] flex justify-center">
+      <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-auto flex justify-center whitespace-nowrap">
         <DatePicker
           mode={isMonthView || isWeekView ? "month" : "date"}
           date={currentDate}
@@ -140,7 +140,7 @@ export default function WorkLogCalendar({
           }}
           dateFormat={isMonthView || isWeekView ? "yyyy년 M월" : "yyyy년 M월 d일"}
           customDisplay={isWeekView ? currentTitle : undefined}
-          buttonClassName="border-none shadow-none text-[1.1rem] font-bold text-gray-800 hover:bg-slate-100 bg-transparent h-9 px-2 min-w-[140px] flex justify-center"
+          buttonClassName="border-none shadow-none text-[1.1rem] font-bold text-gray-800 hover:bg-slate-100 bg-transparent h-9 px-2 min-w-[140px] flex justify-center whitespace-nowrap"
         />
       </div>
       <style>{`
