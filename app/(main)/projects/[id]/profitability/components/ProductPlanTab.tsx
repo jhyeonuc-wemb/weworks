@@ -176,7 +176,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                         }
                                     }}
                                     disabled={isReadOnly}
-                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                                    className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                                 />
                             </td>
                             <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600 h-[35px]">
@@ -283,7 +283,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                     <td className="border border-gray-300 px-[10px] text-right text-sm">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").base)}
                     </td>
-                    <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-600">
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-600 font-bold">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").proposal)}
                     </td>
                     <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
