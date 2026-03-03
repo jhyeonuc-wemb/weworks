@@ -481,6 +481,7 @@ export default function ProfitabilityPage({
               </h1>
               <StatusBadge
                 status={currentVersionStatus}
+                className="h-9"
               />
               <ProjectPhaseNav projectId={id} />
             </div>

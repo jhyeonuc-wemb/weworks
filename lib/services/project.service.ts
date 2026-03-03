@@ -14,7 +14,7 @@ export class ProjectService {
             return {
                 ...row,
                 current_phase: row.computed_phase,
-                status: row.computed_status
+                status: row.computed_status,
             };
         });
 

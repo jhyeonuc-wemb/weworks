@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
-// GET: 특정 단계의 상태 목록 (phaseId 또는 phaseCode 중 하나 필수)
+// GET: 상태 목록 조회 (파라미터 없으면 전체, phaseId 또는 phaseCode로 필터 가능)
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const phaseId = searchParams.get("phaseId");
         const phaseCode = searchParams.get("phaseCode");
-
-        if (!phaseId && !phaseCode) {
-            return NextResponse.json({ error: "phaseId 또는 phaseCode가 필요합니다." }, { status: 400 });
-        }
 
         let result;
         if (phaseCode) {
@@ -23,7 +19,7 @@ export async function GET(request: Request) {
                  ORDER BY ps.display_order ASC`,
                 [phaseCode]
             );
-        } else {
+        } else if (phaseId) {
             // phaseId(숫자)로 조회 - 사업단계 설정 화면용
             result = await pool.query(
                 `SELECT ps.*,
@@ -32,6 +28,16 @@ export async function GET(request: Request) {
                  WHERE ps.phase_id = $1
                  ORDER BY ps.display_order ASC`,
                 [phaseId]
+            );
+        } else {
+            // 파라미터 없음 → 전체 조회 (StatusBadge 전역 캐시용)
+            result = await pool.query(
+                `SELECT ps.id, ps.code, ps.name, ps.color, ps.phase_id,
+                        pp.code as phase_code
+                 FROM project_phase_statuses ps
+                 JOIN project_phases pp ON pp.id = ps.phase_id
+                 WHERE ps.is_active = true
+                 ORDER BY pp.display_order ASC, ps.display_order ASC`
             );
         }
 

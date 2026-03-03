@@ -1269,6 +1269,7 @@ export default function ProjectSettlementPage() {
               </h1>
               <StatusBadge
                 status={settlement.status || 'STANDBY'}
+                className="h-9"
               />
               <ProjectPhaseNav projectId={projectId} />
             </div>

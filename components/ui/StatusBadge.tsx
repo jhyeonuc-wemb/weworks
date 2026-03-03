@@ -1,75 +1,141 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Badge } from "./Badge";
-import { CheckCircle2, Circle, Clock, AlertCircle, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface StatusBadgeProps {
     status: string;
-    label?: string;
+    label?: string; // 직접 라벨을 전달할 경우 사용 (전역 캐시 우선)
     className?: string;
     showIcon?: boolean;
 }
 
+// ── 모듈 수준 캐시 (앱 전체에서 한 번만 fetch) ──────────────────────────
+// { "STANDBY": "대기", "IN_PROGRESS": "진행 중", ... } 형태로 저장
+let statusNameCache: Record<string, string> | null = null;
+let fetchPromise: Promise<void> | null = null;
+
+function loadStatusNames(): Promise<void> {
+    if (statusNameCache !== null) return Promise.resolve();
+    if (fetchPromise) return fetchPromise;
+
+    fetchPromise = fetch("/api/settings/phase-statuses", { cache: "no-store" })
+        .then(res => res.ok ? res.json() : { statuses: [] })
+        .then(data => {
+            const map: Record<string, string> = {};
+            for (const s of data.statuses || []) {
+                // code는 "STANDBY" 등 대문자 코드
+                if (s.code && s.name) map[s.code.toUpperCase()] = s.name;
+            }
+            statusNameCache = map;
+        })
+        .catch(() => {
+            statusNameCache = {}; // 실패 시 빈 캐시로 처리
+        });
+
+    return fetchPromise;
+}
+
+// ── 상태 코드 → 표시 스타일 매핑 ─────────────────────────────────────────
+function getStatusStyle(code: string): {
+    icon: React.ReactNode;
+    colorClass: string;
+} {
+    const upper = code?.trim().toUpperCase() || "STANDBY";
+
+    // 의미별 그룹핑 (코드명 패턴 기반)
+    if (upper === "STANDBY" || upper === "SALES" || upper === "ON_HOLD") {
+        return {
+            icon: <Circle className="h-3 w-3" />,
+            colorClass: "bg-gray-100 text-gray-600 ring-gray-200",
+        };
+    }
+    if (upper.includes("PROGRESS") || upper.includes("DRAFT") || upper === "SALES_OPPORTUNITY") {
+        return {
+            icon: <Clock className="h-3 w-3" />,
+            colorClass: "bg-blue-50 text-blue-700 ring-blue-200",
+        };
+    }
+    if (upper === "COMPLETED" || upper.includes("COMPLET")) {
+        return {
+            icon: <CheckCircle2 className="h-3 w-3" />,
+            colorClass: "bg-green-50 text-green-700 ring-green-200",
+        };
+    }
+    if (upper === "APPROVED" || upper.includes("APPROV")) {
+        return {
+            icon: <CheckCircle2 className="h-3 w-3" />,
+            colorClass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+        };
+    }
+    if (upper === "REJECTED" || upper.includes("REJECT")) {
+        return {
+            icon: <AlertCircle className="h-3 w-3" />,
+            colorClass: "bg-red-50 text-red-700 ring-red-200",
+        };
+    }
+    // 그 외 진행형
+    if (upper.includes("ING") || upper.includes("ONGOING") || upper.includes("PROCESS")) {
+        return {
+            icon: <Clock className="h-3 w-3" />,
+            colorClass: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+        };
+    }
+
+    // 기본
+    return {
+        icon: <Circle className="h-3 w-3" />,
+        colorClass: "bg-gray-100 text-gray-600 ring-gray-200",
+    };
+}
+
 /**
  * 프로젝트 단계별 상태를 표시하는 전용 배지 컴포넌트
- * (기존 StatusDropdown을 대체하며, 단순 표시용으로 사용됨)
+ *
+ * - label prop이 있으면 그것을 사용
+ * - 없으면 project_phase_statuses API에서 전역 캐시로 status 코드 → 이름 변환
+ * - 두 가지 모두 없으면 status 코드 원문 표시
  */
 export const StatusBadge = ({ status, label, className, showIcon = true }: StatusBadgeProps) => {
-    // 상태값 매핑 및 스타일 결정
-    const getStatusConfig = (s: string) => {
-        const normalizedStatus = s?.trim().toUpperCase() || "STANDBY";
+    const [resolvedLabel, setResolvedLabel] = useState<string>(
+        label || status || "STANDBY"
+    );
 
-        // 프로젝트 워크플로우 상태 매핑
-        const statusMap: Record<string, { variant: "default" | "info" | "success" | "error", text: string, icon: any, colorClass: string }> = {
-            // 대기 (STANDBY)
-            "STANDBY": { variant: "default", text: "대기", icon: <Circle className="h-3 w-3" />, colorClass: "bg-gray-100 text-gray-600 ring-gray-200" },
-            "SALES": { variant: "default", text: "대기", icon: <Circle className="h-3 w-3" />, colorClass: "bg-gray-100 text-gray-600 ring-gray-200" },
-            "ON_HOLD": { variant: "default", text: "대기", icon: <Circle className="h-3 w-3" />, colorClass: "bg-gray-100 text-gray-600 ring-gray-200" },
-
-            // 작성 중 (IN_PROGRESS)
-            "IN_PROGRESS": { variant: "info", text: "작성 중", icon: <Clock className="h-3 w-3" />, colorClass: "bg-blue-50 text-blue-700 ring-blue-200" },
-            "DRAFT": { variant: "info", text: "작성 중", icon: <Clock className="h-3 w-3" />, colorClass: "bg-blue-50 text-blue-700 ring-blue-200" },
-            "SALES_OPPORTUNITY": { variant: "info", text: "작성 중", icon: <Clock className="h-3 w-3" />, colorClass: "bg-blue-50 text-blue-700 ring-blue-200" },
-
-            // 진행 중 (PROGRESSING)
-            "PROGRESSING": { variant: "info", text: "진행 중", icon: <Clock className="h-3 w-3" />, colorClass: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-            "ONGOING": { variant: "info", text: "진행 중", icon: <Clock className="h-3 w-3" />, colorClass: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-
-            // 완료 (COMPLETED)
-            "COMPLETED": { variant: "success", text: "완료", icon: <CheckCircle2 className="h-3 w-3" />, colorClass: "bg-green-50 text-green-700 ring-green-200" },
-        };
-
-        if (statusMap[normalizedStatus]) {
-            const config = statusMap[normalizedStatus];
-            return {
-                ...config,
-                text: label || config.text
-            };
+    useEffect(() => {
+        // label prop이 직접 전달된 경우 우선 사용
+        if (label) {
+            setResolvedLabel(label);
+            return;
         }
 
-        // 기본값
-        return {
-            variant: "default" as const,
-            icon: <AlertCircle className="h-3 w-3" />,
-            text: label || normalizedStatus,
-            colorClass: "bg-gray-100 text-gray-600 ring-gray-200"
-        };
-    };
+        const upper = (status || "STANDBY").trim().toUpperCase();
 
-    const config = getStatusConfig(status);
+        // 캐시가 이미 있으면 즉시 반영
+        if (statusNameCache !== null) {
+            setResolvedLabel(statusNameCache[upper] || status);
+            return;
+        }
+
+        // 아직 캐시가 없으면 로드 후 반영
+        loadStatusNames().then(() => {
+            setResolvedLabel(statusNameCache?.[upper] || status);
+        });
+    }, [status, label]);
+
+    const { icon, colorClass } = getStatusStyle(status);
 
     return (
         <Badge
             className={cn(
                 "h-7 px-3 gap-1.5 rounded-full font-semibold transition-all",
-                config.colorClass,
+                colorClass,
                 className
             )}
         >
-            {showIcon && config.icon}
-            <span>{config.text}</span>
+            {showIcon && icon}
+            <span>{resolvedLabel}</span>
         </Badge>
     );
 };

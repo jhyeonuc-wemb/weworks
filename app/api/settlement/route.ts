@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
             settlements: result.rows.map(row => ({
                 ...row,
                 projectCode: row.project_code,
-                customerName: row.customer_name
+                customerName: row.customer_name,
             }))
         });
     } catch (error) {
