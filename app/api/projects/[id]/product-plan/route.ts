@@ -41,14 +41,15 @@ export async function GET(
       productId: row.product_id,
       companyName: row.company_name,
       productName: row.product_name,
-      quantity: row.quantity ? Math.round(Number(row.quantity)) : null,
-      unitPrice: row.unit_price ? Math.round(Number(row.unit_price)) : null,
-      basePrice: row.base_price ? Math.round(Number(row.base_price)) : 0,
-      proposalPrice: row.proposal_price ? Math.round(Number(row.proposal_price)) : null,
-      discountRate: row.discount_rate ? Number(row.discount_rate) : 0, // % 값은 소수점 유지
-      costPrice: row.cost_price ? Math.round(Number(row.cost_price)) : null,
+      quantity: row.quantity !== null && row.quantity !== undefined ? Math.round(Number(row.quantity)) : null,
+      unitPrice: row.unit_price !== null && row.unit_price !== undefined ? Math.round(Number(row.unit_price)) : null,
+      basePrice: row.base_price !== null && row.base_price !== undefined ? Math.round(Number(row.base_price)) : 0,
+      proposalPrice: row.proposal_price !== null && row.proposal_price !== undefined ? Math.round(Number(row.proposal_price)) : null,
+      discountRate: row.discount_rate !== null && row.discount_rate !== undefined ? Number(row.discount_rate) : 0,
+      costPrice: row.cost_price !== null && row.cost_price !== undefined ? Math.round(Number(row.cost_price)) : null,
       requestDate: row.request_date || "",
       requestType: row.request_type || "",
+      contractCostPrice: row.contract_cost_price !== null && row.contract_cost_price !== undefined ? Math.round(Number(row.contract_cost_price)) : null,
     }));
 
     return NextResponse.json({ items });
@@ -109,23 +110,24 @@ export async function PUT(
         await query(
           `INSERT INTO we_project_product_plan 
           (project_id, profitability_id, type, product_id, company_name, product_name, quantity, unit_price, 
-           base_price, proposal_price, discount_rate, cost_price, request_date, request_type)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+           base_price, proposal_price, discount_rate, cost_price, request_date, request_type, contract_cost_price)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
           [
             projectId,
             profitabilityId,
             item.type,
-            item.productId || null,
+            item.productId ?? null,
             item.companyName || "",
             item.productName || "",
-            item.quantity || 0,
-            item.unitPrice || null,
-            item.basePrice || 0,
-            item.proposalPrice || null,
-            item.discountRate || 0,
-            item.costPrice || null,
+            item.quantity ?? 0,
+            item.unitPrice ?? null,
+            item.basePrice ?? 0,
+            item.proposalPrice ?? null,
+            item.discountRate ?? 0,
+            item.costPrice ?? null,
             item.requestDate || null,
             item.requestType || "",
+            item.contractCostPrice ?? null,
           ]
         );
       }
