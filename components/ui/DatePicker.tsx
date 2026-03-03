@@ -27,6 +27,10 @@ interface DatePickerProps {
 function MonthCalendar({ date, setDate, onSelect }: { date?: Date, setDate: (date: Date) => void, onSelect: () => void }) {
     const [year, setYear] = React.useState(date ? date.getFullYear() : new Date().getFullYear())
 
+    React.useEffect(() => {
+        if (date) setYear(date.getFullYear())
+    }, [date])
+
     const handlePreviousYear = () => setYear(year - 1)
     const handleNextYear = () => setYear(year + 1)
 
@@ -163,6 +167,7 @@ export function DatePicker({
                                 setDate(d)
                                 setOpen(false)
                             }}
+                            defaultMonth={date}
                             initialFocus
                         />
                     )}
