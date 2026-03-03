@@ -690,63 +690,27 @@ export default function ProjectSettlementPage() {
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
+  // ✅ 작성완료: confirm → onCompleteSuccess() (advance-phase API)
+  const handleComplete = () => {
     if (!settlement.id) {
       showToast("먼저 저장을 해주세요.", "error");
       return;
     }
-
-    // 완료(마지막 상태) 변경 시 확인
-    if (newStatus === finalStatus || isFinalStatus) {
-      showAlert(
-        "정산서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.",
-        "confirm",
-        "작성 완료",
-        async () => {
-          await executeStatusChange(newStatus);
-        }
-      );
-      return;
-    }
-
-    await executeStatusChange(newStatus);
-  };
-
-  const executeStatusChange = async (newStatus: string) => {
-    try {
-      if (newStatus === finalStatus) {
-        // ✅ 마지막 상태 = 완료: advance-phase (onCompleteSuccess)
-        setSettlement(prev => ({ ...prev, status: newStatus }));
-        showToast("정산 작성이 완료되었습니다.", "success");
-        await onCompleteSuccess();
-      } else {
-        // ✅ 중간 상태 변경: phase-progress PATCH
-        const res = await fetch(`/api/projects/${projectId}/phase-progress`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phaseCode: "settlement", status: newStatus }),
-        });
-        if (res.ok) {
-          setSettlement(prev => ({ ...prev, status: newStatus }));
-          showToast("상태가 변경되었습니다.", "success");
-        } else {
-          const err = await res.json();
-          showToast(err.message || "상태 변경 실패", "error");
+    showAlert(
+      "정산서 작성을 완료하시겠습니까? 완료 후에는 수정이 불가능합니다.",
+      "confirm",
+      "작성 완료",
+      async () => {
+        try {
+          showToast("정산 작성이 완료되었습니다.", "success");
+          await onCompleteSuccess();
+          fetchData();
+        } catch (e) {
+          console.error(e);
+          showToast("오류가 발생했습니다.", "error");
         }
       }
-    } catch (e) {
-      console.error(e);
-      showToast("오류 발생", "error");
-    }
-  };
-
-  const getStatusDisplay = (s: string) => {
-    switch (s) {
-      case "STANDBY": return { label: "대기", color: "bg-gray-100 text-gray-700 border-gray-200" };
-      case "IN_PROGRESS": return { label: "작성중", color: "bg-blue-50 text-blue-700 border-blue-200" };
-      case "COMPLETED": return { label: "작성완료", color: "bg-green-50 text-green-700 border-green-200" };
-      default: return { label: s || "대기", color: "bg-gray-100 text-gray-700 border-gray-200" };
-    }
+    );
   };
 
   const handleSave = async () => {
@@ -795,7 +759,6 @@ export default function ProjectSettlementPage() {
         body: JSON.stringify({
           settlement: {
             ...settlement,
-            status: settlement.status === "STANDBY" ? "IN_PROGRESS" : settlement.status,
             // Calculated Actuals
             actual_revenue: totalActualRevenue,
             actual_cost: totalActualCost,
@@ -1285,7 +1248,8 @@ export default function ProjectSettlementPage() {
   const profitDiff = calculatedActualProfit - baseProfitCalculated;
   const profitRateDiff = calculatedActualProfitRate - baseProfitRateCalculated;
 
-  const isReadOnly = settlement.status === "completed";
+  // ✅ 완료 상태(isFinalStatus)이면 ReadOnly — 하드코딩 상태 비교 금지 (workflow 표준)
+  const isReadOnly = isFinalStatus;
 
   return (
     <div className="space-y-6">
@@ -1314,7 +1278,8 @@ export default function ProjectSettlementPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {settlement.status === 'IN_PROGRESS' && settlement.id && (
+          {/* 삭제: 진행 중(not 초기, not 완료) 상태에서만 */}
+          {!isInitialStatus && !isFinalStatus && settlement.id && (
             <Button
               variant="secondary"
               onClick={handleDelete}
@@ -1325,7 +1290,8 @@ export default function ProjectSettlementPage() {
             </Button>
           )}
 
-          {(settlement.status === 'IN_PROGRESS' || settlement.status === 'COMPLETED' || settlement.status === 'completed') && (
+          {/* 엑셀: 시작 후(not 초기) 상태에서 표시 */}
+          {!isInitialStatus && (
             <Button
               variant="secondary"
               className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-600/90 border-transparent hover:shadow-lg transition-all"
@@ -1335,13 +1301,11 @@ export default function ProjectSettlementPage() {
             </Button>
           )}
 
-          {settlement.status === 'IN_PROGRESS' && (
+          {/* 작성완료: 진행 중 상태에서만 */}
+          {!isInitialStatus && !isFinalStatus && (
             <Button
               variant="primary"
-              onClick={async () => {
-                await handleSave();
-                await handleStatusChange('COMPLETED');
-              }}
+              onClick={handleComplete}
               disabled={saving}
               className="flex items-center gap-2"
             >
@@ -1356,25 +1320,36 @@ export default function ProjectSettlementPage() {
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
         {/* 작성 기준 일자 */}
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">작성 기준 일자</span>
+              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">작성 기준 일자</span>
               <DatePicker
                 date={settlement.settlement_date ? new Date(settlement.settlement_date) : undefined}
                 setDate={(date) => setSettlement({ ...settlement, settlement_date: date ? format(date, "yyyy-MM-dd") : "" })}
-                disabled={settlement.status === "completed"}
-                className="w-32"
+                disabled={isReadOnly}
+                className="w-36"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">승인일</span>
+              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">승인일</span>
               <DatePicker
                 date={settlement.approved_date ? new Date(settlement.approved_date) : undefined}
                 setDate={(date) => setSettlement({ ...settlement, approved_date: date ? format(date, "yyyy-MM-dd") : "" })}
-                disabled={settlement.status === "completed"}
-                className="w-32"
+                disabled={isReadOnly}
+                className="w-36"
               />
             </div>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Save className="h-4 w-4" />
+                {saving ? "저장 중..." : "저장"}
+              </button>
+            )}
           </div>
         </div>
 
