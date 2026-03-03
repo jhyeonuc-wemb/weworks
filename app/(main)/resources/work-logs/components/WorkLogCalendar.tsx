@@ -248,10 +248,17 @@ export default function WorkLogCalendar({
         .fc-wrapper .fc-day-holiday.fc-daygrid-day {
           background-color: #fff5f580 !important;
         }
-        .fc-wrapper .fc-timegrid-slot-label-cushion {
+        .fc-wrapper .fc-timegrid-slot-label-cushion,
+        .fc-wrapper .fc-timegrid-axis-cushion {
           font-size: 14px;
           font-weight: 500;
           color: #6b7280;
+          min-width: 75px;
+          text-align: center;
+          justify-content: center;
+        }
+        .fc-wrapper .fc-timegrid-axis {
+          width: 75px !important;
         }
         .fc-wrapper .fc-timegrid-slot {
           height: 40px;
