@@ -180,7 +180,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 />
                             </td>
                             <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-600 h-[35px]">
-                                {item.discountRate.toFixed(1)}%
+                                {item.discountRate.toFixed(2)}%
                             </td>
                             <td className="border border-gray-300 p-0 h-[35px]">
                                 <input
@@ -286,8 +286,8 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                     <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-600">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").proposal)}
                     </td>
-                    <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900">
-                        {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").discountRate.toFixed(1)}%
+                    <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
+                        {getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").discountRate.toFixed(2)}%
                     </td>
                     <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900">
                         {formatMoney(getSubtotal(typeLabel.includes("자사") ? "자사" : "타사").cost)}
@@ -426,8 +426,8 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                             <td className="border border-gray-300 px-[10px] text-right text-sm text-blue-700 font-bold">
                                 {formatMoney(grandTotal.proposal)}
                             </td>
-                            <td className="border border-gray-300 px-[10px] text-center text-sm text-gray-900 font-bold">
-                                {total.discountRate.toFixed(1)}%
+                            <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
+                                {total.discountRate.toFixed(2)}%
                             </td>
                             <td className="border border-gray-300 px-[10px] text-right text-sm text-gray-900 font-bold">
                                 {formatMoney(grandTotal.cost)}
