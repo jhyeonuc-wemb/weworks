@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { WorkLogPanel } from "./components/WorkLogPanel";
 import type FullCalendar from "@fullcalendar/react";
 import type { WorkLog } from "./types";
@@ -138,16 +139,17 @@ export default function WorkLogsPage() {
                             <span className="text-xs text-gray-500">계획</span>
                         </div>
                     </div>
-                    <button
+                    <Button
+                        variant="primary"
                         onClick={() => {
                             const todayStr = today.toISOString().split("T")[0];
                             openPanel(todayStr);
                         }}
-                        className="h-10 px-4 rounded-xl bg-blue-600 text-white text-sm font-medium flex items-center gap-1.5 hover:bg-blue-700 transition-colors shadow-sm"
+                        className="h-10 px-4 text-sm font-medium flex items-center gap-1.5"
                     >
                         <Plus className="h-4 w-4" />
                         작업
-                    </button>
+                    </Button>
                 </div>
             </div>
 
