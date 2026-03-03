@@ -143,7 +143,7 @@ export default function WorkLogsPage() {
                             const todayStr = today.toISOString().split("T")[0];
                             openPanel(todayStr);
                         }}
-                        className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-medium flex items-center gap-1.5 hover:bg-slate-800 transition-colors"
+                        className="h-10 px-4 rounded-xl bg-blue-600 text-white text-sm font-medium flex items-center gap-1.5 hover:bg-blue-700 transition-colors shadow-sm"
                     >
                         <Plus className="h-4 w-4" />
                         작업
