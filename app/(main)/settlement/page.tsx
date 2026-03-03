@@ -373,7 +373,7 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-foreground/40 font-mono italic">
+                        <span className="text-sm text-foreground/40 font-mono">
                           {formatCurrency(s.planned_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
@@ -383,7 +383,7 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-foreground/40 font-mono italic">
+                        <span className="text-sm text-foreground/40 font-mono">
                           {formatCurrency(s.planned_profit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
@@ -394,8 +394,8 @@ export default function SettlementListPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
-                          "text-xs font-bold font-mono px-2 py-1 rounded-md",
-                          s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                          "text-sm font-mono",
+                          s.profit_diff >= 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                           {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW", false)}
                         </span>
