@@ -458,10 +458,10 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 차액(제안-계약)
                             </td>
                             <td className="border border-gray-300 px-[10px] text-right text-sm">
-                                {formatMoney(total.contractCost - total.cost)}
+                                {total.contractCost ? formatMoney(total.contractCost - total.cost) : "-"}
                             </td>
                             <td className="border border-gray-300 px-[10px] text-right text-sm">
-                                {formatMoney(total.contractMargin - total.margin)}
+                                {total.contractCost ? formatMoney(total.contractMargin - total.margin) : "-"}
                             </td>
                             <td className="border border-gray-300 px-[10px] text-center text-sm"></td>
                         </tr>

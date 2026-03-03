@@ -186,7 +186,7 @@ export function useProductPlan(projectId?: number, profitabilityId?: number) {
         );
       } else {
         // 마스터에 없는 제품명 입력 시
-        updateItem(itemId, "productId", 0);
+        updateItem(itemId, "productId", null);
         updateItem(itemId, "productName", productName);
       }
     },

@@ -201,7 +201,11 @@ export class ProfitabilityService {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save product plan");
+        const errorText = await response.text();
+        console.error("[saveProductPlan] Server error response:", errorText);
+        let errorData: any = {};
+        try { errorData = JSON.parse(errorText); } catch (e) { }
+        throw new Error(errorData.error || errorData.message || `Failed to save product plan (HTTP ${response.status})`);
       }
     } catch (error) {
       console.error("Error saving product plan:", error);

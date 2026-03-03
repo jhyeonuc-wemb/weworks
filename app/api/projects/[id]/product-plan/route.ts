@@ -116,7 +116,7 @@ export async function PUT(
             projectId,
             profitabilityId,
             item.type,
-            item.productId ?? null,
+            item.productId || null,
             item.companyName || "",
             item.productName || "",
             item.quantity ?? 0,
@@ -144,10 +144,10 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error saving product plan:", error);
     return NextResponse.json(
-      { error: "제품 계획 저장에 실패했습니다." },
+      { error: "제품 계획 저장에 실패했습니다.", details: error.message },
       { status: 500 }
     );
   }
