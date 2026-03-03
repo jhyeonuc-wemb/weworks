@@ -6,7 +6,7 @@ import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, FileText, HelpCirc
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
 
 interface Project {
   id: number;
@@ -255,21 +255,7 @@ export default function VrbReviewListPage() {
       label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
-  const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
-    if (status === "COMPLETED") return "success";
-    if (status === "IN_PROGRESS") return "warning";
-    if (status === "STANDBY") return "info";
-    return "default";
-  };
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      STANDBY: "대기",
-      IN_PROGRESS: "작성 중",
-      COMPLETED: "완료",
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="space-y-8 max-w-[1920px]">
@@ -486,9 +472,7 @@ export default function VrbReviewListPage() {
                     </TableCell>
 
                     <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                      <Badge variant={getStatusVariant(review.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                        {getStatusLabel(review.status)}
-                      </Badge>
+                      <StatusBadge status={review.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                     </TableCell>
                   </TableRow>
                 ))

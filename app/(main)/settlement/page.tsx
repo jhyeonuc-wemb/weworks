@@ -6,7 +6,7 @@ import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, LineChart } from "
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
 
 interface Settlement {
   id: number;
@@ -226,22 +226,7 @@ export default function SettlementListPage() {
       label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
-  const getStatusVariant = (status: string): "success" | "warning" | "error" | "default" => {
-    if (status === "approved") return "success";
-    if (status === "pending") return "warning";
-    if (status === "rejected") return "error";
-    return "default";
-  };
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      draft: "초안",
-      pending: "검토 중",
-      approved: "승인",
-      rejected: "반려",
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="space-y-8 max-w-[1920px]">
@@ -401,9 +386,7 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                        <Badge variant={s.status === "COMPLETED" ? "success" : s.status === "IN_PROGRESS" ? "warning" : "info"} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                          {s.status === "COMPLETED" ? "완료" : s.status === "IN_PROGRESS" ? "작성중" : "대기"}
-                        </Badge>
+                        <StatusBadge status={s.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                       </TableCell>
                     </TableRow>
                   );

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, FolderOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
 
 interface Contract {
     id: number;
@@ -193,20 +193,7 @@ export default function ContractListPage() {
             .catch(console.error);
     }, []);
 
-    const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
-        if (status === "COMPLETED") return "success";
-        if (status === "IN_PROGRESS") return "warning";
-        return "info";
-    };
 
-    const getStatusLabel = (status: string): string => {
-        const labels: Record<string, string> = {
-            STANDBY: "대기",
-            IN_PROGRESS: "진행 중",
-            COMPLETED: "완료",
-        };
-        return labels[status] || status;
-    };
 
     return (
         <div className="space-y-8 max-w-[1920px]">
@@ -340,9 +327,7 @@ export default function ContractListPage() {
                                             </span>
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <Badge variant={getStatusVariant(contract.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                                                {getStatusLabel(contract.status)}
-                                            </Badge>
+                                            <StatusBadge status={contract.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                                         </TableCell>
                                     </TableRow>
                                 ))
