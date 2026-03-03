@@ -120,8 +120,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // 현재 비밀번호는 로그인 시 사용한 password (세션에 저장된 id 사용)
-        body: JSON.stringify({ currentPassword: password, newPassword }),
+        body: JSON.stringify({ newPassword }),
       });
 
       if (res.ok) {

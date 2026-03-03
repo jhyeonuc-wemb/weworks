@@ -31,7 +31,7 @@ export class ProjectService {
         }
 
         // 사용자가 선택한 단계가 있으면 사용, 없으면 null (initProjectPhases가 첫 단계 반환)
-        const selectedPhase = data.processStatus || null;
+        const selectedPhase = data.processStatus || undefined;
 
         const params: CreateProjectParams = {
             name: data.name,
