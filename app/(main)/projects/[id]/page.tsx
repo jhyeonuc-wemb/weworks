@@ -327,7 +327,7 @@ export default function ProjectDetailPage({
         <div className="relative rounded-[2.5rem] border border-gray-100 bg-white px-10 pb-10 pt-8 shadow-2xl shadow-blue-50/50">
 
 
-          <div className="relative flex items-center justify-between gap-4">
+          <div className="relative flex items-start justify-between gap-4">
             {phaseProgress.map((step: any, index: number) => {
               const Icon = PHASE_ICONS[step.code] || FileText;
               const stepStatus = toStepperStatus(step.status);
@@ -399,6 +399,7 @@ export default function ProjectDetailPage({
 
                       const content = (
                         <>
+                          {/* 아이콘 — 모든 스텝 동일 높이 기준점 */}
                           <div className={cn(
                             "flex h-12 w-12 items-center justify-center rounded-[1.25rem] transition-all duration-500 ring-4 shadow-lg group-hover/step:translate-y-[-2px]",
                             currentConfig.bg,
@@ -419,14 +420,31 @@ export default function ProjectDetailPage({
                             )}
                           </div>
 
-                          <div className="mt-4 flex flex-col items-center gap-1">
-                            <span className="text-sm font-medium text-gray-900 text-center break-keep">
+                          {/* 단계명 — 고정 높이로 가로 정렬 */}
+                          <div className="mt-3 flex flex-col items-center" style={{ minHeight: 36 }}>
+                            <span className="text-sm font-medium text-gray-900 text-center break-keep leading-snug">
                               {step.name}
                             </span>
                             {stepStatus === "current" && (
                               <span className="text-[8px] font-black text-blue-600/60 uppercase tracking-widest animate-pulse">Running...</span>
                             )}
                           </div>
+
+                          {/* 날짜 — 단계명 아래 별도 영역 */}
+                          {(step.date1 || step.date2) && (
+                            <div className="mt-1 flex flex-col items-center gap-0.5">
+                              {step.date1 && (
+                                <span className="text-sm text-gray-700 text-center whitespace-nowrap">
+                                  {step.date1Label} {step.date1}
+                                </span>
+                              )}
+                              {step.date2 && (
+                                <span className="text-sm text-gray-700 text-center whitespace-nowrap">
+                                  {step.date2Label} {step.date2}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </>
                       );
 
