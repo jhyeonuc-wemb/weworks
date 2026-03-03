@@ -152,7 +152,7 @@ export default function WorkLogsPage() {
             </div>
 
             {/* 캘린더 */}
-            <div className="neo-light-card border border-border/40 overflow-auto p-4" style={{ height: 'calc(100vh - 220px)', minHeight: '600px' }}>
+            <div className="neo-light-card border border-border/40 p-4 min-h-[600px] bg-white">
                 <WorkLogCalendar
                     logs={logs}
                     holidays={holidays}

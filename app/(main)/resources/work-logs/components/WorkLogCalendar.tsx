@@ -114,7 +114,7 @@ export default function WorkLogCalendar({
   };
 
   return (
-    <div className="fc-wrapper h-full">
+    <div className="fc-wrapper">
       <style>{`
         .fc-wrapper .fc {
           height: 100%;
@@ -233,7 +233,8 @@ export default function WorkLogCalendar({
         dayCellClassNames={dayCellClassNames}
         eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
         dayMaxEvents={4}
-        height="100%"
+        height="auto"
+        contentHeight="auto"
         firstDay={0}
         nowIndicator
         selectable={false}
