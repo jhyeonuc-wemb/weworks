@@ -438,21 +438,14 @@ export default function VrbReviewListPage() {
                     <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
                       <div className="flex items-center justify-center shrink-0">
                         {review.review_result === "PROCEED" ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 text-emerald-700 border border-emerald-200/50 shadow-[0_2px_10px_-4px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.4)]">
-                            <div className="relative flex h-5 w-5 items-center justify-center">
-                              <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
-                              <div className="relative flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100">
-                                <CheckCircle2 className="h-2.5 w-2.5" strokeWidth={4} />
-                              </div>
-                            </div>
-                            <span className="text-[11px] font-black tracking-tight leading-none">진행</span>
+                          <div className="inline-flex items-center gap-1.5 text-emerald-600">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="text-sm font-bold tracking-tight">진행</span>
                           </div>
                         ) : review.review_result === "STOP" ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/50 shadow-[0_2px_10px_-4px_rgba(244,63,94,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(244,63,94,0.4)]">
-                            <div className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm ring-2 ring-rose-100">
-                              <XCircle className="h-2.5 w-2.5" strokeWidth={4} />
-                            </div>
-                            <span className="text-[11px] font-black tracking-tight leading-none">미진행</span>
+                          <div className="inline-flex items-center gap-1.5 text-rose-600">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm font-bold tracking-tight">미진행</span>
                           </div>
                         ) : (
                           <div className="w-8 h-[1px] bg-slate-200" />
