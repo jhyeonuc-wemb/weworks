@@ -144,6 +144,7 @@ export default function WorkLogCalendar({
         .fc-wrapper .fc {
           height: 100%;
           font-family: inherit;
+          font-size: 14px;
         }
         .fc-wrapper .fc-toolbar-title {
           font-size: 1.1rem;
@@ -153,10 +154,10 @@ export default function WorkLogCalendar({
           background: #f1f5f9;
           border: 1px solid #e2e8f0;
           color: #475569;
-          font-size: 0.8rem;
-          font-weight: 600;
+          font-size: 14px;
+          font-weight: 500;
           border-radius: 8px;
-          padding: 4px 10px;
+          padding: 4px 12px;
           box-shadow: none;
         }
         .fc-wrapper .fc-button:hover {
@@ -181,8 +182,8 @@ export default function WorkLogCalendar({
           background-color: #eff6ff !important;
         }
         .fc-wrapper .fc-daygrid-day-number {
-          font-size: 0.8rem;
-          font-weight: 600;
+          font-size: 14px;
+          font-weight: 500;
           padding: 4px 6px;
           color: #374151;
         }
@@ -195,8 +196,8 @@ export default function WorkLogCalendar({
           color: #3b82f6;
         }
         .fc-wrapper .fc-col-header-cell-cushion {
-          font-size: 0.8rem;
-          font-weight: 700;
+          font-size: 14px;
+          font-weight: 500;
           padding: 8px 4px;
           color: #6b7280;
         }
@@ -208,7 +209,7 @@ export default function WorkLogCalendar({
           opacity: 0.85;
         }
         .fc-wrapper .fc-daygrid-event-harness {
-          margin-bottom: 1px;
+          margin-bottom: 2px;
         }
         .fc-wrapper .fc-theme-standard .fc-scrollgrid {
           border-radius: 12px;
@@ -228,6 +229,11 @@ export default function WorkLogCalendar({
         }
         .fc-wrapper .fc-day-holiday.fc-daygrid-day {
           background-color: #fff5f580 !important;
+        }
+        .fc-wrapper .fc-timegrid-slot-label-cushion {
+          font-size: 14px;
+          font-weight: 500;
+          color: #6b7280;
         }
         .fc-wrapper .fc-timegrid-slot {
           height: 40px;
