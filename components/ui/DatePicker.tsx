@@ -124,7 +124,8 @@ export function DatePicker({
     disabled,
     dateFormat = "yyyy-MM-dd",
     mode = "date",
-}: DatePickerProps & { dateFormat?: string; buttonClassName?: string }) {
+    customDisplay,
+}: DatePickerProps & { dateFormat?: string; buttonClassName?: string; customDisplay?: string }) {
     const [open, setOpen] = React.useState(false)
 
     return (
@@ -145,7 +146,7 @@ export function DatePicker({
                         {!disabled && <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />}
                         {date ? (
                             <span className={cn(disabled ? "text-gray-900" : "text-foreground")}>
-                                {format(date!, dateFormat)}
+                                {customDisplay || format(date!, dateFormat)}
                             </span>
                         ) : (
                             <span className="text-gray-400">{placeholder}</span>

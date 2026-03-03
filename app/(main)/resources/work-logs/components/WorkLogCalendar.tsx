@@ -69,6 +69,7 @@ export default function WorkLogCalendar({
 }: WorkLogCalendarProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<string>("dayGridMonth");
+  const [currentTitle, setCurrentTitle] = useState<string>("");
 
   const events = logs.map((log) => {
     const color = CATEGORY_BG[log.category] || DEFAULT_COLOR;
@@ -120,6 +121,7 @@ export default function WorkLogCalendar({
   const handleDatesSetInternal = (info: any) => {
     setCurrentDate(info.view.currentStart);
     setCurrentView(info.view.type);
+    setCurrentTitle(info.view.title); // FullCalendar에서 만든 "2026년 3월 1일 ~ 7일" 등
     if (onDatesSet) onDatesSet(info);
   };
 
@@ -137,6 +139,7 @@ export default function WorkLogCalendar({
             calendarRef.current.getApi().gotoDate(d);
           }}
           dateFormat={isMonthView || isWeekView ? "yyyy년 M월" : "yyyy년 M월 d일"}
+          customDisplay={isWeekView ? currentTitle : undefined}
           buttonClassName="border-none shadow-none text-[1.1rem] font-bold text-gray-800 hover:bg-slate-100 bg-transparent h-9 px-2 min-w-[140px] flex justify-center"
         />
       </div>
