@@ -128,17 +128,6 @@ export default function WorkLogsPage() {
                     </p>
                 </div>
                 <div className="h-10 flex items-center gap-2">
-                    {/* 범례 */}
-                    <div className="flex items-center gap-3 mr-2">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                            <span className="text-xs text-gray-500">실행</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-                            <span className="text-xs text-gray-500">계획</span>
-                        </div>
-                    </div>
                     <Button
                         variant="primary"
                         onClick={() => {

@@ -131,6 +131,16 @@ export default function WorkLogCalendar({
 
   return (
     <div className="fc-wrapper relative">
+      <div className="absolute top-[5px] left-[80px] flex items-center gap-3 z-10">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+          <span className="text-[13px] font-medium text-gray-500">실행</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+          <span className="text-[13px] font-medium text-gray-500">계획</span>
+        </div>
+      </div>
       <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-auto flex items-center justify-center whitespace-nowrap gap-1">
         <button
           type="button"
