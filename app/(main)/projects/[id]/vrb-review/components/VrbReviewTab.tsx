@@ -1359,6 +1359,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
       complete: async () => {
         await handleSave();
         await handleStatusChange('COMPLETED');
+        // ✅ page.tsx의 onStatusChange → onCompleteSuccess() 호출하여 phase_progress 업데이트
+        onStatusChange?.('COMPLETED', currentVrbId, vrbData.reviewResult);
       },
     }));
 
@@ -2319,11 +2321,11 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
-                                onTabChange?.("development");
+                                onTabChange?.("md-estimation");
                               }}
                               className="text-sm font-medium underline hover:text-amber-700"
                             >
-                              개발 탭으로 이동
+                              M/D 산정 탭으로 이동
                             </button>
                           </div>
                         )}

@@ -34,7 +34,7 @@ interface ExtraItem {
 
 // ── 공통 열 너비 (모든 테이블 동일 적용) ─────────────────────────────────────
 // col1 = No / 선택  col2 = 분류 / 항목명(weight)
-const COL1_W = "44px";
+const COL1_W = "56px";
 const COL2_W = "130px";
 
 // ── 수량 입력 ─────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ function WeightSelector({ weightCategory, selectedWeightId, onSelect, disabled }
                     </colgroup>
                     <thead>
                         <tr className="h-[35px] bg-slate-50">
-                            <th className="border border-gray-200 px-3 text-center text-sm font-bold text-gray-700">선택</th>
+                            <th className="border border-gray-200 px-3 text-center text-sm font-bold text-gray-700 whitespace-nowrap">선택</th>
                             <th className="border border-gray-200 px-3 text-left text-sm font-bold text-gray-700">항목명</th>
                             <th className="border border-gray-200 px-3 text-left text-sm font-bold text-gray-700">설명</th>
                             <th className="border border-gray-200 px-3 text-center text-sm font-bold text-gray-700">가중치</th>
@@ -334,8 +334,9 @@ export default function MdEstimationTab({ projectId, vrbStatus }: { projectId: s
     const [allCategories, setAllCategories] = useState<MdCategory[]>([]);
     const [quantities, setQuantities] = useState<QuantityMap>({});
     const [selectedWeightIds, setSelectedWeightIds] = useState<Record<string, number | null>>({});
-    const [extraItems, setExtraItems] = useState<ExtraItem[]>([]);
-    const [extraQuantities, setExtraQuantities] = useState<Record<number, number>>({});
+    // 카테고리별 추가 항목 맵 (key: categoryCode)
+    const [extraItemsMap, setExtraItemsMap] = useState<Record<string, ExtraItem[]>>({});
+    const [extraQuantitiesMap, setExtraQuantitiesMap] = useState<Record<string, Record<number, number>>>();
     const [vrbId, setVrbId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -438,22 +439,20 @@ export default function MdEstimationTab({ projectId, vrbStatus }: { projectId: s
                     setQuantities(qtyMap);
                     setSelectedWeightIds(weightMap);
 
-                    // 추가 항목 복원
+                    // 추가 항목 복원 (카테고리별)
                     if (qtyData.extraItems?.length > 0) {
                         let tempIdCounter = Date.now();
-                        const restoredExtras: ExtraItem[] = qtyData.extraItems.map((e: any) => ({
-                            tempId: tempIdCounter++,
-                            id: e.id,
-                            classification: e.classification || "",
-                            content: e.content || "",
-                            standardMd: e.standardMd || 0,
-                        }));
-                        const restoredQty: Record<number, number> = {};
-                        restoredExtras.forEach((item, idx) => {
-                            restoredQty[item.tempId] = qtyData.extraItems[idx].quantity || 0;
+                        const newItemsMap: Record<string, ExtraItem[]> = {};
+                        const newQtyMap: Record<string, Record<number, number>> = {};
+                        qtyData.extraItems.forEach((e: any) => {
+                            const catCode = e.categoryCode || 'development';
+                            if (!newItemsMap[catCode]) { newItemsMap[catCode] = []; newQtyMap[catCode] = {}; }
+                            const tempId = tempIdCounter++;
+                            newItemsMap[catCode].push({ tempId, id: e.id, classification: e.classification || '', content: e.content || '', standardMd: e.standardMd || 0 });
+                            newQtyMap[catCode][tempId] = e.quantity || 0;
                         });
-                        setExtraItems(restoredExtras);
-                        setExtraQuantities(restoredQty);
+                        setExtraItemsMap(newItemsMap);
+                        setExtraQuantitiesMap(newQtyMap);
                     }
                 }
 
@@ -501,24 +500,25 @@ export default function MdEstimationTab({ projectId, vrbStatus }: { projectId: s
     const handleWeightSelect = useCallback((catCode: string, weightItemId: number) => {
         setSelectedWeightIds((prev) => ({ ...prev, [catCode]: prev[catCode] === weightItemId ? null : weightItemId }));
     }, []);
-    const handleAddExtra = useCallback(() => {
-        setExtraItems((prev) => [...prev, { tempId: Date.now(), classification: "", content: "", standardMd: 0 }]);
+    const handleAddExtra = useCallback((catCode: string) => {
+        setExtraItemsMap((prev) => ({ ...prev, [catCode]: [...(prev[catCode] || []), { tempId: Date.now(), classification: '', content: '', standardMd: 0 }] }));
     }, []);
-    const handleUpdateExtra = useCallback((tempId: number, field: keyof ExtraItem, value: string | number) => {
-        setExtraItems((prev) => prev.map((i) => i.tempId === tempId ? { ...i, [field]: value } : i));
+    const handleUpdateExtra = useCallback((catCode: string, tempId: number, field: keyof ExtraItem, value: string | number) => {
+        setExtraItemsMap((prev) => ({ ...prev, [catCode]: (prev[catCode] || []).map((i) => i.tempId === tempId ? { ...i, [field]: value } : i) }));
     }, []);
-    const handleDeleteExtra = useCallback((tempId: number) => {
-        setExtraItems((prev) => prev.filter((i) => i.tempId !== tempId));
-        setExtraQuantities((prev) => { const next = { ...prev }; delete next[tempId]; return next; });
+    const handleDeleteExtra = useCallback((catCode: string, tempId: number) => {
+        setExtraItemsMap((prev) => ({ ...prev, [catCode]: (prev[catCode] || []).filter((i) => i.tempId !== tempId) }));
+        setExtraQuantitiesMap((prev) => { const next = { ...prev, [catCode]: { ...(prev?.[catCode] || {}) } }; delete next[catCode][tempId]; return next; });
     }, []);
-    const handleExtraQtyChange = useCallback((tempId: number, qty: number) => {
-        setExtraQuantities((prev) => ({ ...prev, [tempId]: qty }));
+    const handleExtraQtyChange = useCallback((catCode: string, tempId: number, qty: number) => {
+        setExtraQuantitiesMap((prev) => ({ ...prev, [catCode]: { ...(prev?.[catCode] || {}), [tempId]: qty } }));
     }, []);
 
     const getCategoryFinalMd = (cat: MdCategory): number => {
         const calcMd = cat.items.reduce((s, item) => s + (quantities[item.id] || 0) * item.standardMd, 0);
-        const extraCalcMd = cat.code === "development"
-            ? extraItems.reduce((s, item) => s + (extraQuantities[item.tempId] || 0) * item.standardMd, 0) : 0;
+        const catExtras = extraItemsMap[cat.code] || [];
+        const catExtraQtys = extraQuantitiesMap?.[cat.code] || {};
+        const extraCalcMd = catExtras.reduce((s, item) => s + (catExtraQtys[item.tempId] || 0) * item.standardMd, 0);
         const total = calcMd + extraCalcMd;
         const weightCat = weightCategoryMap[cat.code];
         if (!weightCat) return total;
@@ -571,13 +571,16 @@ export default function MdEstimationTab({ projectId, vrbStatus }: { projectId: s
                         categoryName: weightCat.name,
                     }];
                 });
-            const extraPayload = extraItems.map((item) => ({
-                classification: item.classification,
-                content: item.content,
-                standardMd: item.standardMd,
-                quantity: extraQuantities[item.tempId] || 0,
-                calculatedMd: (extraQuantities[item.tempId] || 0) * item.standardMd,
-            }));
+            const extraPayload = Object.entries(extraItemsMap).flatMap(([catCode, items]) =>
+                items.map((item) => ({
+                    categoryCode: catCode,
+                    classification: item.classification,
+                    content: item.content,
+                    standardMd: item.standardMd,
+                    quantity: extraQuantitiesMap?.[catCode]?.[item.tempId] || 0,
+                    calculatedMd: (extraQuantitiesMap?.[catCode]?.[item.tempId] || 0) * item.standardMd,
+                }))
+            );
 
             const res = await fetch(`/api/vrb-reviews/${vrbId}/md-estimation`, {
                 method: "PUT", headers: { "Content-Type": "application/json" },
@@ -655,25 +658,22 @@ export default function MdEstimationTab({ projectId, vrbStatus }: { projectId: s
             </div>
 
             <div className="space-y-3">
-                {regularCategories.map((cat) => {
-                    const isDev = cat.code === "development";
-                    return (
-                        <CategoryAccordion key={cat.code} category={cat}
-                            quantities={quantities} onQuantityChange={handleQuantityChange}
-                            isOpen={openCategoryIds.includes(cat.code)} onToggle={() => handleCategoryToggle(cat.code)}
-                            disabled={isCompleted}
-                            weightCategory={weightCategoryMap[cat.code] ?? null}
-                            selectedWeightId={selectedWeightIds[cat.code] ?? null}
-                            onWeightSelect={(id) => handleWeightSelect(cat.code, id)}
-                            extraItems={isDev ? extraItems : undefined}
-                            extraQuantities={isDev ? extraQuantities : undefined}
-                            onAddExtra={isDev ? handleAddExtra : undefined}
-                            onUpdateExtra={isDev ? handleUpdateExtra : undefined}
-                            onDeleteExtra={isDev ? handleDeleteExtra : undefined}
-                            onExtraQtyChange={isDev ? handleExtraQtyChange : undefined}
-                        />
-                    );
-                })}
+                {regularCategories.map((cat) => (
+                    <CategoryAccordion key={cat.code} category={cat}
+                        quantities={quantities} onQuantityChange={handleQuantityChange}
+                        isOpen={openCategoryIds.includes(cat.code)} onToggle={() => handleCategoryToggle(cat.code)}
+                        disabled={isCompleted}
+                        weightCategory={weightCategoryMap[cat.code] ?? null}
+                        selectedWeightId={selectedWeightIds[cat.code] ?? null}
+                        onWeightSelect={(id) => handleWeightSelect(cat.code, id)}
+                        extraItems={extraItemsMap[cat.code] || []}
+                        extraQuantities={extraQuantitiesMap?.[cat.code] || {}}
+                        onAddExtra={() => handleAddExtra(cat.code)}
+                        onUpdateExtra={(tempId, field, value) => handleUpdateExtra(cat.code, tempId, field, value)}
+                        onDeleteExtra={(tempId) => handleDeleteExtra(cat.code, tempId)}
+                        onExtraQtyChange={(tempId, qty) => handleExtraQtyChange(cat.code, tempId, qty)}
+                    />
+                ))}
             </div>
         </div>
     );

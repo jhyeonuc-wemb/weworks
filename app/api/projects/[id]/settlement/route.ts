@@ -309,18 +309,7 @@ export async function PUT(
 
         const updatedSettlement = settlementResult.rows[0];
 
-        // 정산서가 완료되면 프로젝트 상태도 업데이트
-        if (updatedSettlement.status === 'COMPLETED') {
-            try {
-                console.log(`Settlement COMPLETED. Updating project ${projectId} status to completed`);
-                await query(
-                    "UPDATE we_projects SET status = 'completed', current_phase = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-                    [projectId]
-                );
-            } catch (err) {
-                console.error(`Failed to update project status for ${projectId}:`, err);
-            }
-        }
+        // ✅ 완료 처리는 advance-phase API가 담당 (we_project_phase_progress 단일 소스)
 
         // 기존 데이터 삭제
         await query(`DELETE FROM we_project_settlement_labor WHERE settlement_id = $1`, [settlement.id]);

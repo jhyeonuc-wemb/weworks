@@ -1399,7 +1399,7 @@ export default function ProjectSettlementPage() {
                 <span className="text-blue-600">수지정산서</span> - {projectName}
               </h1>
               <StatusBadge
-                status={settlement.status || 'STANDBY'}
+                status={phaseStatus}
                 className="h-9"
               />
               <ProjectPhaseNav projectId={projectId} />

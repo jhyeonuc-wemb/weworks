@@ -127,9 +127,29 @@ export async function DELETE(
   try {
     const { id } = await params;
 
+    // 연관 데이터 먼저 삭제 (FK 제약 순서대로)
+    const relatedTables = [
+      'we_work_logs',
+      'we_project_profitability_extra_revenue',
+      'we_project_profitability_standard_expenses',
+      'we_project_order_proposal',
+      'we_project_expense_plan',
+      'we_project_manpower_plan',
+      'we_project_product_plan',
+      'we_project_profitability',
+      'we_project_settlement',
+      'we_project_vrb_reviews',
+      'we_project_md_estimations',
+      'we_project_monitoring',
+      'we_project_phase_progress',
+    ];
+
+    for (const table of relatedTables) {
+      await query(`DELETE FROM ${table} WHERE project_id = $1`, [id]);
+    }
+
     // 프로젝트 삭제
-    const sql = `DELETE FROM we_projects WHERE id = $1 RETURNING id`;
-    const result = await query(sql, [id]);
+    const result = await query(`DELETE FROM we_projects WHERE id = $1 RETURNING id`, [id]);
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -144,3 +164,4 @@ export async function DELETE(
     );
   }
 }
+

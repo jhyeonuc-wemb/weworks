@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
         p.id,
         p.project_id,
         p.version,
-        p.status,
+        -- ✅ 단일 소스: phase_progress.status만 사용 (we_project_profitability.status 사용 안 함)
+        COALESCE(pp.status, 'STANDBY') AS status,
         p.version_comment,
         COALESCE(p.total_revenue, 0) as total_revenue,
         COALESCE(p.total_cost, 0) as total_cost,
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN we_projects pr ON p.project_id = pr.id
       LEFT JOIN we_clients c ON pr.customer_id = c.id
       LEFT JOIN we_users u ON p.created_by = u.id
+      LEFT JOIN we_project_phase_progress pp ON pp.project_id = p.project_id AND pp.phase_code = 'profitability'
       LEFT JOIN (
         SELECT 
           profitability_id,
@@ -50,12 +52,12 @@ export async function GET(request: NextRequest) {
       sql += ` AND p.project_id = $${params.length + 1}`;
       params.push(parseInt(projectId, 10));
     } else {
-      // 전체 목록 조회 시 작업이 시작되지 않은(Placeholder) 자료는 제외
-      sql += ` AND p.status != 'STANDBY'`;
+      // 전체 목록 조회 시 아직 시작 안 한 항목 제외 (phase_progress 기준)
+      sql += ` AND COALESCE(pp.status, 'STANDBY') != 'STANDBY'`;
     }
 
     if (status) {
-      sql += ` AND p.status = $${params.length + 1}`;
+      sql += ` AND COALESCE(pp.status, 'STANDBY') = $${params.length + 1}`;
       params.push(status);
     }
 

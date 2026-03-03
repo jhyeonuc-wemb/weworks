@@ -112,7 +112,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                             onChange={(e) => selectProduct(item.id, e.target.value)}
                                             disabled={isReadOnly}
                                             className="w-full h-[35px] border-none px-[10px] text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
-                                            placeholder="제품명"
+                                            placeholder=""
                                         />
                                         <datalist id={`products-${item.id}`}>
                                             {masterItems.map((p) => (
@@ -243,31 +243,15 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                         </tr>
                     );
                 })}
-                {/* Add Row Button Row */}
-                {!isReadOnly && (
-                    <tr className="h-[35px]">
-                        {groupItems.length === 0 && (
-                            <td rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white">
-                                {typeLabel}
-                            </td>
-                        )}
-                        <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={2}>
-                            <button
-                                type="button"
-                                onClick={() => addRow(typeLabel.includes("자사") ? "자사" : "타사")}
-                                className="w-full h-full flex items-center justify-center gap-1.5 text-sm font-medium transition-colors rounded-none border-none outline-none focus:outline-none bg-blue-50 text-blue-700 hover:bg-blue-100"
-                            >
-                                <Plus className="h-4 w-4" />
-                                {typeLabel} 추가
-                            </button>
-                        </td>
-                        <td colSpan={13} className="border border-gray-300 bg-white"></td>
-                    </tr>
-                )}
                 {/* Group Subtotal */}
                 <tr className="bg-gray-50 h-[35px]">
                     {groupItems.length === 0 && isReadOnly && (
                         <td className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white">
+                            {typeLabel}
+                        </td>
+                    )}
+                    {groupItems.length === 0 && !isReadOnly && (
+                        <td rowSpan={2} className="border border-gray-300 px-[10px] text-center text-sm font-medium text-gray-900 bg-white">
                             {typeLabel}
                         </td>
                     )}
@@ -311,6 +295,22 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                             : "-"}
                     </td>
                 </tr>
+                {/* Add Row Button Row */}
+                {!isReadOnly && (
+                    <tr className="h-[35px]">
+                        <td className="border border-gray-300 p-0 bg-white h-[35px]" colSpan={2}>
+                            <button
+                                type="button"
+                                onClick={() => addRow(typeLabel.includes("자사") ? "자사" : "타사")}
+                                className="w-full h-full flex items-center justify-center gap-1.5 text-sm font-medium transition-colors rounded-none border-none outline-none focus:outline-none bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            >
+                                <Plus className="h-4 w-4" />
+                                {typeLabel} 추가
+                            </button>
+                        </td>
+                        <td colSpan={13} className="border border-gray-300 bg-white"></td>
+                    </tr>
+                )}
             </>
         );
     };

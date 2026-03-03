@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
         v.id,
         v.project_id,
         v.version,
-        v.status,
+        -- ✅ 단일 소스: phase_progress.status만 사용 (we_project_vrb_reviews.status 사용 안 함)
+        COALESCE(pp.status, 'STANDBY') AS status,
         v.project_budget,
         v.win_probability,
         v.win_date,
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
       FROM we_project_vrb_reviews v
       LEFT JOIN we_projects p ON v.project_id = p.id
       LEFT JOIN we_clients c ON p.customer_id = c.id
+      LEFT JOIN we_project_phase_progress pp ON pp.project_id = v.project_id AND pp.phase_code = 'vrb'
       WHERE 1=1
     `;
     const params: any[] = [];
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      sql += ` AND v.status = $${params.length + 1}`;
+      sql += ` AND pp.status = $${params.length + 1}`;
       params.push(status);
     }
 

@@ -323,9 +323,26 @@ export default function ProfitabilityPage({
   const executeStatusChange = async (newStatus: string) => {
     try {
       if (newStatus === finalStatus) {
-        // ✅ 마지막 상태 = 완료: advance-phase API (onCompleteSuccess)
+        // ✅ 1. we_project_profitability.status → COMPLETED (배지 원천 데이터 갱신)
+        if (selectedVersionId) {
+          const patchRes = await fetch(`/api/profitability/${selectedVersionId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "COMPLETED",
+              written_date: new Date().toISOString().slice(0, 10),
+            }),
+          });
+          if (!patchRes.ok) {
+            showAlert("상태 변경에 실패했습니다.", "error");
+            return;
+          }
+        }
+        // ✅ 2. phase_progress 완료 + 다음 단계 전환
         showAlert("수지분석서 작성이 완료되었습니다.", "success");
         await onCompleteSuccess();
+        // ✅ 3. versions 목록 재로드 → currentVersionStatus 갱신 → 배지 업데이트
+        await refreshStatus(selectedVersionId);
       } else {
         // ✅ 중간 상태 변경: phase-progress PATCH
         const res = await fetch(`/api/projects/${id}/phase-progress`, {

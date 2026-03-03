@@ -229,7 +229,7 @@ export default function ProjectDetailPage({
   // 삭제 처리
   const handleDelete = async () => {
     showAlert(
-      "정말 이 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "정말 이 프로젝트를 삭제하시겠습니까?\n\n수지분석서, VRB 심의, 수지정산서, 업무일지, 인력계획 등 프로젝트와 연관된 모든 데이터가 함께 삭제되며, 이 작업은 되돌릴 수 없습니다.",
       "confirm",
       "프로젝트 삭제",
       async () => {
