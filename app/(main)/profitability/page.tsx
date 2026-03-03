@@ -6,7 +6,7 @@ import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight } from "lucide-reac
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
 
 interface Project {
     id: number;
@@ -164,11 +164,11 @@ export default function ProfitabilityListPage() {
     const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
     useEffect(() => {
-        fetch(`/api/codes?parentCode=PROFITABILITY`)
+        fetch(`/api/settings/phase-statuses?phaseCode=profitability`)
             .then(res => res.json())
             .then(data => {
-                if (data.codes && data.codes.length > 0) {
-                    const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+                if (data.statuses && data.statuses.length > 0) {
+                    const opts = data.statuses.map((s: any) => ({ value: s.code, label: s.name }));
                     setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
                 }
             })
@@ -221,21 +221,7 @@ export default function ProfitabilityListPage() {
             label: `${p.projectCode || "N/A"}_${p.name}`,
         }));
 
-    const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
-        if (status === "COMPLETED") return "success";
-        if (status === "IN_PROGRESS") return "warning";
-        if (status === "STANDBY") return "info";
-        return "default";
-    };
 
-    const getStatusLabel = (status: string): string => {
-        const labels: Record<string, string> = {
-            STANDBY: "대기",
-            IN_PROGRESS: "작성 중",
-            COMPLETED: "완료",
-        };
-        return labels[status] || status;
-    };
 
     return (
         <div className="space-y-8 max-w-[1920px]">
@@ -398,9 +384,7 @@ export default function ProfitabilityListPage() {
                                             </span>
                                         </TableCell>
                                         <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <Badge variant={getStatusVariant(p.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                                                {getStatusLabel(p.status)}
-                                            </Badge>
+                                            <StatusBadge status={p.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                                         </TableCell>
                                     </TableRow>
                                 ))

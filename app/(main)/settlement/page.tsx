@@ -6,7 +6,7 @@ import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, LineChart } from "
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
 
 interface Settlement {
   id: number;
@@ -169,11 +169,11 @@ export default function SettlementListPage() {
   const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
   useEffect(() => {
-    fetch(`/api/codes?parentCode=SETTLEMENT`)
+    fetch(`/api/settings/phase-statuses?phaseCode=settlement`)
       .then(res => res.json())
       .then(data => {
-        if (data.codes && data.codes.length > 0) {
-          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+        if (data.statuses && data.statuses.length > 0) {
+          const opts = data.statuses.map((s: any) => ({ value: s.code, label: s.name }));
           setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
         }
       })
@@ -226,22 +226,7 @@ export default function SettlementListPage() {
       label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
-  const getStatusVariant = (status: string): "success" | "warning" | "error" | "default" => {
-    if (status === "approved") return "success";
-    if (status === "pending") return "warning";
-    if (status === "rejected") return "error";
-    return "default";
-  };
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      draft: "초안",
-      pending: "검토 중",
-      approved: "승인",
-      rejected: "반려",
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="space-y-8 max-w-[1920px]">
@@ -373,7 +358,7 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-foreground/40 font-mono italic">
+                        <span className="text-sm text-foreground/40 font-mono">
                           {formatCurrency(s.planned_revenue * 1000, "KRW", false)}
                         </span>
                       </TableCell>
@@ -383,7 +368,7 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-foreground/40 font-mono italic">
+                        <span className="text-sm text-foreground/40 font-mono">
                           {formatCurrency(s.planned_profit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
@@ -394,16 +379,14 @@ export default function SettlementListPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
-                          "text-xs font-bold font-mono px-2 py-1 rounded-md",
-                          s.profit_diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                          "text-sm font-mono",
+                          s.profit_diff >= 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                           {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW", false)}
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                        <Badge variant={s.status === "COMPLETED" ? "success" : s.status === "IN_PROGRESS" ? "warning" : "info"} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                          {s.status === "COMPLETED" ? "완료" : s.status === "IN_PROGRESS" ? "작성중" : "대기"}
-                        </Badge>
+                        <StatusBadge status={s.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                       </TableCell>
                     </TableRow>
                   );

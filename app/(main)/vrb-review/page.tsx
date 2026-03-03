@@ -6,7 +6,7 @@ import { Plus, FolderOpen, Trash2, ChevronLeft, ChevronRight, FileText, HelpCirc
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
-import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
 
 interface Project {
   id: number;
@@ -198,11 +198,11 @@ export default function VrbReviewListPage() {
   const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
   useEffect(() => {
-    fetch(`/api/codes?parentCode=VRB`)
+    fetch(`/api/settings/phase-statuses?phaseCode=vrb`)
       .then(res => res.json())
       .then(data => {
-        if (data.codes && data.codes.length > 0) {
-          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+        if (data.statuses && data.statuses.length > 0) {
+          const opts = data.statuses.map((s: any) => ({ value: s.code, label: s.name }));
           setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
         }
       })
@@ -255,21 +255,7 @@ export default function VrbReviewListPage() {
       label: `${p.projectCode || "N/A"}_${p.name}`,
     }));
 
-  const getStatusVariant = (status: string): "success" | "warning" | "info" | "default" => {
-    if (status === "COMPLETED") return "success";
-    if (status === "IN_PROGRESS") return "warning";
-    if (status === "STANDBY") return "info";
-    return "default";
-  };
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      STANDBY: "대기",
-      IN_PROGRESS: "작성 중",
-      COMPLETED: "완료",
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="space-y-8 max-w-[1920px]">
@@ -438,21 +424,14 @@ export default function VrbReviewListPage() {
                     <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
                       <div className="flex items-center justify-center shrink-0">
                         {review.review_result === "PROCEED" ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 text-emerald-700 border border-emerald-200/50 shadow-[0_2px_10px_-4px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.4)]">
-                            <div className="relative flex h-5 w-5 items-center justify-center">
-                              <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping" />
-                              <div className="relative flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100">
-                                <CheckCircle2 className="h-2.5 w-2.5" strokeWidth={4} />
-                              </div>
-                            </div>
-                            <span className="text-[11px] font-black tracking-tight leading-none">진행</span>
+                          <div className="inline-flex items-center gap-1.5 text-emerald-600">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="text-sm font-bold tracking-tight">진행</span>
                           </div>
                         ) : review.review_result === "STOP" ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/50 shadow-[0_2px_10px_-4px_rgba(244,63,94,0.3)] backdrop-blur-sm transition-all group-hover:scale-105 group-hover:shadow-[0_4px_12px_-2px_rgba(244,63,94,0.4)]">
-                            <div className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm ring-2 ring-rose-100">
-                              <XCircle className="h-2.5 w-2.5" strokeWidth={4} />
-                            </div>
-                            <span className="text-[11px] font-black tracking-tight leading-none">미진행</span>
+                          <div className="inline-flex items-center gap-1.5 text-rose-600">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm font-bold tracking-tight">미진행</span>
                           </div>
                         ) : (
                           <div className="w-8 h-[1px] bg-slate-200" />
@@ -493,9 +472,7 @@ export default function VrbReviewListPage() {
                     </TableCell>
 
                     <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                      <Badge variant={getStatusVariant(review.status)} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none">
-                        {getStatusLabel(review.status)}
-                      </Badge>
+                      <StatusBadge status={review.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
                     </TableCell>
                   </TableRow>
                 ))
