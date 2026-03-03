@@ -61,11 +61,18 @@ export async function GET(
             [settlement.id]
         );
 
+        // 경비 상세 데이터 조회
+        const expensesResult = await query(
+            `SELECT * FROM we_project_settlement_expenses WHERE settlement_id = $1 ORDER BY display_order, id`,
+            [settlement.id]
+        );
+
         return NextResponse.json({
             settlement,
             labor: laborResult.rows,
             extCompanies: extCompaniesResult.rows,
             products: productsResult.rows,
+            expenses: expensesResult.rows,
         });
     } catch (error) {
 
@@ -224,6 +231,30 @@ export async function POST(
             }
         }
 
+        // 경비 상세 데이터 생성
+        const expenses = body.expenses;
+        if (expenses && expenses.length > 0) {
+            for (let i = 0; i < expenses.length; i++) {
+                const item = expenses[i];
+                await query(
+                    `INSERT INTO we_project_settlement_expenses (
+                        settlement_id, item_name, plan_standard, plan_latest,
+                        exec_total, sell_admin, cost, display_order
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [
+                        newSettlement.id,
+                        item.item,
+                        item.planStandard || 0,
+                        item.planLatest || 0,
+                        item.execTotal || 0,
+                        item.sellAdmin || 0,
+                        item.cost || 0,
+                        i
+                    ]
+                );
+            }
+        }
+
 
         return NextResponse.json({ settlement: newSettlement });
     } catch (error) {
@@ -315,6 +346,7 @@ export async function PUT(
         await query(`DELETE FROM we_project_settlement_labor WHERE settlement_id = $1`, [settlement.id]);
         await query(`DELETE FROM we_project_settlement_ext_company WHERE settlement_id = $1`, [settlement.id]);
         await query(`DELETE FROM we_project_settlement_products WHERE settlement_id = $1`, [settlement.id]);
+        await query(`DELETE FROM we_project_settlement_expenses WHERE settlement_id = $1`, [settlement.id]);
 
 
         // 인력 데이터 재생성
@@ -393,6 +425,30 @@ export async function PUT(
                         item.plannedCostPrice || item.costPrice,
                         item.actualProposalPrice,
                         item.actualCostPrice,
+                        i
+                    ]
+                );
+            }
+        }
+
+        // 경비 상세 데이터 재생성
+        const expenses = body.expenses;
+        if (expenses && expenses.length > 0) {
+            for (let i = 0; i < expenses.length; i++) {
+                const item = expenses[i];
+                await query(
+                    `INSERT INTO we_project_settlement_expenses (
+                        settlement_id, item_name, plan_standard, plan_latest,
+                        exec_total, sell_admin, cost, display_order
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [
+                        settlement.id,
+                        item.item,
+                        item.planStandard || 0,
+                        item.planLatest || 0,
+                        item.execTotal || 0,
+                        item.sellAdmin || 0,
+                        item.cost || 0,
                         i
                     ]
                 );

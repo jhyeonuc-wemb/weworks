@@ -553,6 +553,18 @@ export default function ProjectSettlementPage() {
             planned_svc_mm_own: Number(s.planned_svc_mm_own || 0),
             planned_svc_mm_ext: Number(s.planned_svc_mm_ext || 0),
           });
+
+          if (data.expenses && data.expenses.length > 0) {
+            setExpenseDetails(data.expenses.map((e: any) => ({
+              item: e.item_name,
+              planStandard: Number(e.plan_standard || 0),
+              planLatest: Number(e.plan_latest || 0),
+              execTotal: Number(e.exec_total || 0),
+              sellAdmin: Number(e.sell_admin || 0),
+              cost: Number(e.cost || 0)
+            })));
+          }
+
           setLaborItems((data.labor || []).map((l: any) => ({
             ...l,
             planned_mm: Number(l.planned_mm || 0),
@@ -864,7 +876,8 @@ export default function ProjectSettlementPage() {
           },
           labor: laborToSave,
           extCompanies: extCompanyPlans,
-          products: productsToSave
+          products: productsToSave,
+          expenses: expenseDetails
         }),
       });
 
