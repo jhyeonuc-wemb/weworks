@@ -53,17 +53,20 @@ export function WorkLogPanel({
     const [categories, setCategories] = useState<Category[]>([]);
 
     const defaultForm = (): WorkLog => {
-        // 클릭한 시간을 30분 단위로 맞춤 (TIME_OPTIONS에 맞게)
-        const snapTime = (t?: string): string => {
-            if (!t) return "09:00";
+        const snapTime = (t: string): string => {
             const [h, m] = t.split(":").map(Number);
             const snapped = m < 30 ? 0 : 30;
             return `${String(h).padStart(2, "0")}:${String(snapped).padStart(2, "0")}`;
         };
-        const start = snapTime(initialTime);
-        // 종료시간: 시작 + 1시간 (단, 23:00 이상이면 그대로)
-        const endHour = parseInt(start.split(":")[0]) + 1;
-        const end = endHour >= 24 ? "23:30" : `${String(endHour).padStart(2, "0")}:${start.split(":")[1]}`;
+
+        let start = "09:00";
+        let end = "18:00";
+
+        if (initialTime) {
+            start = snapTime(initialTime);
+            const endHour = parseInt(start.split(":")[0]) + 1;
+            end = endHour >= 24 ? "23:30" : `${String(endHour).padStart(2, "0")}:${start.split(":")[1]}`;
+        }
         return {
             workDate: initialDate || new Date().toLocaleDateString("en-CA"),
             startTime: start,
