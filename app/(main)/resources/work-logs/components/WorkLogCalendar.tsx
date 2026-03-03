@@ -236,6 +236,7 @@ export default function WorkLogCalendar({
         height="auto"
         contentHeight="auto"
         firstDay={0}
+        fixedWeekCount={false}
         nowIndicator
         selectable={false}
         editable={false}
