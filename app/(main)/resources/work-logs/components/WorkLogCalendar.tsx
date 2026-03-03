@@ -130,7 +130,7 @@ export default function WorkLogCalendar({
     <div className="fc-wrapper relative">
       <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-[200px] flex justify-center">
         <DatePicker
-          mode="month"
+          mode={isMonthView || isWeekView ? "month" : "date"}
           date={currentDate}
           setDate={(d) => {
             if (!d || !calendarRef?.current) return;
