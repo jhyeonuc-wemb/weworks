@@ -160,7 +160,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     actualEndDate: project.actualEndDate || "",
                     currency: (project.currency || "KRW") as Currency,
                     expectedAmount: project.expectedAmount?.toString() || "",
-                    processStatus: project.processStatus?.toLowerCase() || "",
+                    processStatus: project.currentPhase || project.processStatus || "",
                     riskLevel: project.riskLevel || "",
                 });
 
