@@ -41,7 +41,11 @@ export async function GET(
 
         // 인력 데이터 조회
         const laborResult = await query(
-            `SELECT * FROM we_project_settlement_labor WHERE settlement_id = $1 ORDER BY display_order, id`,
+            `SELECT *, 
+                actual_monthly_allocation,
+                affiliation_group,
+                actual_internal_amount
+             FROM we_project_settlement_labor WHERE settlement_id = $1 ORDER BY display_order, id`,
             [settlement.id]
         );
 
@@ -51,12 +55,20 @@ export async function GET(
             [settlement.id]
         );
 
+        // 제품/상품 데이터 조회
+        const productsResult = await query(
+            `SELECT * FROM we_project_settlement_products WHERE settlement_id = $1 ORDER BY display_order, id`,
+            [settlement.id]
+        );
+
         return NextResponse.json({
             settlement,
             labor: laborResult.rows,
             extCompanies: extCompaniesResult.rows,
+            products: productsResult.rows,
         });
     } catch (error) {
+
         console.error("Error fetching settlement:", error);
         return NextResponse.json(
             { error: "Failed to fetch settlement" },
@@ -138,8 +150,8 @@ export async function POST(
                     `INSERT INTO we_project_settlement_labor (
                         settlement_id, user_id, user_name, role,
                         planned_mm, planned_cost, actual_mm, actual_cost,
-                        display_order
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                        display_order, actual_monthly_allocation, affiliation_group, actual_internal_amount
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                     [
                         newSettlement.id,
                         item.user_id,
@@ -150,10 +162,14 @@ export async function POST(
                         item.actual_mm,
                         item.actual_cost,
                         i,
+                        item.actual_monthly_allocation || {},
+                        item.affiliation_group,
+                        item.actual_internal_amount
                     ]
                 );
             }
         }
+
 
         // 외주 업체 데이터 생성
         if (extCompanies && extCompanies.length > 0) {
@@ -179,6 +195,35 @@ export async function POST(
                 );
             }
         }
+
+        // 제품/상품 데이터 생성
+        const products = body.products;
+        if (products && products.length > 0) {
+            for (let i = 0; i < products.length; i++) {
+                const item = products[i];
+                await query(
+                    `INSERT INTO we_project_settlement_products (
+                        settlement_id, product_plan_id, type, company_name, product_name,
+                        planned_proposal_price, planned_cost_price,
+                        actual_proposal_price, actual_cost_price,
+                        display_order
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                    [
+                        newSettlement.id,
+                        item.productPlanId || item.id,
+                        item.type,
+                        item.companyName,
+                        item.productName,
+                        item.plannedProposalPrice || item.proposalPrice,
+                        item.plannedCostPrice || item.costPrice,
+                        item.actualProposalPrice,
+                        item.actualCostPrice,
+                        i
+                    ]
+                );
+            }
+        }
+
 
         return NextResponse.json({ settlement: newSettlement });
     } catch (error) {
@@ -280,6 +325,8 @@ export async function PUT(
         // 기존 데이터 삭제
         await query(`DELETE FROM we_project_settlement_labor WHERE settlement_id = $1`, [settlement.id]);
         await query(`DELETE FROM we_project_settlement_ext_company WHERE settlement_id = $1`, [settlement.id]);
+        await query(`DELETE FROM we_project_settlement_products WHERE settlement_id = $1`, [settlement.id]);
+
 
         // 인력 데이터 재생성
         if (labor && labor.length > 0) {
@@ -289,8 +336,8 @@ export async function PUT(
                     `INSERT INTO we_project_settlement_labor (
                         settlement_id, user_id, user_name, role,
                         planned_mm, planned_cost, actual_mm, actual_cost,
-                        display_order
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                        display_order, actual_monthly_allocation, affiliation_group, actual_internal_amount
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                     [
                         settlement.id,
                         item.user_id,
@@ -301,10 +348,14 @@ export async function PUT(
                         item.actual_mm,
                         item.actual_cost,
                         i,
+                        item.actual_monthly_allocation || {},
+                        item.affiliation_group,
+                        item.actual_internal_amount
                     ]
                 );
             }
         }
+
 
         // 외주 업체 데이터 재생성
         if (extCompanies && extCompanies.length > 0) {
@@ -330,6 +381,35 @@ export async function PUT(
                 );
             }
         }
+
+        // 제품/상품 데이터 재생성
+        const products = body.products;
+        if (products && products.length > 0) {
+            for (let i = 0; i < products.length; i++) {
+                const item = products[i];
+                await query(
+                    `INSERT INTO we_project_settlement_products (
+                        settlement_id, product_plan_id, type, company_name, product_name,
+                        planned_proposal_price, planned_cost_price,
+                        actual_proposal_price, actual_cost_price,
+                        display_order
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                    [
+                        settlement.id,
+                        item.productPlanId || item.id,
+                        item.type,
+                        item.companyName,
+                        item.productName,
+                        item.plannedProposalPrice || item.proposalPrice,
+                        item.plannedCostPrice || item.costPrice,
+                        item.actualProposalPrice,
+                        item.actualCostPrice,
+                        i
+                    ]
+                );
+            }
+        }
+
 
         return NextResponse.json({ settlement: settlementResult.rows[0] });
     } catch (error) {
