@@ -51,10 +51,11 @@ export function useProjectExpense(
             if (item.monthlyAllocation) {
                 Object.entries(item.monthlyAllocation).forEach(([month, mm]) => {
                     if (!summary[month]) summary[month] = { wemb: 0, external: 0 };
+                    const mmValue = Number(mm) || 0;
                     if (isExternal) {
-                        summary[month].external += mm;
+                        summary[month].external += mmValue;
                     } else {
-                        summary[month].wemb += mm;
+                        summary[month].wemb += mmValue;
                     }
                 });
             }
@@ -145,44 +146,31 @@ export function useProjectExpense(
                 { id: 9, category: "특별경비", item: "기타(렌탈)", monthlyValues: {}, isAutoCalculated: false },
             ];
 
-            const mergedItems = defaultItems.map((def, index) => {
-                // 저장된 데이터가 있으면 순서(index)대로 매칭하여 명칭 변경 시에도 데이터 유지
-                // API에서 category ASC, id ASC 순으로 정렬되어 오므로 순서 매칭이 유효함
-                const saved = savedItems[index];
+            const mergedItems = defaultItems.map((def) => {
+                // 저장된 데이터에서 이름으로 찾기 (가장 확실함)
+                const saved = savedItems.find((s: any) => s.item === def.item);
 
-                if (saved && (saved.item === def.item || def.id === 9 || saved.category === def.category)) {
+                if (saved) {
                     return {
                         ...def,
-                        item: saved.item || def.item, // 저장된 명칭(ABC 등) 사용
+                        item: saved.item || def.item,
                         monthlyValues: saved.monthlyValues || {},
-                        // 저장된 데이터가 있으면 저장된 상태를 우선, 없으면 Default
                         isAutoCalculated: saved.isAutoCalculated ?? def.isAutoCalculated
                     };
                 }
 
-                // 순서가 맞지 않을 경우 이름으로 찾기 (폴백)
-                const savedByName = savedItems.find((s: any) => s.item === def.item);
-                if (savedByName) {
-                    return {
-                        ...def,
-                        monthlyValues: savedByName.monthlyValues || {},
-                        isAutoCalculated: savedByName.isAutoCalculated ?? def.isAutoCalculated
-                    };
-                }
                 return def;
             });
 
-            // 저장된 데이터가 없는 경우 (Live Sync 모드), 즉시 최신 기준 데이터로 자동 계산 수행
-            if (savedItems.length === 0) {
-                const initialCalculated = mergedItems.map(item => {
-                    if (!item.isAutoCalculated) return item;
-                    const calculated = calculateMonthlyValues(item);
-                    return { ...item, monthlyValues: calculated };
-                });
-                setItems(initialCalculated);
-            } else {
-                setItems(mergedItems);
-            }
+            // "자동 계산" 모드인 항목은 즉시 재계산하여 최신 MM/기준 데이터 반영
+            const recalculatedItems = mergedItems.map(item => {
+                if (!item.isAutoCalculated) return item;
+                const calculated = calculateMonthlyValues(item);
+                return { ...item, monthlyValues: calculated };
+            });
+
+            setItems(recalculatedItems);
+            setHasSavedData(savedItems.length > 0);
         } catch (error) {
             console.error("Error loading project expense plan:", error);
         } finally {
@@ -199,12 +187,12 @@ export function useProjectExpense(
         }));
     }, [calculateMonthlyValues]);
 
-    // Live Sync (저장 전까지만 자동 동기화)
+    // Live Sync: 인력 계획이나 기준 경비가 변경되면 자동 계산 항목 즉시 업데이트
     useEffect(() => {
-        if (!loading && !hasSavedData) {
+        if (!loading) {
             recalculateData();
         }
-    }, [recalculateData, loading, hasSavedData]);
+    }, [recalculateData, loading, mmSummary, expenseStandards]);
 
     // 초기 로딩
     useEffect(() => {
