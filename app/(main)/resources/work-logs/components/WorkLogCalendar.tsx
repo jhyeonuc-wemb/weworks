@@ -208,7 +208,7 @@ export default function WorkLogCalendar({
           height: 40px;
         }
         .fc-wrapper .fc-daygrid-day-frame {
-          min-height: 120px;
+          min-height: 100px;
         }
       `}</style>
       <FullCalendar
