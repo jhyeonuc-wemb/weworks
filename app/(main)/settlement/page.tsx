@@ -169,11 +169,11 @@ export default function SettlementListPage() {
   const yearOptions = startYears.map(year => ({ value: year, label: year === "전체" ? "년도" : `${year}년` }));
 
   useEffect(() => {
-    fetch(`/api/codes?parentCode=SETTLEMENT`)
+    fetch(`/api/settings/phase-statuses?phaseCode=settlement`)
       .then(res => res.json())
       .then(data => {
-        if (data.codes && data.codes.length > 0) {
-          const opts = data.codes.map((c: any) => ({ value: c.code, label: c.name }));
+        if (data.statuses && data.statuses.length > 0) {
+          const opts = data.statuses.map((s: any) => ({ value: s.code, label: s.name }));
           setStatusOptions([{ value: "전체", label: "상태" }, ...opts]);
         }
       })
