@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -9,6 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import koLocale from "@fullcalendar/core/locales/ko";
 import { EventContentArg, EventClickArg } from "@fullcalendar/core";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/DatePicker";
 import type { WorkLog } from "../types";
 
 
@@ -66,6 +67,9 @@ export default function WorkLogCalendar({
   onDatesSet,
   calendarRef,
 }: WorkLogCalendarProps) {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [currentView, setCurrentView] = useState<string>("dayGridMonth");
+
   const events = logs.map((log) => {
     const color = CATEGORY_BG[log.category] || DEFAULT_COLOR;
     const start = log.startTime
@@ -113,8 +117,29 @@ export default function WorkLogCalendar({
     return isHoliday(dateStr) ? ["fc-day-holiday"] : [];
   };
 
+  const handleDatesSetInternal = (info: any) => {
+    setCurrentDate(info.view.currentStart);
+    setCurrentView(info.view.type);
+    if (onDatesSet) onDatesSet(info);
+  };
+
+  const isMonthView = currentView.includes("Month");
+  const isWeekView = currentView.includes("Week");
+
   return (
-    <div className="fc-wrapper">
+    <div className="fc-wrapper relative">
+      <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-[200px] flex justify-center">
+        <DatePicker
+          mode="month"
+          date={currentDate}
+          setDate={(d) => {
+            if (!d || !calendarRef?.current) return;
+            calendarRef.current.getApi().gotoDate(d);
+          }}
+          dateFormat={isMonthView || isWeekView ? "yyyy년 M월" : "yyyy년 M월 d일"}
+          buttonClassName="border-none shadow-none text-[1.1rem] font-bold text-gray-800 hover:bg-slate-100 bg-transparent h-9 px-2 min-w-[140px] flex justify-center"
+        />
+      </div>
       <style>{`
         .fc-wrapper .fc {
           height: 100%;
@@ -218,7 +243,7 @@ export default function WorkLogCalendar({
         locale={koLocale}
         headerToolbar={{
           left: "prev,next today",
-          center: "title",
+          center: "", // 커스텀 DatePicker로 대체
           right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
         }}
         buttonText={{
@@ -232,7 +257,7 @@ export default function WorkLogCalendar({
         dateClick={handleDateClick}
         eventClick={handleEventClick}
         eventContent={renderEventContent}
-        datesSet={onDatesSet}
+        datesSet={handleDatesSetInternal}
         dayCellClassNames={dayCellClassNames}
         eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
         dayMaxEvents={4}
