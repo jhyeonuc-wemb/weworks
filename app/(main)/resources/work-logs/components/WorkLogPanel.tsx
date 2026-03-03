@@ -80,7 +80,15 @@ export function WorkLogPanel({
 
     useEffect(() => {
         if (open) {
-            setForm(editLog ? { ...editLog } : defaultForm());
+            if (editLog) {
+                setForm({
+                    ...editLog,
+                    startTime: editLog.startTime ? editLog.startTime.substring(0, 5) : null,
+                    endTime: editLog.endTime ? editLog.endTime.substring(0, 5) : null,
+                });
+            } else {
+                setForm(defaultForm());
+            }
         }
     }, [open, editLog, initialDate, initialTime]);
 
