@@ -58,8 +58,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.25 0.02 240);
 
-  --primary: oklch(0.55 0.15 250);
-  /* Soft Tech Blue */
+  --primary: oklch(0.55 0.25 260);
+  /* Vivid Tech Blue */
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.97 0.01 240);
@@ -77,7 +77,7 @@
   /* Modern Neutral Borders */
   --border: oklch(0.94 0.01 240);
   --input: oklch(0.94 0.01 240);
-  --ring: oklch(0.55 0.15 250 / 0.2);
+  --ring: oklch(0.55 0.25 260 / 0.2);
 
   /* Status Pastel Palette */
   --status-blue: oklch(0.92 0.03 240);
@@ -97,7 +97,7 @@
 
   --sidebar: oklch(0.99 0.002 240);
   --sidebar-foreground: oklch(0.3 0.02 240);
-  --sidebar-primary: oklch(0.55 0.15 250);
+  --sidebar-primary: oklch(0.55 0.25 260);
   --sidebar-accent: oklch(0.96 0.02 250);
   --sidebar-border: oklch(0.95 0.005 240);
 }
