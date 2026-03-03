@@ -10,6 +10,7 @@ import koLocale from "@fullcalendar/core/locales/ko";
 import { EventContentArg, EventClickArg } from "@fullcalendar/core";
 import { cn } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WorkLog } from "../types";
 
 
@@ -130,7 +131,14 @@ export default function WorkLogCalendar({
 
   return (
     <div className="fc-wrapper relative">
-      <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-auto flex justify-center whitespace-nowrap">
+      <div className="absolute top-[2px] left-1/2 -translate-x-1/2 z-10 w-auto flex items-center justify-center whitespace-nowrap gap-1">
+        <button
+          type="button"
+          onClick={() => calendarRef?.current?.getApi().prev()}
+          className="h-8 w-8 flex justify-center items-center rounded-lg hover:bg-slate-100 text-gray-500 transition-colors"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
         <DatePicker
           mode={isMonthView || isWeekView ? "month" : "date"}
           date={currentDate}
@@ -142,6 +150,13 @@ export default function WorkLogCalendar({
           customDisplay={isWeekView ? currentTitle : undefined}
           buttonClassName="border-none shadow-none text-[1.1rem] font-bold text-gray-800 hover:bg-slate-100 bg-transparent h-9 px-2 min-w-[140px] flex justify-center whitespace-nowrap"
         />
+        <button
+          type="button"
+          onClick={() => calendarRef?.current?.getApi().next()}
+          className="h-8 w-8 flex justify-center items-center rounded-lg hover:bg-slate-100 text-gray-500 transition-colors"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
       <style>{`
         .fc-wrapper .fc {
@@ -251,8 +266,8 @@ export default function WorkLogCalendar({
         initialView="dayGridMonth"
         locale={koLocale}
         headerToolbar={{
-          left: "prev,next today",
-          center: "", // 커스텀 DatePicker로 대체
+          left: "today",
+          center: "", // 커스텀 DatePicker 및 버튼으로 대체
           right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
         }}
         buttonText={{
