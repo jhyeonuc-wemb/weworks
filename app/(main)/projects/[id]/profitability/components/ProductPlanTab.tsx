@@ -135,7 +135,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 <input
                                     type="text"
                                     inputMode="numeric"
-                                    value={item.quantity ? item.quantity.toLocaleString() : ""}
+                                    value={item.quantity !== null && item.quantity !== undefined ? item.quantity.toLocaleString() : ""}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/,/g, "");
                                         if (!isNaN(Number(val)) || val === "") {
@@ -150,7 +150,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 <input
                                     type="text"
                                     inputMode="numeric"
-                                    value={item.unitPrice ? item.unitPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
+                                    value={item.unitPrice !== null && item.unitPrice !== undefined ? item.unitPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/,/g, "");
                                         if (!isNaN(Number(val)) || val === "") {
@@ -168,7 +168,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 <input
                                     type="text"
                                     inputMode="numeric"
-                                    value={item.proposalPrice ? item.proposalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
+                                    value={item.proposalPrice !== null && item.proposalPrice !== undefined ? item.proposalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/,/g, "");
                                         if (!isNaN(Number(val)) || val === "") {
@@ -186,7 +186,7 @@ export function ProductPlanTab({ projectId, currency, status, onSave, profitabil
                                 <input
                                     type="text"
                                     inputMode="numeric"
-                                    value={item.costPrice ? item.costPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
+                                    value={item.costPrice !== null && item.costPrice !== undefined ? item.costPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ""}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/,/g, "");
                                         if (!isNaN(Number(val)) || val === "") {
