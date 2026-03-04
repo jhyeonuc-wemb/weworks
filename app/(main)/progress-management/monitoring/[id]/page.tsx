@@ -354,7 +354,7 @@ export default function ProjectMonitoringDetailPage({
                                     />
                                 </Field>
                                 <Field className="col-span-1">
-                                    <FieldLabel>진행 상태 코드</FieldLabel>
+                                    <FieldLabel>상태</FieldLabel>
                                     <Dropdown
                                         value={project.progress_status || '정상'}
                                         options={[
