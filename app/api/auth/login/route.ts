@@ -49,15 +49,28 @@ export async function POST(request: NextRequest) {
         // 로그인 후 이동할 첫 번째 허용 경로
         const MENU_KEY_TO_PATH: Record<string, string> = {
             'dashboard': '/dashboard',
-            'sales': '/sales',
+            // 영업/PS
+            'sales-group': '/sales',
+            'sales/leads': '/sales/leads',
+            'sales/opportunities': '/sales/opportunities',
+            // 프로젝트
+            'projects-group': '/projects',
             'projects': '/projects',
             'vrb-review': '/vrb-review',
             'contract-status': '/contract-status',
+            'progress-management/monitoring': '/progress-management/monitoring',
             'profitability': '/profitability',
             'settlement': '/settlement',
+            // 유지보수
+            'maintenance-group': '/maintenance',
             'maintenance/free': '/maintenance/free',
             'maintenance/paid': '/maintenance/paid',
+            // 업무실적
+            'resources-group': '/resources',
             'resources/work-logs': '/resources/work-logs',
+            // 설정
+            'settings-group': '/settings',
+            'settings/business-phases': '/settings/business-phases',
             'settings/clients': '/settings/clients',
             'settings/codes': '/settings/codes',
             'settings/departments': '/settings/departments',
