@@ -40,7 +40,6 @@ export class ProjectService {
             maintenancePaidCode: data.maintenancePaidCode,
             researchCode: data.researchCode,
             categoryId: data.categoryId,
-            projectTypeId: data.projectTypeId,
             customerId: data.customerId,
             ordererId: data.ordererId,
             description: data.description,

@@ -205,9 +205,8 @@ export default function ProfitabilityListPage() {
         router.push(`/projects/${selectedProjectId}/profitability`);
     };
 
-    // 프로젝트 코드가 있고, 수지분석서가 아직 작성되지 않은 프로젝트만 표시
     const availableProjects = projects.filter(
-        (project) => !!project.projectCode && !profitabilities.some((prof) => prof.project_id === project.id)
+        (project) => !profitabilities.some((prof) => prof.project_id === project.id)
     );
 
     const projectOptions = availableProjects

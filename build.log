@@ -1,0 +1,136 @@
+
+> weworks@0.1.0 build
+> next build
+
+▲ Next.js 16.1.1 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.4s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/72) ...
+  Generating static pages using 15 workers (18/72) 
+  Generating static pages using 15 workers (36/72) 
+  Generating static pages using 15 workers (54/72) 
+✓ Generating static pages using 15 workers (72/72) in 1627.2ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /403
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/clients
+├ ƒ /api/clients/[id]
+├ ƒ /api/clients/seed
+├ ƒ /api/codes
+├ ƒ /api/codes/[id]
+├ ƒ /api/common-codes
+├ ƒ /api/departments
+├ ƒ /api/departments/[id]
+├ ƒ /api/holidays
+├ ƒ /api/holidays/[id]
+├ ƒ /api/labor-categories
+├ ƒ /api/labor-categories/[id]
+├ ƒ /api/md-estimations
+├ ƒ /api/md-estimations/[id]
+├ ƒ /api/md-weights/difficulty-items
+├ ƒ /api/md-weights/field-difficulty-items
+├ ƒ /api/md-weights/modeling-3d
+├ ƒ /api/md-weights/pid
+├ ƒ /api/monitoring
+├ ƒ /api/permissions
+├ ƒ /api/permissions/[roleCode]
+├ ƒ /api/permissions/check
+├ ƒ /api/permissions/migrate
+├ ƒ /api/products
+├ ƒ /api/products/[id]
+├ ƒ /api/profitability
+├ ƒ /api/profitability/[id]
+├ ƒ /api/profitability/[id]/export
+├ ƒ /api/profitability/status
+├ ƒ /api/project-categories
+├ ƒ /api/projects
+├ ƒ /api/projects/[id]
+├ ƒ /api/projects/[id]/advance-phase
+├ ƒ /api/projects/[id]/expense-plan
+├ ƒ /api/projects/[id]/manpower-plan
+├ ƒ /api/projects/[id]/order-proposal
+├ ƒ /api/projects/[id]/phase-progress
+├ ƒ /api/projects/[id]/phase-status
+├ ƒ /api/projects/[id]/product-plan
+├ ƒ /api/projects/[id]/profitability-diff
+├ ƒ /api/projects/[id]/profitability-standard-expenses
+├ ƒ /api/projects/[id]/settlement
+├ ƒ /api/projects/[id]/settlement/status
+├ ƒ /api/projects/[id]/team-assignments
+├ ƒ /api/ranks
+├ ƒ /api/roles
+├ ƒ /api/settings/difficulty-checklist
+├ ƒ /api/settings/md-estimation
+├ ƒ /api/settings/phase-groups
+├ ƒ /api/settings/phase-lifecycle
+├ ƒ /api/settings/phase-statuses
+├ ƒ /api/settings/phases
+├ ƒ /api/settlement
+├ ƒ /api/unit-prices
+├ ƒ /api/unit-prices/[id]
+├ ƒ /api/unit-prices/copy-year
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ƒ /api/vrb-reviews
+├ ƒ /api/vrb-reviews/[id]
+├ ƒ /api/vrb-reviews/[id]/difficulty
+├ ƒ /api/vrb-reviews/[id]/md-estimation
+├ ƒ /api/work-logs
+├ ƒ /api/work-logs/[id]
+├ ○ /contract-status
+├ ○ /dashboard
+├ ○ /login
+├ ○ /maintenance/free
+├ ○ /maintenance/paid
+├ ○ /md-estimation
+├ ○ /profitability
+├ ○ /progress-management/monitoring
+├ ƒ /progress-management/monitoring/[id]
+├ ○ /projects
+├ ƒ /projects/[id]
+├ ƒ /projects/[id]/confirmation
+├ ƒ /projects/[id]/delivery
+├ ƒ /projects/[id]/maintenance
+├ ƒ /projects/[id]/profitability
+├ ƒ /projects/[id]/profitability/review
+├ ƒ /projects/[id]/settlement
+├ ƒ /projects/[id]/settlement/review
+├ ƒ /projects/[id]/team-allocation
+├ ƒ /projects/[id]/vrb-review
+├ ƒ /projects/[id]/warranty
+├ ○ /resources/work-logs
+├ ○ /sales
+├ ○ /sales/leads
+├ ○ /sales/opportunities
+├ ○ /settings
+├ ○ /settings/business-phases
+├ ○ /settings/clients
+├ ○ /settings/codes
+├ ○ /settings/departments
+├ ○ /settings/difficulty-checklist
+├ ○ /settings/holidays
+├ ○ /settings/md-estimation
+├ ○ /settings/permissions
+├ ○ /settings/phases
+├ ○ /settings/products
+├ ○ /settings/roles
+├ ○ /settings/users
+├ ○ /settlement
+└ ○ /vrb-review
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

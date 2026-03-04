@@ -22,10 +22,7 @@ interface Settlement {
   planned_svc_mm_ext: number;
   actual_revenue: number;
   actual_cost: number;
-  // (3) 수주차 실적 프로젝트영업이익 (API에서 계산)
-  actual_profit: number;
   revenue_diff: number;
-  // (1) 정산결과: 기준 계획대비 영업이익 증감액 (API에서 계산)
   profit_diff: number;
   actual_svc_mm_own: number;
   actual_svc_mm_ext: number;
@@ -60,8 +57,6 @@ export default function SettlementListPage() {
   const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [profitabilities, setProfitabilities] = useState<{ project_id: number; status: string }[]>([]);
-  const [lastProfitabilityStatus, setLastProfitabilityStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState("project_code_desc");
@@ -77,33 +72,16 @@ export default function SettlementListPage() {
     try {
       setLoading(true);
 
-      const [settlementRes, projectRes, profitabilityRes, phaseStatusRes] = await Promise.all([
-        fetch("/api/settlement"),
-        fetch("/api/projects"),
-        fetch("/api/profitability?latestOnly=true"),
-        fetch("/api/settings/phase-statuses?phaseCode=profitability"),
-      ]);
-
+      const settlementRes = await fetch("/api/settlement");
       if (settlementRes.ok) {
         const data = await settlementRes.json();
         setSettlements(data.settlements || []);
       }
+
+      const projectRes = await fetch("/api/projects");
       if (projectRes.ok) {
         const data = await projectRes.json();
         setProjects(data.projects || []);
-      }
-      if (profitabilityRes.ok) {
-        const data = await profitabilityRes.json();
-        setProfitabilities(data.profitabilities || []);
-      }
-      if (phaseStatusRes.ok) {
-        const data = await phaseStatusRes.json();
-        // display_order ASC 순 → 마지막 항목이 최종 상태
-        const statuses: { code: string; display_order: number }[] = data.statuses || [];
-        if (statuses.length > 0) {
-          const last = statuses[statuses.length - 1];
-          setLastProfitabilityStatus(last.code);
-        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -232,17 +210,9 @@ export default function SettlementListPage() {
     router.push(`/projects/${selectedProjectId}/settlement`);
   };
 
-  // 프로젝트 코드가 있고, 수지분석서가 최종 상태(단계 설정의 마지막 상태)인 프로젝트만 표시
-  const availableProjects = projects.filter((project) => {
-    if (!project.projectCode) return false;
-    const hasCompletedProfitability = lastProfitabilityStatus
-      ? profitabilities.some(
-        (prof) => prof.project_id === project.id && prof.status === lastProfitabilityStatus
-      )
-      : false;
-    const hasSettlement = settlements.some((s) => s.project_id === project.id);
-    return hasCompletedProfitability && !hasSettlement;
-  });
+  const availableProjects = projects.filter(
+    (project) => !settlements.some((s) => s.project_id === project.id)
+  );
 
   const projectOptions = availableProjects
     .slice()
@@ -364,8 +334,7 @@ export default function SettlementListPage() {
                 </TableRow>
               ) : (
                 paginatedSettlements.map((s) => {
-                  // API에서 (3) 수주차 실적 프로젝트영업이익으로 계산된 값
-                  const actualProfit = s.actual_profit ?? (s.actual_revenue - s.actual_cost);
+                  const actualProfit = s.actual_revenue - s.actual_cost;
 
                   return (
                     <TableRow
@@ -408,7 +377,7 @@ export default function SettlementListPage() {
                           {formatCurrency(actualProfit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
+                      <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
                           "text-sm font-mono",
                           s.profit_diff >= 0 ? "text-emerald-600" : "text-rose-600"

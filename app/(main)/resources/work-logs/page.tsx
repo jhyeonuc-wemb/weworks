@@ -4,13 +4,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { WorkLogPanel } from "./components/work-log-panel";
+import { WorkLogPanel } from "./components/WorkLogPanel";
 import type FullCalendar from "@fullcalendar/react";
 import type { WorkLog } from "./types";
 
 // SSR 이슈 방지 — FullCalendar는 클라이언트에서만 렌더
 const WorkLogCalendar = dynamic(
-    () => import("./components/work-log-calendar"),
+    () => import("./components/WorkLogCalendar"),
     { ssr: false }
 );
 
