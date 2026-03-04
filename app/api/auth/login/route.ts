@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAccessibleMenuKeys } from '@/lib/utils/permissions';
+import { getMenuKeyToPath } from '@/lib/menu-config';
 import bcrypt from 'bcrypt';
 
 export async function POST(request: NextRequest) {
@@ -47,39 +48,7 @@ export async function POST(request: NextRequest) {
             : [];
 
         // 로그인 후 이동할 첫 번째 허용 경로
-        const MENU_KEY_TO_PATH: Record<string, string> = {
-            'dashboard': '/dashboard',
-            // 영업/PS
-            'sales-group': '/sales',
-            'sales/leads': '/sales/leads',
-            'sales/opportunities': '/sales/opportunities',
-            // 프로젝트
-            'projects-group': '/projects',
-            'projects': '/projects',
-            'vrb-review': '/vrb-review',
-            'contract-status': '/contract-status',
-            'progress-management/monitoring': '/progress-management/monitoring',
-            'profitability': '/profitability',
-            'settlement': '/settlement',
-            // 유지보수
-            'maintenance-group': '/maintenance',
-            'maintenance/free': '/maintenance/free',
-            'maintenance/paid': '/maintenance/paid',
-            // 업무실적
-            'resources-group': '/resources',
-            'resources/work-logs': '/resources/work-logs',
-            // 설정
-            'settings-group': '/settings',
-            'settings/business-phases': '/settings/business-phases',
-            'settings/clients': '/settings/clients',
-            'settings/codes': '/settings/codes',
-            'settings/departments': '/settings/departments',
-            'settings/users': '/settings/users',
-            'settings/permissions': '/settings/permissions',
-            'settings/difficulty-checklist': '/settings/difficulty-checklist',
-            'settings/md-estimation': '/settings/md-estimation',
-            'settings/holidays': '/settings/holidays',
-        };
+        const MENU_KEY_TO_PATH = getMenuKeyToPath();
         let firstPath = '/dashboard';
         for (const key of allowedMenuKeys) {
             const p = MENU_KEY_TO_PATH[key];
