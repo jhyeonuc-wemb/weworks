@@ -48,6 +48,9 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     // 폼 데이터 (new/page.tsx와 동일하게 구성)
     const [formData, setFormData] = useState({
         projectCode: "",
+        maintenanceFreeCode: "",
+        maintenancePaidCode: "",
+        researchCode: "",
         name: "",
         projectType: "", // CD_002_05_01 하위 코드
         category: "",
@@ -155,10 +158,13 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             if (project) {
                 setFormData({
                     projectCode: project.projectCode || "",
+                    maintenanceFreeCode: project.maintenanceFreeCode || "",
+                    maintenancePaidCode: project.maintenancePaidCode || "",
+                    researchCode: project.researchCode || "",
                     name: project.name || "",
                     projectType: project.project_type_id?.toString() || (loadedProjectTypes[0]?.id?.toString() ?? ""),
                     category: project.category_id?.toString() || "",
-                    field: project.field_id?.toString() || "", // field -> field_id로 매핑 변경
+                    field: project.field_id?.toString() || "",
                     customerId: project.customerId?.toString() || "",
                     ordererId: project.ordererId?.toString() || "",
                     description: project.description || "",
@@ -188,8 +194,11 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                 // 등록 모드 초기화
                 setFormData({
                     projectCode: "",
+                    maintenanceFreeCode: "",
+                    maintenancePaidCode: "",
+                    researchCode: "",
                     name: "",
-                    projectType: loadedProjectTypes[0]?.id?.toString() ?? "", // 첫 번째 유형 자동 선택
+                    projectType: loadedProjectTypes[0]?.id?.toString() ?? "",
                     category: "",
                     field: "",
                     customerId: "",
@@ -203,7 +212,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     actualEndDate: "",
                     currency: "KRW" as Currency,
                     expectedAmount: "",
-                    processStatus: "", // 새 시스템의 첫 번째 단계가 아래에서 동적으로 설정됨
+                    processStatus: "",
                     riskLevel: "",
                 });
                 setPmSearch("");
@@ -229,9 +238,12 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
         const payload = {
             name: formData.name,
             projectCode: formData.projectCode || null,
+            maintenanceFreeCode: formData.maintenanceFreeCode || null,
+            maintenancePaidCode: formData.maintenancePaidCode || null,
+            researchCode: formData.researchCode || null,
             project_type_id: formData.projectType ? parseInt(formData.projectType) : null,
             category_id: formData.category ? parseInt(formData.category) : null,
-            field_id: formData.field ? parseInt(formData.field) : null, // field_id 추가
+            field_id: formData.field ? parseInt(formData.field) : null,
             customerId: formData.customerId ? parseInt(formData.customerId) : null,
             ordererId: formData.ordererId ? parseInt(formData.ordererId) : null,
             description: formData.description,
@@ -281,28 +293,53 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     {/* 프로젝트 코드 */}
                     <div className="space-y-1 col-span-1">
                         <label className="text-xs font-bold text-gray-500">프로젝트 코드</label>
-                        <input
-                            type="text"
-                            name="projectCode"
-                            value={formData.projectCode}
-                            onChange={handleChange}
+                        <input type="text" name="projectCode" value={formData.projectCode} onChange={handleChange}
                             placeholder="예: P24-039"
-                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0" />
+                    </div>
+
+                    {/* 무상 유지보수 코드 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">무상 유지보수 코드</label>
+                        <input type="text" name="maintenanceFreeCode" value={formData.maintenanceFreeCode} onChange={handleChange}
+                            placeholder="무상 코드"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0" />
+                    </div>
+
+                    {/* 유상 유지보수 코드 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">유상 유지보수 코드</label>
+                        <input type="text" name="maintenancePaidCode" value={formData.maintenancePaidCode} onChange={handleChange}
+                            placeholder="유상 코드"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0" />
+                    </div>
+
+                    {/* 연구과제 코드 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">연구과제 코드</label>
+                        <input type="text" name="researchCode" value={formData.researchCode} onChange={handleChange}
+                            placeholder="연구과제 코드"
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0" />
+                    </div>
+
+                    {/* 프로젝트 유형 - 2행 첫 번째 */}
+                    <div className="space-y-1 col-span-1">
+                        <label className="text-xs font-bold text-gray-500">프로젝트 유형</label>
+                        <Dropdown
+                            value={formData.projectType}
+                            onChange={(val) => setFormData(prev => ({ ...prev, projectType: val as string }))}
+                            options={projectTypeCodes.map(code => ({ value: code.id.toString(), label: code.name }))}
+                            placeholder="유형을 선택하세요"
+                            variant="standard"
                         />
                     </div>
 
-                    {/* 프로젝트명 */}
+                    {/* 프로젝트명 - 2행 나머지 */}
                     <div className="space-y-1 col-span-3">
                         <label className="text-xs font-bold text-gray-500">프로젝트명 <span className="text-red-500">*</span></label>
-                        <input
-                            type="text"
-                            name="name"
-                            required
-                            value={formData.name}
-                            onChange={handleChange}
+                        <input type="text" name="name" required value={formData.name} onChange={handleChange}
                             placeholder="프로젝트명을 입력하세요"
-                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
-                        />
+                            className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0" />
                     </div>
 
 
@@ -597,17 +634,6 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                         />
                     </div>
 
-                    {/* 프로젝트 유형 - CD_002_05_01 하위 코드 */}
-                    <div className="space-y-1 col-span-2">
-                        <label className="text-xs font-bold text-gray-500">프로젝트 유형</label>
-                        <Dropdown
-                            value={formData.projectType}
-                            onChange={(val) => setFormData(prev => ({ ...prev, projectType: val as string }))}
-                            options={projectTypeCodes.map(code => ({ value: code.id.toString(), label: code.name }))}
-                            placeholder="유형을 선택하세요"
-                            variant="standard"
-                        />
-                    </div>
                 </div>
 
                 {/* 설명 */}

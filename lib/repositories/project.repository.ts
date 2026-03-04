@@ -8,6 +8,9 @@ export interface GetProjectsFilters {
 export interface CreateProjectParams {
   name: string;
   projectCode?: string;
+  maintenanceFreeCode?: string;
+  maintenancePaidCode?: string;
+  researchCode?: string;
   categoryId?: number;
   projectTypeId?: number;
   customerId?: number;
@@ -102,12 +105,13 @@ export class ProjectRepository {
   static async create(data: CreateProjectParams) {
     const sql = `
       INSERT INTO we_projects (
-        name, project_code, category_id, project_type_id, customer_id, orderer_id, description,
+        name, project_code, maintenance_free_code, maintenance_paid_code, research_code,
+        category_id, project_type_id, customer_id, orderer_id, description,
         contract_start_date, contract_end_date, actual_start_date, actual_end_date,
         expected_amount, currency, manager_id, sales_representative_id,
         process_status, current_phase, risk_level, field_id, created_by, status
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23,
         'active'
       ) RETURNING id
     `;
@@ -115,6 +119,9 @@ export class ProjectRepository {
     const result = await query(sql, [
       data.name,
       data.projectCode || null,
+      data.maintenanceFreeCode || null,
+      data.maintenancePaidCode || null,
+      data.researchCode || null,
       data.categoryId || null,
       data.projectTypeId || null,
       data.customerId || null,

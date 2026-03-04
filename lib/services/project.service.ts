@@ -36,8 +36,10 @@ export class ProjectService {
         const params: CreateProjectParams = {
             name: data.name,
             projectCode: data.projectCode,
+            maintenanceFreeCode: data.maintenanceFreeCode,
+            maintenancePaidCode: data.maintenancePaidCode,
+            researchCode: data.researchCode,
             categoryId: data.categoryId,
-            projectTypeId: data.projectTypeId,
             customerId: data.customerId,
             ordererId: data.ordererId,
             description: data.description,

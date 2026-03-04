@@ -41,10 +41,6 @@ export async function GET(request: NextRequest) {
                 ...row,
                 projectCode: row.project_code,
                 customerName: row.customer_name,
-                // 실행이익: 정산_2 행의 영업이익과 동일한 공식으로 계산
-                actual_profit: Number(row.actual_profit || 0),
-                // 이익증감: 기준 계획대비 영업이익 증감액
-                profit_diff: Number(row.profit_diff_calc || 0),
             }))
         });
     } catch (error) {

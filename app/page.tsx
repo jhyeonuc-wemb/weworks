@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 
 const MENU_KEY_TO_PATH: Record<string, string> = {
   'dashboard': '/dashboard',
-  'sales/leads': '/sales/leads',
-  'sales/opportunities': '/sales/opportunities',
+  'sales': '/sales',
   'projects': '/projects',
   'vrb-review': '/vrb-review',
   'contract-status': '/contract-status',

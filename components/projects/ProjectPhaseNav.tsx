@@ -20,6 +20,7 @@ export const ProjectPhaseNav = ({ projectId }: ProjectPhaseNavProps) => {
 
         { value: `/projects/${projectId}/vrb-review`, label: "VRB 심의" },
         { value: `/projects/${projectId}/profitability`, label: "수지분석" },
+        { value: `/progress-management/monitoring/${projectId}`, label: "프로젝트 모니터링" },
         { value: `/projects/${projectId}/settlement`, label: "수지정산" },
     ];
 
