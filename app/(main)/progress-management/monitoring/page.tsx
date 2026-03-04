@@ -114,7 +114,7 @@ export default function ProjectMonitoringPage() {
     }, [data]);
 
     const statusOptions = [
-        { value: "전체", label: "진행상태" },
+        { value: "전체", label: "진행 상태 코드" },
         { value: "정상", label: "정상" },
         { value: "일정지연", label: "일정지연" },
         { value: "대기", label: "대기" },
