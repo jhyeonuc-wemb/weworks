@@ -1,27 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getMenuKeyToPath } from '@/lib/menu-config';
 
-// menu_key → URL 경로 매핑
-const MENU_KEY_TO_PATH: Record<string, string> = {
-    'dashboard': '/dashboard',
-    'sales': '/sales',
-    'projects': '/projects',
-    'vrb-review': '/vrb-review',
-    'contract-status': '/contract-status',
-    'profitability': '/profitability',
-    'settlement': '/settlement',
-    'maintenance/free': '/maintenance/free',
-    'maintenance/paid': '/maintenance/paid',
-    'resources/work-logs': '/resources/work-logs',
-    'settings/clients': '/settings/clients',
-    'settings/codes': '/settings/codes',
-    'settings/departments': '/settings/departments',
-    'settings/users': '/settings/users',
-    'settings/permissions': '/settings/permissions',
-    'settings/difficulty-checklist': '/settings/difficulty-checklist',
-    'settings/md-estimation': '/settings/md-estimation',
-    'settings/holidays': '/settings/holidays',
-};
+// SIDEBAR_MENU 기반으로 자동 생성 — 메뉴 추가/삭제 시 menu-config.ts만 수정하면 됨
+const MENU_KEY_TO_PATH = getMenuKeyToPath();
+
 
 // URL 경로 → menu_key 매핑 (긴 경로 우선 정렬 - 매칭용)
 const PATH_ENTRIES = Object.entries(MENU_KEY_TO_PATH)

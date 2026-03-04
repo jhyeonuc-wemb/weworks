@@ -42,6 +42,23 @@ export function hasChildren(item: SidebarMenuItem): boolean {
     return Array.isArray(item.children) && item.children.length > 0;
 }
 
+/**
+ * SIDEBAR_MENU 기반으로 { menuKey: href } 맵을 자동 생성.
+ * proxy.ts / login/route.ts 에서 import해 사용하면 메뉴 추가 시 별도 수정 불필요.
+ */
+export function getMenuKeyToPath(): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const item of SIDEBAR_MENU) {
+        result[item.menuKey] = item.href;
+        if (hasChildren(item)) {
+            for (const child of item.children!) {
+                result[child.menuKey] = child.href;
+            }
+        }
+    }
+    return result;
+}
+
 // ============================================================
 // 메뉴 정의 (사이드바 구조와 동일)
 // children이 없으면 1레벨 단독 메뉴, 있으면 2레벨 그룹 메뉴

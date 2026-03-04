@@ -314,15 +314,12 @@ export default function ProjectSettlementPage() {
   ]);
 
   // Sync expenseDetails to settlement actuals
-  // ※ expenseDetails 합산이 모두 0이면 settlement 값을 덮어쓰지 않음
-  //    → (3) 수주차에서 직접 입력한 actual_expense_general/special 값 보존
   useEffect(() => {
     const totalSellAdmin = expenseDetails.reduce((sum, item) => sum + (item.sellAdmin || 0), 0);
     const totalCost = expenseDetails.reduce((sum, item) => sum + (item.cost || 0), 0);
 
-    // Section 5에서 실제 입력된 값이 있는 경우에만 settlement에 반영
-    if (totalSellAdmin === 0 && totalCost === 0) return;
-
+    // Section 5의 합계값을 settlement.actual_expense_general/special에 동기화
+    // (이전에는 0일 때 무시하던 로직을 제거하여 0으로의 변경도 반영되도록 함)
     if (settlement.actual_expense_general !== totalSellAdmin || settlement.actual_expense_special !== totalCost) {
       setSettlement(prev => ({
         ...prev,
@@ -893,21 +890,39 @@ export default function ProjectSettlementPage() {
       }));
 
 
-      // Calculate total actuals before saving
-      const totalActualMMOwn = manpowerSummaries[0].totalActualMM;
-      const totalActualMMExt = manpowerSummaries[1].totalActualMM;
-      const totalActualLaborCostOwn = manpowerSummaries[0].totalActualAmount;
-      const totalActualLaborCostExt = manpowerSummaries[1].totalActualAmount;
-      const totalActualRevenue =
+      // Calculate total actuals before saving (use latest state arrays to avoid async state lag)
+      const latestTotalActualMMOwn = manpowerSummaries[0].totalActualMM;
+      const latestTotalActualMMExt = manpowerSummaries[1].totalActualMM;
+      const latestTotalActualLaborCostOwn = manpowerSummaries[0].totalActualAmount;
+      const latestTotalActualLaborCostExt = manpowerSummaries[1].totalActualAmount;
+
+      const latestTotalActualRevenue =
         Number(settlement.actual_prod_rev_own || 0) +
         Number(settlement.actual_prod_rev_ext || 0) +
         Number(settlement.actual_svc_rev_own || 0) +
         Number(settlement.actual_svc_rev_ext || 0);
-      const actualPurchase = Number(settlement.actual_prod_cost_ext || 0);
-      const actualExpense = Number(settlement.actual_expense_general || 0) + Number(settlement.actual_expense_special || 0);
-      const totalActualCost = actualPurchase + totalActualLaborCostOwn + totalActualLaborCostExt + actualExpense;
-      const calculatedActualProfit = totalActualRevenue - totalActualCost;
-      const calculatedActualProfitRate = totalActualRevenue > 0 ? (calculatedActualProfit / totalActualRevenue) * 100 : 0;
+
+      const latestActualPurchase = Number(settlement.actual_prod_cost_ext || 0);
+
+      // 상세 경비 데이터에서 최신 합계 직접 계산 (stale settlement state 방지)
+      const latestTotalSellAdmin = expenseDetails.reduce((sum, item) => sum + (item.sellAdmin || 0), 0);
+      const latestTotalCost = expenseDetails.reduce((sum, item) => sum + (item.cost || 0), 0);
+      const latestActualExpense = latestTotalSellAdmin + latestTotalCost;
+
+      // 간접비(경상비용), 부가수수료 등 포함한 전체 비용 계산
+      const latestTotalActualCost =
+        latestActualPurchase +
+        latestTotalActualLaborCostOwn +
+        latestTotalActualLaborCostExt +
+        latestActualExpense +
+        Number(settlement.actual_biz_cost_indirect || 0);
+
+      const latestCalculatedActualProfit =
+        latestTotalActualRevenue -
+        latestTotalActualCost +
+        (Number(settlement.actual_extra_revenue || 0) - Number(settlement.actual_extra_cost || 0));
+
+      const latestCalculatedActualProfitRate = latestTotalActualRevenue > 0 ? (latestCalculatedActualProfit / latestTotalActualRevenue) * 100 : 0;
 
       const response = await fetch(`/api/projects/${projectId}/settlement`, {
         method: settlement.id ? "PUT" : "POST",
@@ -916,14 +931,16 @@ export default function ProjectSettlementPage() {
           settlement: {
             ...settlement,
             // Calculated Actuals
-            actual_revenue: totalActualRevenue,
-            actual_cost: totalActualCost,
-            actual_profit: calculatedActualProfit,
-            actual_profit_rate: calculatedActualProfitRate,
-            actual_svc_mm_own: Number(settlement.actual_svc_mm_own || 0) || totalActualMMOwn,
-            actual_svc_mm_ext: Number(settlement.actual_svc_mm_ext || 0) || totalActualMMExt,
-            actual_labor_cost: totalActualLaborCostOwn + totalActualLaborCostExt,
-            actual_other_cost: actualExpense,
+            actual_revenue: latestTotalActualRevenue,
+            actual_cost: latestTotalActualCost,
+            actual_profit: latestCalculatedActualProfit,
+            actual_profit_rate: latestCalculatedActualProfitRate,
+            actual_svc_mm_own: latestTotalActualMMOwn,
+            actual_svc_mm_ext: latestTotalActualMMExt,
+            actual_labor_cost: latestTotalActualLaborCostOwn + latestTotalActualLaborCostExt,
+            actual_expense_general: latestTotalSellAdmin,
+            actual_expense_special: latestTotalCost,
+            actual_other_cost: latestActualExpense,
             // Ensure planned fields are always from Base Plan as requested
             planned_revenue: baseRevenue,
             planned_profit: baseProfitCalculated,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAccessibleMenuKeys } from '@/lib/utils/permissions';
+import { getMenuKeyToPath } from '@/lib/menu-config';
 import bcrypt from 'bcrypt';
 
 export async function POST(request: NextRequest) {
@@ -47,26 +48,7 @@ export async function POST(request: NextRequest) {
             : [];
 
         // 로그인 후 이동할 첫 번째 허용 경로
-        const MENU_KEY_TO_PATH: Record<string, string> = {
-            'dashboard': '/dashboard',
-            'sales': '/sales',
-            'projects': '/projects',
-            'vrb-review': '/vrb-review',
-            'contract-status': '/contract-status',
-            'profitability': '/profitability',
-            'settlement': '/settlement',
-            'maintenance/free': '/maintenance/free',
-            'maintenance/paid': '/maintenance/paid',
-            'resources/work-logs': '/resources/work-logs',
-            'settings/clients': '/settings/clients',
-            'settings/codes': '/settings/codes',
-            'settings/departments': '/settings/departments',
-            'settings/users': '/settings/users',
-            'settings/permissions': '/settings/permissions',
-            'settings/difficulty-checklist': '/settings/difficulty-checklist',
-            'settings/md-estimation': '/settings/md-estimation',
-            'settings/holidays': '/settings/holidays',
-        };
+        const MENU_KEY_TO_PATH = getMenuKeyToPath();
         let firstPath = '/dashboard';
         for (const key of allowedMenuKeys) {
             const p = MENU_KEY_TO_PATH[key];
