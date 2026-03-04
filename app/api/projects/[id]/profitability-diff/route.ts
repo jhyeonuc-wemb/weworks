@@ -14,7 +14,7 @@ export async function GET(
         const profitabilityId = searchParams.get("profitabilityId");
 
         let sql = `
-          SELECT extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc
+          SELECT extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc, biz_cost_indirect, prod_cost_own
           FROM we_project_profitability_extra_revenue
         `;
         const dbParams: any[] = [];
@@ -39,6 +39,8 @@ export async function GET(
                 extraRevenueDesc: "",
                 extraExpense: 0,
                 extraExpenseDesc: "",
+                bizCostIndirect: 0,
+                prodCostOwn: 0,
             });
         }
 
@@ -48,6 +50,8 @@ export async function GET(
             extraRevenueDesc: row.extra_revenue_desc || "",
             extraExpense: Number(row.extra_expense),
             extraExpenseDesc: row.extra_expense_desc || "",
+            bizCostIndirect: Number(row.biz_cost_indirect || 0),
+            prodCostOwn: Number(row.prod_cost_own || 0),
         });
     } catch (error: any) {
         console.error("Error fetching profitability extra revenue:", error);
@@ -76,6 +80,8 @@ export async function PUT(
             extraRevenueDesc,
             extraExpense,
             extraExpenseDesc,
+            bizCostIndirect,
+            prodCostOwn,
             // 최종 요약 정보
             totalRevenue,
             totalCost,
@@ -112,13 +118,15 @@ export async function PUT(
         // 1. 부가수익 데이터 UPSERT (profitability_id 기준)
         const extraSql = `
           INSERT INTO we_project_profitability_extra_revenue (
-            project_id, profitability_id, extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+            project_id, profitability_id, extra_revenue, extra_revenue_desc, extra_expense, extra_expense_desc, biz_cost_indirect, prod_cost_own, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
           ON CONFLICT (profitability_id) DO UPDATE SET
             extra_revenue = EXCLUDED.extra_revenue,
             extra_revenue_desc = EXCLUDED.extra_revenue_desc,
             extra_expense = EXCLUDED.extra_expense,
             extra_expense_desc = EXCLUDED.extra_expense_desc,
+            biz_cost_indirect = EXCLUDED.biz_cost_indirect,
+            prod_cost_own = EXCLUDED.prod_cost_own,
             updated_at = CURRENT_TIMESTAMP
         `;
         await query(extraSql, [
@@ -128,6 +136,8 @@ export async function PUT(
             extraRevenueDesc,
             extraExpense,
             extraExpenseDesc,
+            bizCostIndirect || 0,
+            prodCostOwn || 0,
         ]);
 
         // 2. 수지분석서 헤더 요약 정보 갱신

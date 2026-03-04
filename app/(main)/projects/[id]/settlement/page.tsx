@@ -49,6 +49,9 @@ interface SettlementData {
   actual_svc_mm_ext?: number;
   actual_expense_general?: number;
   actual_expense_special?: number;
+  actual_biz_cost_indirect: number;
+  actual_extra_revenue: number;
+  actual_extra_cost: number;
 
   planned_svc_mm_own?: number;
   planned_svc_mm_ext?: number;
@@ -140,15 +143,18 @@ interface User {
 }
 
 interface SummaryData {
-  product_revenue: number;
-  service_revenue: number;
+  prodRevOwn: number;
+  prodRevExt: number;
+  svcRevOwn: number;
+  svcRevExt: number;
   total_revenue: number;
-  purchase_cost: number;
-  internal_mm: number;
-  internal_labor_cost: number;
-  external_mm: number;
-  external_labor_cost: number;
+  prodCostOwn: number;
+  prodCostExt: number;
+  svcCostOwn: number;
+  svcCostExt: number;
   expense_cost: number;
+  internalMM: number;
+  externalMM: number;
   profit: number;
   profit_rate: number;
 }
@@ -214,6 +220,9 @@ export default function ProjectSettlementPage() {
     actual_cost: 0,
     actual_labor_cost: 0,
     actual_other_cost: 0,
+    actual_biz_cost_indirect: 0,
+    actual_extra_revenue: 0,
+    actual_extra_cost: 0,
     planned_svc_mm_own: 0,
     planned_svc_mm_ext: 0,
     notes: "",
@@ -305,9 +314,14 @@ export default function ProjectSettlementPage() {
   ]);
 
   // Sync expenseDetails to settlement actuals
+  // ※ expenseDetails 합산이 모두 0이면 settlement 값을 덮어쓰지 않음
+  //    → (3) 수주차에서 직접 입력한 actual_expense_general/special 값 보존
   useEffect(() => {
     const totalSellAdmin = expenseDetails.reduce((sum, item) => sum + (item.sellAdmin || 0), 0);
     const totalCost = expenseDetails.reduce((sum, item) => sum + (item.cost || 0), 0);
+
+    // Section 5에서 실제 입력된 값이 있는 경우에만 settlement에 반영
+    if (totalSellAdmin === 0 && totalCost === 0) return;
 
     if (settlement.actual_expense_general !== totalSellAdmin || settlement.actual_expense_special !== totalCost) {
       setSettlement(prev => ({
@@ -317,6 +331,18 @@ export default function ProjectSettlementPage() {
       }));
     }
   }, [expenseDetails]);
+
+  // 부가수익 데이터 (계획)
+  const [extraData, setExtraData] = useState({
+    baseExtraRevenue: 0,
+    baseExtraExpense: 0,
+    latestExtraRevenue: 0,
+    latestExtraExpense: 0,
+    baseBizCostIndirect: 0,
+    latestBizCostIndirect: 0,
+    baseProdCostOwn: 0,
+    latestProdCostOwn: 0,
+  });
 
   const fetchData = async () => {
     try {
@@ -420,29 +446,35 @@ export default function ProjectSettlementPage() {
           setTotalRevenue(latestRev);
 
           setBasePlanSummary({
-            product_revenue: Number(first.product_revenue || 0),
-            service_revenue: Number(first.service_revenue || 0),
+            prodRevOwn: Number(first.product_revenue_own || first.product_revenue || 0),
+            prodRevExt: Number(first.product_revenue_ext || 0),
+            svcRevOwn: Number(first.service_revenue_own || first.service_revenue || 0),
+            svcRevExt: Number(first.service_revenue_ext || 0),
             total_revenue: Number(first.total_revenue || first.revenue || 0),
-            purchase_cost: Number(first.purchase_cost || 0),
-            internal_mm: Number(first.internal_mm || 0),
-            internal_labor_cost: Number(first.internal_labor_cost || 0),
-            external_mm: Number(first.external_mm || 0),
-            external_labor_cost: Number(first.external_labor_cost || 0),
+            prodCostOwn: Number(first.product_cost_own || first.purchase_cost || 0),
+            prodCostExt: Number(first.product_cost_ext || 0),
+            svcCostOwn: Number(first.service_cost_own || first.internal_labor_cost || 0),
+            svcCostExt: Number(first.service_cost_ext || first.external_labor_cost || 0),
             expense_cost: Number(first.expense_cost || 0),
+            internalMM: Number(first.internal_mm || 0),
+            externalMM: Number(first.external_mm || 0),
             profit: Number(first.net_profit || first.profit || 0),
             profit_rate: Number(first.profit_rate || 0),
           });
 
           setLatestPlanSummary({
-            product_revenue: Number(latest.product_revenue || 0),
-            service_revenue: Number(latest.service_revenue || 0),
+            prodRevOwn: Number(latest.product_revenue_own || latest.product_revenue || 0),
+            prodRevExt: Number(latest.product_revenue_ext || 0),
+            svcRevOwn: Number(latest.service_revenue_own || latest.service_revenue || 0),
+            svcRevExt: Number(latest.service_revenue_ext || 0),
             total_revenue: latestRev,
-            purchase_cost: Number(latest.purchase_cost || 0),
-            internal_mm: Number(latest.internal_mm || 0),
-            internal_labor_cost: Number(latest.internal_labor_cost || 0),
-            external_mm: Number(latest.external_mm || 0),
-            external_labor_cost: Number(latest.external_labor_cost || 0),
+            prodCostOwn: Number(latest.product_cost_own || latest.purchase_cost || 0),
+            prodCostExt: Number(latest.product_cost_ext || 0),
+            svcCostOwn: Number(latest.service_cost_own || latest.internal_labor_cost || 0),
+            svcCostExt: Number(latest.service_cost_ext || latest.external_labor_cost || 0),
             expense_cost: Number(latest.expense_cost || 0),
+            internalMM: Number(latest.internal_mm || 0),
+            externalMM: Number(latest.external_mm || 0),
             profit: Number(latest.net_profit || latest.profit || 0),
             profit_rate: Number(latest.profit_rate || 0),
           });
@@ -503,6 +535,32 @@ export default function ProjectSettlementPage() {
             }
           } else if (latest.id === first.id) {
             setLatestManpowerPlan(baseManpowerPlan);
+          }
+
+          // 수지차 데이터 (부가수익/비용) 가져오기
+          try {
+            const [baseDiffRes, latestDiffRes] = await Promise.all([
+              fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${first.id}`),
+              fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${latest.id}`)
+            ]);
+
+            if (baseDiffRes.ok && latestDiffRes.ok) {
+              const baseDiff = await baseDiffRes.json();
+              const latestDiff = await latestDiffRes.json();
+
+              setExtraData({
+                baseExtraRevenue: baseDiff.extraRevenue || 0,
+                baseExtraExpense: baseDiff.extraExpense || 0,
+                latestExtraRevenue: latestDiff.extraRevenue || 0,
+                latestExtraExpense: latestDiff.extraExpense || 0,
+                baseBizCostIndirect: baseDiff.bizCostIndirect || 0,
+                latestBizCostIndirect: latestDiff.bizCostIndirect || 0,
+                baseProdCostOwn: baseDiff.prodCostOwn || 0,
+                latestProdCostOwn: latestDiff.prodCostOwn || 0,
+              });
+            }
+          } catch (e) {
+            console.error("Error fetching profitability diff data:", e);
           }
         }
       }
@@ -1328,10 +1386,13 @@ export default function ProjectSettlementPage() {
     return {
       prodRevOwn, prodRevExt,
       svcRevOwn, svcRevExt,
+      total_revenue: prodRevOwn + prodRevExt + svcRevOwn + svcRevExt,
       prodCostOwn, prodCostExt,
       svcCostOwn, svcCostExt,
-      expenseTotal,
-      internalMM, externalMM
+      expense_cost: expenseTotal,
+      internalMM, externalMM,
+      profit: (prodRevOwn + prodRevExt + svcRevOwn + svcRevExt) - (prodCostOwn + prodCostExt + svcCostOwn + svcCostExt + expenseTotal),
+      profit_rate: (prodRevOwn + prodRevExt + svcRevOwn + svcRevExt) > 0 ? (((prodRevOwn + prodRevExt + svcRevOwn + svcRevExt) - (prodCostOwn + prodCostExt + svcCostOwn + svcCostExt + expenseTotal)) / (prodRevOwn + prodRevExt + svcRevOwn + svcRevExt)) * 100 : 0
     };
   };
 
@@ -1359,7 +1420,7 @@ export default function ProjectSettlementPage() {
   const latestInternalCost = latestSum.svcCostOwn;
   const latestExternalMM = latestSum.externalMM;
   const latestExternalCost = latestSum.svcCostExt;
-  const latestExpense = Math.round(latestSum.expenseTotal);
+  const latestExpense = Math.round(latestSum.expense_cost);
 
   const latestRevenue = latestPlanSummary?.total_revenue || 0;
   const latestProfitCalculated = latestRevenue - (latestPurchase + latestInternalCost + latestExternalCost + latestExpense);
@@ -1381,8 +1442,8 @@ export default function ProjectSettlementPage() {
   const actualPurchase = Number(settlement.actual_prod_cost_ext || 0);
   const actualExpense = Number(settlement.actual_expense_general || 0) + Number(settlement.actual_expense_special || 0);
 
-  const totalActualCostValue = actualPurchase + totalActualLaborCostOwn + totalActualLaborCostExt + actualExpense;
-  const calculatedActualProfit = totalActualRevenue - totalActualCostValue;
+  const totalActualCostValue = actualPurchase + totalActualLaborCostOwn + totalActualLaborCostExt + actualExpense + Number(settlement.actual_biz_cost_indirect || 0);
+  const calculatedActualProfit = totalActualRevenue - totalActualCostValue + (Number(settlement.actual_extra_revenue || 0) - Number(settlement.actual_extra_cost || 0));
   const calculatedActualProfitRate = totalActualRevenue > 0 ? (calculatedActualProfit / totalActualRevenue) * 100 : 0;
 
 
@@ -1687,7 +1748,7 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{baseExternalMM.toFixed(2)}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{baseExternalCost.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{baseExpense.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">-</td>
+                      <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{(extraData.baseExtraRevenue - extraData.baseExtraExpense).toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{baseProfitCalculated.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-center text-[14px]">{baseProfitRateCalculated.toFixed(2)}%</td>
                     </tr>
@@ -1695,10 +1756,10 @@ export default function ProjectSettlementPage() {
                     <tr className="bg-[#FFFFCC]">
                       <td className="border border-gray-300 px-[10px] py-[4px] bg-[#DAEEF3] text-center text-[14px]">최종 변경</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
-                        {firstProfitabilityId === latestProfitabilityId ? "-" : latestPlanSummary?.product_revenue.toLocaleString()}
+                        {firstProfitabilityId === latestProfitabilityId ? "-" : latestPlanSummary?.prodRevOwn.toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
-                        {firstProfitabilityId === latestProfitabilityId ? "-" : latestPlanSummary?.service_revenue.toLocaleString()}
+                        {firstProfitabilityId === latestProfitabilityId ? "-" : latestPlanSummary?.svcRevOwn.toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right font-medium text-[14px]">
                         {firstProfitabilityId === latestProfitabilityId ? "-" : latestPlanSummary?.total_revenue.toLocaleString()}
@@ -1721,7 +1782,7 @@ export default function ProjectSettlementPage() {
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
                         {firstProfitabilityId === latestProfitabilityId ? "-" : latestExpense.toLocaleString()}
                       </td>
-                      <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">-</td>
+                      <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{(extraData.latestExtraRevenue - extraData.latestExtraExpense).toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
                         {firstProfitabilityId === latestProfitabilityId ? "-" : latestProfitCalculated.toLocaleString()}
                       </td>
@@ -1757,7 +1818,7 @@ export default function ProjectSettlementPage() {
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{actualExpense.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
-                        {calculatedActualProfit > 0 ? Math.floor(calculatedActualProfit * 0.3).toLocaleString() : "-"}
+                        {((settlement.actual_extra_revenue || 0) - (settlement.actual_extra_cost || 0)).toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right font-bold text-[14px]">{calculatedActualProfit.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-center font-bold text-[14px]">{calculatedActualProfitRate.toFixed(2)}%</td>
@@ -1790,7 +1851,7 @@ export default function ProjectSettlementPage() {
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">{actualExpense.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right text-[14px]">
-                        {calculatedActualProfit > 0 ? Math.floor(calculatedActualProfit * 0.3).toLocaleString() : "-"}
+                        {((settlement.actual_extra_revenue || 0) - (settlement.actual_extra_cost || 0)).toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-right font-bold text-[14px]">{calculatedActualProfit.toLocaleString()}</td>
                       <td className="border border-gray-300 px-[10px] py-[4px] text-center font-bold text-[14px]">{calculatedActualProfitRate.toFixed(2)}%</td>
@@ -2124,7 +2185,7 @@ export default function ProjectSettlementPage() {
                       <td rowSpan={3} className="border border-gray-400 bg-[#D9D9D9] font-bold py-2 text-[14px]">프로젝트 경비</td>
                       <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 font-normal text-[14px]">일반 경비</td>
                       <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{Math.round(expenseBreakdown.general).toLocaleString()}</td>
-                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.expenseTotal.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{latestSum.expense_cost.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
@@ -2160,21 +2221,126 @@ export default function ProjectSettlementPage() {
                     <tr className="bg-[#D9D9D9] font-bold">
                       <td colSpan={2} className="border border-gray-400 py-2 text-[14px]">경비 소계</td>
                       <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">{Math.round(expenseBreakdown.general + expenseBreakdown.special).toLocaleString()}</td>
-                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">{latestSum.expenseTotal.toLocaleString()}</td>
+                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">{latestSum.expense_cost.toLocaleString()}</td>
                       <td className="border border-gray-400 bg-[#D9D9D9] text-right px-4 py-2 text-[14px] font-bold">{settlement.actual_other_cost.toLocaleString()}</td>
+                    </tr>
+
+                    {/* 사업 손익 섹션 */}
+                    <tr>
+                      <td rowSpan={3} className="border border-gray-400 bg-[#D9D9D9] font-bold py-2 text-[14px]">사업 손익</td>
+                      <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 text-[14px]">당사 제품 원가 (+)</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.baseProdCostOwn.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.latestProdCostOwn.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
+                        <input
+                          type="text"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          disabled={isReadOnly}
+                          value={focusedField === 'actual_prod_cost_own' && (settlement.actual_prod_cost_own || 0) === 0 ? "" : (settlement.actual_prod_cost_own || 0).toLocaleString()}
+                          onFocus={() => setFocusedField('actual_prod_cost_own')}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+                            setSettlement({ ...settlement, actual_prod_cost_own: val });
+                          }}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 text-[14px]">경상비용</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.baseBizCostIndirect.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.latestBizCostIndirect.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
+                        <input
+                          type="text"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          disabled={isReadOnly}
+                          value={focusedField === 'actual_biz_cost_indirect' && (settlement.actual_biz_cost_indirect || 0) === 0 ? "" : ((settlement.actual_biz_cost_indirect || 0) === 0 ? "0" : (settlement.actual_biz_cost_indirect || 0).toLocaleString())}
+                          onFocus={() => setFocusedField('actual_biz_cost_indirect')}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+                            setSettlement({ ...settlement, actual_biz_cost_indirect: val });
+                          }}
+                        />
+                      </td>
+                    </tr>
+                    <tr className="bg-[#D9D9D9] font-bold">
+                      <td colSpan={2} className="border border-gray-400 py-2 text-[14px]">사업 손익 합계</td>
+                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">
+                        {(baseSum.profit + baseSum.prodCostOwn - extraData.baseProdCostOwn - extraData.baseBizCostIndirect).toLocaleString()}
+                      </td>
+                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">
+                        {(latestSum.profit + latestSum.prodCostOwn - extraData.latestProdCostOwn - extraData.latestBizCostIndirect).toLocaleString()}
+                      </td>
+                      <td className={`border border-gray-400 bg-[#D9D9D9] text-right px-4 py-2 text-[14px] font-bold ${(((settlement.actual_prod_rev_own || 0) + (settlement.actual_prod_rev_ext || 0) - (settlement.actual_prod_cost_own || 0) - (settlement.actual_prod_cost_ext || 0)) + ((settlement.actual_svc_rev_own || 0) + (settlement.actual_svc_rev_ext || 0)) - ((settlement.actual_svc_cost_own || 0) + (settlement.actual_svc_cost_ext || 0)) - ((settlement.actual_expense_general || 0) + (settlement.actual_expense_special || 0)) - (Number(settlement.actual_biz_cost_indirect || 0))) < 0 ? 'text-red-600' : ''}`}>
+                        {(((settlement.actual_prod_rev_own || 0) + (settlement.actual_prod_rev_ext || 0) - (settlement.actual_prod_cost_own || 0) - (settlement.actual_prod_cost_ext || 0)) +
+                          (((settlement.actual_svc_rev_own || 0) + (settlement.actual_svc_rev_ext || 0)) - ((settlement.actual_svc_cost_own || 0) + (settlement.actual_svc_cost_ext || 0))) -
+                          ((settlement.actual_expense_general || 0) + (settlement.actual_expense_special || 0)) -
+                          (Number(settlement.actual_biz_cost_indirect || 0))).toLocaleString()}
+                      </td>
+                    </tr>
+
+                    {/* 부가 수익 섹션 */}
+                    <tr>
+                      <td rowSpan={3} className="border border-gray-400 bg-[#D9D9D9] font-bold py-2 text-[14px]">부가 수익</td>
+                      <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 text-[14px]">부가 예상 수익 (+)</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.baseExtraRevenue.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.latestExtraRevenue.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
+                        <input
+                          type="text"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          disabled={isReadOnly}
+                          value={focusedField === 'actual_extra_revenue' && (settlement.actual_extra_revenue || 0) === 0 ? "" : ((settlement.actual_extra_revenue || 0) === 0 ? "0" : (settlement.actual_extra_revenue || 0).toLocaleString())}
+                          onFocus={() => setFocusedField('actual_extra_revenue')}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+                            setSettlement({ ...settlement, actual_extra_revenue: val });
+                          }}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2} className="border border-gray-400 bg-white text-left px-4 py-2 text-[14px]">부가 예상 비용 (-)</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.baseExtraExpense.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#FFFFCC] text-right px-4 py-2 text-[14px]">{extraData.latestExtraExpense.toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
+                        <input
+                          type="text"
+                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          disabled={isReadOnly}
+                          value={focusedField === 'actual_extra_cost' && (settlement.actual_extra_cost || 0) === 0 ? "" : ((settlement.actual_extra_cost || 0) === 0 ? "0" : (settlement.actual_extra_cost || 0).toLocaleString())}
+                          onFocus={() => setFocusedField('actual_extra_cost')}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+                            setSettlement({ ...settlement, actual_extra_cost: val });
+                          }}
+                        />
+                      </td>
+                    </tr>
+                    <tr className="bg-[#D9D9D9] font-bold">
+                      <td colSpan={2} className="border border-gray-400 py-2 text-[14px]">부가수익 합계</td>
+                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">{(extraData.baseExtraRevenue - extraData.baseExtraExpense).toLocaleString()}</td>
+                      <td className="border border-gray-400 text-right px-4 py-2 text-[14px]">{(extraData.latestExtraRevenue - extraData.latestExtraExpense).toLocaleString()}</td>
+                      <td className="border border-gray-400 bg-[#D9D9D9] text-right px-4 py-2 text-[14px] font-bold">
+                        {((settlement.actual_extra_revenue || 0) - (settlement.actual_extra_cost || 0)).toLocaleString()}
+                      </td>
                     </tr>
 
                     {/* 최종 영업 이익 */}
                     <tr className="bg-[#D9D9D9] font-bold text-gray-900 border-t-2 border-gray-500">
                       <td colSpan={3} className="border border-gray-400 py-2 text-[14px]">프로젝트 영업 이익</td>
-                      <td className={`border border-gray-400 text-right px-4 py-2 text-[14px] ${(baseSum.prodRevOwn + baseSum.prodRevExt + baseSum.svcRevOwn + baseSum.svcRevExt - (baseSum.prodCostOwn + baseSum.prodCostExt + baseSum.svcCostOwn + baseSum.svcCostExt + Math.round(expenseBreakdown.general + expenseBreakdown.special))) < 0 ? 'text-red-600' : ''}`}>
-                        {(baseSum.prodRevOwn + baseSum.prodRevExt + baseSum.svcRevOwn + baseSum.svcRevExt - (baseSum.prodCostOwn + baseSum.prodCostExt + baseSum.svcCostOwn + baseSum.svcCostExt + Math.round(expenseBreakdown.general + expenseBreakdown.special))).toLocaleString()}
+                      <td className={`border border-gray-400 text-right px-4 py-2 text-[14px] ${(baseSum.prodRevOwn + baseSum.prodRevExt + baseSum.svcRevOwn + baseSum.svcRevExt - (baseSum.prodCostOwn + baseSum.prodCostExt + baseSum.svcCostOwn + baseSum.svcCostExt + (expenseBreakdown.general + expenseBreakdown.special)) + (extraData.baseExtraRevenue - extraData.baseExtraExpense)) < 0 ? 'text-red-600' : ''}`}>
+                        {(baseSum.prodRevOwn + baseSum.prodRevExt + baseSum.svcRevOwn + baseSum.svcRevExt - (baseSum.prodCostOwn + baseSum.prodCostExt + baseSum.svcCostOwn + baseSum.svcCostExt + (expenseBreakdown.general + expenseBreakdown.special)) + (extraData.baseExtraRevenue - extraData.baseExtraExpense)).toLocaleString()}
                       </td>
-                      <td className={`border border-gray-400 text-right px-4 py-2 text-[14px] ${(latestSum.prodRevOwn + latestSum.prodRevExt + latestSum.svcRevOwn + latestSum.svcRevExt - (latestSum.prodCostOwn + latestSum.prodCostExt + latestSum.svcCostOwn + latestSum.svcCostExt + latestSum.expenseTotal)) < 0 ? 'text-red-600' : ''}`}>
-                        {(latestSum.prodRevOwn + latestSum.prodRevExt + latestSum.svcRevOwn + latestSum.svcRevExt - (latestSum.prodCostOwn + latestSum.prodCostExt + latestSum.svcCostOwn + latestSum.svcCostExt + latestSum.expenseTotal)).toLocaleString()}
+                      <td className={`border border-gray-400 text-right px-4 py-2 text-[14px] ${((latestPlanSummary?.profit || 0) + (extraData.latestExtraRevenue - extraData.latestExtraExpense)) < 0 ? 'text-red-600' : ''}`}>
+                        {((latestPlanSummary?.profit || 0) + (extraData.latestExtraRevenue - extraData.latestExtraExpense)).toLocaleString()}
                       </td>
-                      <td className={`border border-gray-400 bg-[#D9D9D9] text-right px-4 py-2 text-[14px] font-bold ${(settlement.actual_revenue - settlement.actual_cost) < 0 ? 'text-red-600' : ''}`}>
-                        {(settlement.actual_revenue - settlement.actual_cost).toLocaleString()}
+                      <td className={`border border-gray-400 bg-[#D9D9D9] text-right px-4 py-2 text-[14px] font-bold ${calculatedActualProfit < 0 ? 'text-red-600' : ''}`}>
+                        {calculatedActualProfit.toLocaleString()}
                       </td>
                     </tr>
                   </tbody>
@@ -3171,7 +3337,7 @@ export default function ProjectSettlementPage() {
                           {(Math.round(expenseBreakdown.general + expenseBreakdown.special)).toLocaleString()}
                         </td>
                         <td className="border border-gray-300 py-[4px] px-[10px] text-right text-sm">
-                          {latestSum.expenseTotal.toLocaleString()}
+                          {latestSum.expense_cost.toLocaleString()}
                         </td>
                         <td className="border border-gray-300 py-[4px] px-[10px] text-right bg-[#EBF1DE] border-x-2 border-x-gray-500 text-sm font-bold">
                           {Math.round(settlement.actual_other_cost || 0).toLocaleString()}

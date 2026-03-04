@@ -24,6 +24,7 @@ export async function GET(
                     actual_prod_rev_own, actual_prod_rev_ext, actual_svc_rev_own, actual_svc_rev_ext,
                     actual_prod_cost_own, actual_prod_cost_ext, actual_svc_cost_own, actual_svc_cost_ext,
                     actual_svc_mm_own, actual_svc_mm_ext, actual_expense_general, actual_expense_special,
+                    actual_biz_cost_indirect, actual_extra_revenue, actual_extra_cost,
                     planned_svc_mm_own, planned_svc_mm_ext,
                     notes, status, created_at, updated_at, created_by
              FROM we_project_settlement WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -109,8 +110,9 @@ export async function POST(
                 actual_prod_rev_own, actual_prod_rev_ext, actual_svc_rev_own, actual_svc_rev_ext,
                 actual_prod_cost_own, actual_prod_cost_ext, actual_svc_cost_own, actual_svc_cost_ext,
                 actual_svc_mm_own, actual_svc_mm_ext, actual_expense_general, actual_expense_special,
+                actual_biz_cost_indirect, actual_extra_revenue, actual_extra_cost,
                 notes, status, created_by, planned_svc_mm_own, planned_svc_mm_ext
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)
             RETURNING *`,
             [
                 projectId,
@@ -139,6 +141,9 @@ export async function POST(
                 settlement.actual_svc_mm_ext || 0,
                 settlement.actual_expense_general || 0,
                 settlement.actual_expense_special || 0,
+                settlement.actual_biz_cost_indirect || 0,
+                settlement.actual_extra_revenue || 0,
+                settlement.actual_extra_cost || 0,
                 settlement.notes,
                 settlement.status || 'STANDBY',
                 user.id,
@@ -297,12 +302,15 @@ export async function PUT(
                 actual_svc_mm_ext = $16,
                 actual_expense_general = $17,
                 actual_expense_special = $18,
-                notes = $19,
-                status = $20,
-                planned_svc_mm_own = $21,
-                planned_svc_mm_ext = $22,
+                actual_biz_cost_indirect = $19,
+                actual_extra_revenue = $20,
+                actual_extra_cost = $21,
+                notes = $22,
+                status = $23,
+                planned_svc_mm_own = $24,
+                planned_svc_mm_ext = $25,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $23
+            WHERE id = $26
             RETURNING *`,
             [
                 settlement.settlement_date,
@@ -323,6 +331,9 @@ export async function PUT(
                 settlement.actual_svc_mm_ext || 0,
                 settlement.actual_expense_general || 0,
                 settlement.actual_expense_special || 0,
+                settlement.actual_biz_cost_indirect || 0,
+                settlement.actual_extra_revenue || 0,
+                settlement.actual_extra_cost || 0,
                 settlement.notes,
                 settlement.status || 'STANDBY',
                 settlement.planned_svc_mm_own || 0,

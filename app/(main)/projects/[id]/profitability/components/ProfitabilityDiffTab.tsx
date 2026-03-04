@@ -43,6 +43,8 @@ export function ProfitabilityDiffTab({
   const [extraRevenueDesc, setExtraRevenueDesc] = React.useState("");
   const [extraExpense, setExtraExpense] = React.useState(0);
   const [extraExpenseDesc, setExtraExpenseDesc] = React.useState("");
+  const [bizCostIndirect, setBizCostIndirect] = React.useState(0);
+  const [prodCostOwn, setProdCostOwn] = React.useState(0);
   const [saving, setSaving] = useState(false);
 
   // --- 초기 데이터 로드 ---
@@ -54,6 +56,8 @@ export function ProfitabilityDiffTab({
         setExtraRevenueDesc(data.extraRevenueDesc || "");
         setExtraExpense(data.extraExpense || 0);
         setExtraExpenseDesc(data.extraExpenseDesc || "");
+        setBizCostIndirect(data.bizCostIndirect || 0);
+        setProdCostOwn(data.prodCostOwn || 0);
       } catch (error) {
         console.error("Error loading profitability diff data:", error);
       }
@@ -123,10 +127,12 @@ export function ProfitabilityDiffTab({
         extraRevenueDesc,
         extraExpense,
         extraExpenseDesc,
+        bizCostIndirect,
+        prodCostOwn,
         totalRevenue: summary.totalRevenue,
-        totalCost: summary.totalCost,
-        netProfit: summary.netProfit,
-        profitRate: summary.profitRate,
+        totalCost: summary.totalCost + bizCostIndirect + prodCostOwn, // Update total cost if needed
+        netProfit: summary.netProfit - bizCostIndirect - prodCostOwn, // Update net profit
+        profitRate: (summary.totalRevenue > 0) ? ((summary.netProfit - bizCostIndirect - prodCostOwn) / summary.totalRevenue) : 0,
       }, profitabilityId);
       showToast("데이터가 성공적으로 저장되었습니다.", "success");
       if (onSave) onSave();
@@ -383,22 +389,44 @@ export function ProfitabilityDiffTab({
               <td rowSpan={7} className="border border-gray-300 px-2 text-center font-bold text-gray-900 w-[100px] bg-gray-50/50">손익합계</td>
               <td rowSpan={3} className="border border-gray-300 px-1 text-center font-bold text-gray-900 w-[70px] leading-tight text-sm">사업<br />손익</td>
               <td colSpan={2} className="border border-gray-300 px-[10px] text-left text-gray-700">당사 제품 원가 (+)</td>
-              <td className="border border-gray-300 px-2 text-right font-medium text-gray-900">{fmt(0)}</td>
-              <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(0, revenue.grandTotal)}</td>
+              <td className="border border-gray-300 p-0 text-right font-medium text-gray-900 h-[35px]">
+                <input
+                  type="text"
+                  value={prodCostOwn === 0 ? "0" : prodCostOwn.toLocaleString()}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value.replace(/[^0-9-]/g, "")) || 0;
+                    setProdCostOwn(val);
+                  }}
+                  disabled={isReadOnly}
+                  className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                />
+              </td>
+              <td className="border border-gray-300 px-2 text-right text-gray-700">{calcRate(prodCostOwn, revenue.grandTotal)}</td>
               <td className="border border-gray-300 px-[10px]"></td>
               <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm">제품원가 비율</td>
             </tr>
             <tr className="h-[35px]">
               <td colSpan={2} className="border border-gray-300 px-[10px] text-left text-gray-700">경상비용</td>
-              <td className="border border-gray-300 px-2 text-right font-medium text-gray-900"></td>
-              <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700 font-bold">0.00%</td>
+              <td className="border border-gray-300 p-0 text-right font-medium text-gray-900 h-[35px]">
+                <input
+                  type="text"
+                  value={bizCostIndirect === 0 ? "0" : bizCostIndirect.toLocaleString()}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value.replace(/[^0-9-]/g, "")) || 0;
+                    setBizCostIndirect(val);
+                  }}
+                  disabled={isReadOnly}
+                  className="w-full h-[35px] border-none px-[10px] text-right text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                />
+              </td>
+              <td className="border border-gray-300 px-2 text-right bg-blue-50/30 text-blue-700 font-bold">{calcRate(bizCostIndirect, revenue.grandTotal)}</td>
               <td className="border border-gray-300 px-[10px]"></td>
-              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm">매출액 18%</td>
+              <td className="border border-gray-300 px-[10px] text-left text-gray-600 text-sm">경상비용 비율</td>
             </tr>
             <tr className="h-[35px] bg-gray-100 font-bold">
               <td colSpan={2} className="border border-gray-300 px-4 text-left font-bold text-gray-900">사업 손익 합계</td>
-              <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit)}`}>{fmt(businessPL.totalProfit)}</td>
-              <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit)}`}>{calcRate(businessPL.totalProfit, revenue.grandTotal)}</td>
+              <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit - bizCostIndirect - prodCostOwn)}`}>{fmt(businessPL.totalProfit - bizCostIndirect - prodCostOwn)}</td>
+              <td className={`border border-gray-300 px-2 text-right font-bold ${getClr(businessPL.totalProfit - bizCostIndirect - prodCostOwn)}`}>{calcRate(businessPL.totalProfit - bizCostIndirect - prodCostOwn, revenue.grandTotal)}</td>
               <td className="border border-gray-300 px-4"></td>
               <td className="border border-gray-300 px-4 text-left text-gray-600 text-sm font-normal">사업손익 / 수주합계</td>
             </tr>
@@ -466,8 +494,8 @@ export function ProfitabilityDiffTab({
 
             <tr className="h-[40px] bg-slate-800 text-white font-bold text-lg">
               <td colSpan={3} className="border border-slate-700 px-4 text-left text-white font-bold">회사 손익 합계</td>
-              <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal < 0 ? 'text-red-400' : 'text-white'}`}>{fmt(companyProfitTotal)}</td>
-              <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal < 0 ? 'text-red-400' : 'text-blue-300'}`}>{calcRate(companyProfitTotal, revenue.grandTotal)}</td>
+              <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal - bizCostIndirect - prodCostOwn < 0 ? 'text-red-400' : 'text-white'}`}>{fmt(companyProfitTotal - bizCostIndirect - prodCostOwn)}</td>
+              <td className={`border border-slate-700 px-2 text-right font-bold ${companyProfitTotal - bizCostIndirect - prodCostOwn < 0 ? 'text-red-400' : 'text-blue-300'}`}>{calcRate(companyProfitTotal - bizCostIndirect - prodCostOwn, revenue.grandTotal)}</td>
               <td className="border border-slate-700 px-4"></td>
               <td className="border border-slate-700 px-4 text-sm font-normal text-gray-300 text-left">회사수익합계 / 수주합계</td>
             </tr>
