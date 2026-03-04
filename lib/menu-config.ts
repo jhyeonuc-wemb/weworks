@@ -76,18 +76,9 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
             { menuKey: "projects", href: "/projects", label: "프로젝트 현황", icon: FolderGit2, displayOrder: 31 },
             { menuKey: "vrb-review", href: "/vrb-review", label: "VRB 현황", icon: CheckCircle2, displayOrder: 32 },
             { menuKey: "contract-status", href: "/contract-status", label: "계약 현황", icon: FileText, displayOrder: 33 },
-            { menuKey: "profitability", href: "/profitability", label: "수지분석서 현황", icon: DollarSign, displayOrder: 34 },
-            { menuKey: "settlement", href: "/settlement", label: "수지정산서 현황", icon: FileText, displayOrder: 35 },
-        ],
-    },
-    {
-        menuKey: "progress-management-group",
-        href: "/progress-management",
-        label: "프로젝트 진척관리",
-        icon: CheckCircle2,
-        displayOrder: 36,
-        children: [
-            { menuKey: "progress-management/monitoring", href: "/progress-management/monitoring", label: "프로젝트 모니터링", icon: LayoutDashboard, displayOrder: 37 },
+            { menuKey: "progress-management/monitoring", href: "/progress-management/monitoring", label: "프로젝트 진행 현황", icon: LayoutDashboard, displayOrder: 34 },
+            { menuKey: "profitability", href: "/profitability", label: "수지분석서 현황", icon: DollarSign, displayOrder: 35 },
+            { menuKey: "settlement", href: "/settlement", label: "수지정산서 현황", icon: FileText, displayOrder: 36 },
         ],
     },
     {
