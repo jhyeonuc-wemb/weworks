@@ -114,10 +114,11 @@ export default function ProjectMonitoringPage() {
     }, [data]);
 
     const statusOptions = [
-        { value: "전체", label: "건전성" },
+        { value: "전체", label: "진행상태" },
         { value: "정상", label: "정상" },
-        { value: "RISK", label: "RISK" },
-        { value: "이슈", label: "이슈" }
+        { value: "일정지연", label: "일정지연" },
+        { value: "대기", label: "대기" },
+        { value: "종료", label: "종료" }
     ];
 
     const filteredData = useMemo(() => {
@@ -132,7 +133,7 @@ export default function ProjectMonitoringPage() {
         }
 
         if (searchStatus !== "전체") {
-            filtered = filtered.filter(item => item.progress_status === searchStatus);
+            filtered = filtered.filter(item => (item.progress_state || '정상') === searchStatus);
         }
 
         return filtered;
