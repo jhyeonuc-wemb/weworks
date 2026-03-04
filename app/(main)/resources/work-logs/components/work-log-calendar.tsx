@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
-import allLocales from "@fullcalendar/core/locales-all";
+import koLocale from "@fullcalendar/core/locales/ko";
 import { EventContentArg, EventClickArg } from "@fullcalendar/core";
 import { cn } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -281,7 +281,7 @@ export default function WorkLogCalendar({
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        locales={allLocales}
+        locales={[koLocale]}
         locale="ko"
         headerToolbar={{
           left: "today",
