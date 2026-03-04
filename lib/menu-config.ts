@@ -81,6 +81,16 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
         ],
     },
     {
+        menuKey: "progress-management-group",
+        href: "/progress-management",
+        label: "프로젝트 진척관리",
+        icon: CheckCircle2,
+        displayOrder: 36,
+        children: [
+            { menuKey: "progress-management/monitoring", href: "/progress-management/monitoring", label: "프로젝트 모니터링", icon: LayoutDashboard, displayOrder: 37 },
+        ],
+    },
+    {
         menuKey: "maintenance-group",
         href: "/maintenance",
         label: "유지보수",
@@ -94,7 +104,7 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
     {
         menuKey: "resources-group",
         href: "/resources",
-        label: "업무실적",
+        label: "자원",
         icon: Boxes,
         displayOrder: 50,
         children: [
