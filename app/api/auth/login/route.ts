@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
         // 로그인 후 이동할 첫 번째 허용 경로
         const MENU_KEY_TO_PATH: Record<string, string> = {
             'dashboard': '/dashboard',
-            'sales': '/sales',
+            'sales/leads': '/sales/leads',
+            'sales/opportunities': '/sales/opportunities',
             'projects': '/projects',
             'vrb-review': '/vrb-review',
             'contract-status': '/contract-status',

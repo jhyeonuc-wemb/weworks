@@ -94,7 +94,7 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
     {
         menuKey: "resources-group",
         href: "/resources",
-        label: "자원",
+        label: "업무실적",
         icon: Boxes,
         displayOrder: 50,
         children: [

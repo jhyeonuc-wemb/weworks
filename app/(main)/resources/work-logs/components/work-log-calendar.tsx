@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -119,12 +119,30 @@ export default function WorkLogCalendar({
     return isHoliday(dateStr) ? ["fc-day-holiday"] : [];
   };
 
-  const handleDatesSetInternal = (info: any) => {
-    setCurrentDate(info.view.currentStart);
-    setCurrentView(info.view.type);
-    setCurrentTitle(info.view.title); // FullCalendar에서 만든 "2026년 3월 1일 ~ 7일" 등
+  const prevDateRef = useRef<number>(0);
+  const prevViewRef = useRef<string>("");
+  const prevTitleRef = useRef<string>("");
+
+  const handleDatesSetInternal = useCallback((info: any) => {
+    const newTimestamp = info.view.currentStart.getTime();
+    const newView = info.view.type;
+    const newTitle = info.view.title;
+
+    // 실제로 변경된 경우에만 setState 호출 (무한루프 방지)
+    if (newTimestamp !== prevDateRef.current) {
+      prevDateRef.current = newTimestamp;
+      setCurrentDate(info.view.currentStart);
+    }
+    if (newView !== prevViewRef.current) {
+      prevViewRef.current = newView;
+      setCurrentView(newView);
+    }
+    if (newTitle !== prevTitleRef.current) {
+      prevTitleRef.current = newTitle;
+      setCurrentTitle(newTitle);
+    }
     if (onDatesSet) onDatesSet(info);
-  };
+  }, [onDatesSet]);
 
   const isMonthView = currentView.includes("Month");
   const isWeekView = currentView.includes("Week");

@@ -57,6 +57,8 @@ export default function SettlementListPage() {
   const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [profitabilities, setProfitabilities] = useState<{ project_id: number; status: string }[]>([]);
+  const [lastProfitabilityStatus, setLastProfitabilityStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState("project_code_desc");
@@ -72,16 +74,33 @@ export default function SettlementListPage() {
     try {
       setLoading(true);
 
-      const settlementRes = await fetch("/api/settlement");
+      const [settlementRes, projectRes, profitabilityRes, phaseStatusRes] = await Promise.all([
+        fetch("/api/settlement"),
+        fetch("/api/projects"),
+        fetch("/api/profitability?latestOnly=true"),
+        fetch("/api/settings/phase-statuses?phaseCode=profitability"),
+      ]);
+
       if (settlementRes.ok) {
         const data = await settlementRes.json();
         setSettlements(data.settlements || []);
       }
-
-      const projectRes = await fetch("/api/projects");
       if (projectRes.ok) {
         const data = await projectRes.json();
         setProjects(data.projects || []);
+      }
+      if (profitabilityRes.ok) {
+        const data = await profitabilityRes.json();
+        setProfitabilities(data.profitabilities || []);
+      }
+      if (phaseStatusRes.ok) {
+        const data = await phaseStatusRes.json();
+        // display_order ASC 순 → 마지막 항목이 최종 상태
+        const statuses: { code: string; display_order: number }[] = data.statuses || [];
+        if (statuses.length > 0) {
+          const last = statuses[statuses.length - 1];
+          setLastProfitabilityStatus(last.code);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -210,9 +229,17 @@ export default function SettlementListPage() {
     router.push(`/projects/${selectedProjectId}/settlement`);
   };
 
-  const availableProjects = projects.filter(
-    (project) => !settlements.some((s) => s.project_id === project.id)
-  );
+  // 프로젝트 코드가 있고, 수지분석서가 최종 상태(단계 설정의 마지막 상태)인 프로젝트만 표시
+  const availableProjects = projects.filter((project) => {
+    if (!project.projectCode) return false;
+    const hasCompletedProfitability = lastProfitabilityStatus
+      ? profitabilities.some(
+        (prof) => prof.project_id === project.id && prof.status === lastProfitabilityStatus
+      )
+      : false;
+    const hasSettlement = settlements.some((s) => s.project_id === project.id);
+    return hasCompletedProfitability && !hasSettlement;
+  });
 
   const projectOptions = availableProjects
     .slice()
