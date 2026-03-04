@@ -22,7 +22,10 @@ interface Settlement {
   planned_svc_mm_ext: number;
   actual_revenue: number;
   actual_cost: number;
+  // (3) 수주차 실적 프로젝트영업이익 (API에서 계산)
+  actual_profit: number;
   revenue_diff: number;
+  // (1) 정산결과: 기준 계획대비 영업이익 증감액 (API에서 계산)
   profit_diff: number;
   actual_svc_mm_own: number;
   actual_svc_mm_ext: number;
@@ -361,7 +364,8 @@ export default function SettlementListPage() {
                 </TableRow>
               ) : (
                 paginatedSettlements.map((s) => {
-                  const actualProfit = s.actual_revenue - s.actual_cost;
+                  // API에서 (3) 수주차 실적 프로젝트영업이익으로 계산된 값
+                  const actualProfit = s.actual_profit ?? (s.actual_revenue - s.actual_cost);
 
                   return (
                     <TableRow
@@ -404,7 +408,7 @@ export default function SettlementListPage() {
                           {formatCurrency(actualProfit * 1000, "KRW", false)}
                         </span>
                       </TableCell>
-                      <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
+                      <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
                           "text-sm font-mono",
                           s.profit_diff >= 0 ? "text-emerald-600" : "text-rose-600"
