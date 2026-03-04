@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, FolderOpen, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, FolderOpen, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
 
 // 공통 UI 컴포넌트 임포트
 import {
-    Button,
     SearchInput,
-    Badge,
     Dropdown,
     Table,
     TableHeader,
@@ -154,12 +152,6 @@ export default function ProjectMonitoringPage() {
                         프로젝트 모니터링
                     </h1>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="secondary" onClick={fetchData} className="flex items-center gap-2">
-                        <Save className="h-4 w-4 rotate-90" />
-                        새로고침
-                    </Button>
-                </div>
             </div>
 
             {/* 검색 및 필터 */}
@@ -185,6 +177,15 @@ export default function ProjectMonitoringPage() {
                     className="w-36"
                     align="center"
                 />
+                <div className="ml-auto">
+                    <button
+                        onClick={fetchData}
+                        className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 h-10 text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                        새로 고침
+                    </button>
+                </div>
             </div>
 
             {/* List Table Section */}
@@ -192,21 +193,21 @@ export default function ProjectMonitoringPage() {
                 <div className="overflow-x-auto custom-scrollbar-main">
                     <Table className="w-full table-fixed">
                         <TableHeader className="bg-muted/30">
-                            <TableRow>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
-                                <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center">분야</TableHead>
-                                <TableHead className="w-[140px] px-4 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">PM</TableHead>
-                                <TableHead className="w-[80px] px-4 py-3 text-sm text-slate-900 text-center">PL</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">단계</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">상태</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">진행 상태</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계획(%)</TableHead>
-                                <TableHead className="w-[100px] px-4 py-3 text-sm text-slate-900 text-center whitespace-nowrap">실적(%)</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">계획MM</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">실행MM</TableHead>
-                                <TableHead className="w-[90px] px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">잔여MM</TableHead>
+                            <TableRow className="h-[46px]">
+                                <TableHead className="w-[90px] px-3 py-0 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
+                                <TableHead className="px-4 py-0 text-sm text-slate-900 text-center">프로젝트명</TableHead>
+                                <TableHead className="w-[110px] px-3 py-0 text-sm text-slate-900 text-center">분야</TableHead>
+                                <TableHead className="w-[120px] px-3 py-0 text-sm text-slate-900 text-center">고객사</TableHead>
+                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center">PM</TableHead>
+                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center">PL</TableHead>
+                                <TableHead className="w-[120px] px-3 py-0 text-sm text-slate-900 text-center whitespace-nowrap">단계</TableHead>
+                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">건전성</TableHead>
+                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">일정</TableHead>
+                                <TableHead className="w-[80px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">계획(%)</TableHead>
+                                <TableHead className="w-[80px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">실적(%)</TableHead>
+                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">계획MM</TableHead>
+                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">실행MM</TableHead>
+                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">잔여MM</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -231,88 +232,122 @@ export default function ProjectMonitoringPage() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                paginatedData.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
-                                        onClick={() => handleRowClick(row.id)}
-                                    >
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground/80 font-mono font-bold">{row.project_code}</span>
-                                        </TableCell>
-                                        <TableCell align="left" className="px-4 py-3">
-                                            <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1 leading-snug">
-                                                {row.project_name}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-[11px] text-foreground/70">{row.field}</div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-[11px] font-bold text-indigo-600 truncate">{row.customer || '-'}</div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-[11px] font-bold text-gray-700">{row.pm || '-'}</div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap border-r border-border/5">
-                                            <div className="text-[11px] font-bold text-emerald-600">{row.pl || '-'}</div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <Badge variant="default" className="bg-slate-100 text-slate-600 rounded-md text-[10px] px-1.5 h-5 border-none font-black uppercase">
-                                                {row.current_phase || '미지정'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <div className={cn(
-                                                "text-[11px] font-bold",
-                                                (row.progress_state === '정상' || !row.progress_state) ? "text-emerald-600" : "text-slate-500"
-                                            )}>
-                                                {row.progress_state || '정상'}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                                            <Badge
-                                                className={cn(
-                                                    "rounded-full px-3 h-6 text-[11px] font-black border-none shadow-sm",
+                                paginatedData.map((row) => {
+                                    const phaseStyle = (() => {
+                                        switch (row.current_phase?.toLowerCase()) {
+                                            case 'md_estimation': return 'bg-sky-100 text-sky-700';
+                                            case 'vrb': return 'bg-violet-100 text-violet-700';
+                                            case 'order_proposal': return 'bg-cyan-100 text-cyan-700';
+                                            case 'profitability': return 'bg-yellow-100 text-yellow-700';
+                                            case 'in_progress': return 'bg-green-100 text-green-700';
+                                            case 'settlement': return 'bg-indigo-100 text-indigo-700';
+                                            case 'warranty': return 'bg-orange-100 text-orange-700';
+                                            case 'paid_maintenance': return 'bg-rose-100 text-rose-700';
+                                            case 'completed': return 'bg-zinc-100 text-zinc-500';
+                                            default: return 'bg-slate-100 text-slate-500';
+                                        }
+                                    })();
+
+                                    return (
+                                        <TableRow
+                                            key={row.id}
+                                            className="h-[46px] hover:bg-primary/[0.02] transition-colors group cursor-pointer"
+                                            onClick={() => handleRowClick(row.id)}
+                                        >
+                                            {/* 코드 */}
+                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                                <span className="text-sm text-foreground/80 font-mono">{row.project_code}</span>
+                                            </TableCell>
+                                            {/* 프로젝트명 */}
+                                            <TableCell align="left" className="px-4 py-0">
+                                                <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1 leading-snug">
+                                                    {row.project_name}
+                                                </div>
+                                            </TableCell>
+                                            {/* 분야 */}
+                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                                <span className="text-sm text-foreground/80">{row.field || '-'}</span>
+                                            </TableCell>
+                                            {/* 고객사 */}
+                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                                <span className="text-sm text-foreground/80 truncate">{row.customer || '-'}</span>
+                                            </TableCell>
+                                            {/* PM */}
+                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                                <span className="text-sm text-foreground/80">{row.pm || '-'}</span>
+                                            </TableCell>
+                                            {/* PL */}
+                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap border-r border-border/5">
+                                                <span className="text-sm text-foreground/80">{row.pl || '-'}</span>
+                                            </TableCell>
+                                            {/* 단계 - 프로젝트 현황 스타일 */}
+                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                                <span className={`inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm ${phaseStyle}`}>
+                                                    {row.current_phase || '미지정'}
+                                                </span>
+                                            </TableCell>
+                                            {/* 건전성 */}
+                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                                <span className={cn(
+                                                    "inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm",
                                                     (row.progress_status === '정상' || !row.progress_status) ? "bg-green-100 text-green-700" :
-                                                        (row.progress_status === 'RISK' || row.progress_status === '이슈') ? "bg-red-100 text-red-700" :
-                                                            "bg-gray-100 text-gray-500"
-                                                )}
-                                            >
-                                                {row.progress_status || '정상'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
-                                            <div className="flex flex-col items-center">
-                                                <span className="font-mono font-bold text-[11px] text-gray-900 mb-1">{calculateScheduleProgress(row.actual_start_date, row.actual_end_date)}%</span>
-                                                <div className="w-10 h-1 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-indigo-500" style={{ width: `${calculateScheduleProgress(row.actual_start_date, row.actual_end_date)}%` }} />
+                                                        row.progress_status === 'RISK' ? "bg-amber-100 text-amber-700" :
+                                                            row.progress_status === '이슈' ? "bg-red-100 text-red-700" :
+                                                                "bg-gray-100 text-gray-500"
+                                                )}>
+                                                    {row.progress_status || '정상'}
+                                                </span>
+                                            </TableCell>
+                                            {/* 일정 상태 */}
+                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                                <span className={cn(
+                                                    "inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm",
+                                                    (row.progress_state === '정상' || !row.progress_state) ? "bg-green-100 text-green-700" :
+                                                        row.progress_state === '일정지연' ? "bg-amber-100 text-amber-700" :
+                                                            row.progress_state === '종료' ? "bg-zinc-100 text-zinc-500" :
+                                                                row.progress_state === '대기' ? "bg-slate-100 text-slate-500" :
+                                                                    "bg-slate-100 text-slate-500"
+                                                )}>
+                                                    {row.progress_state || '정상'}
+                                                </span>
+                                            </TableCell>
+                                            {/* 계획(%) */}
+                                            <TableCell align="center" className="px-2 py-0">
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="font-mono text-sm text-foreground/80">{calculateScheduleProgress(row.actual_start_date, row.actual_end_date)}%</span>
+                                                    <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-indigo-400" style={{ width: `${calculateScheduleProgress(row.actual_start_date, row.actual_end_date)}%` }} />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell align="center" className="px-4 py-3">
-                                            <div className="flex flex-col items-center">
-                                                <span className="font-mono font-bold text-[11px] text-gray-900 mb-1">{row.performance_rate}%</span>
-                                                <div className="w-10 h-1 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-emerald-500" style={{ width: `${row.performance_rate}%` }} />
+                                            </TableCell>
+                                            {/* 실적(%) */}
+                                            <TableCell align="center" className="px-2 py-0">
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="font-mono text-sm text-foreground/80">{row.performance_rate}%</span>
+                                                    <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-emerald-400" style={{ width: `${row.performance_rate}%` }} />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell align="right" className="px-4 py-3 font-mono text-[13px] font-bold text-gray-600">
-                                            {calculateTotalMM(row.planned_internal_mm, row.planned_external_mm)}
-                                        </TableCell>
-                                        <TableCell align="right" className="px-4 py-3 font-mono text-[13px] font-bold text-indigo-600">
-                                            {calculateTotalMM(row.executed_internal_mm, row.executed_external_mm)}
-                                        </TableCell>
-                                        <TableCell align="right" className={cn(
-                                            "px-4 py-3 font-mono text-[13px] font-black",
-                                            parseFloat(calculateRemainingMMTotal(row.planned_internal_mm, row.planned_external_mm, row.executed_internal_mm, row.executed_external_mm)) < 0
-                                                ? "text-red-500" : "text-gray-900"
-                                        )}>
-                                            {calculateRemainingMMTotal(row.planned_internal_mm, row.planned_external_mm, row.executed_internal_mm, row.executed_external_mm)}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                            </TableCell>
+                                            {/* 계획MM */}
+                                            <TableCell align="right" className="px-3 py-0 font-mono text-sm text-foreground/80">
+                                                {calculateTotalMM(row.planned_internal_mm, row.planned_external_mm)}
+                                            </TableCell>
+                                            {/* 실행MM */}
+                                            <TableCell align="right" className="px-3 py-0 font-mono text-sm text-foreground/80">
+                                                {calculateTotalMM(row.executed_internal_mm, row.executed_external_mm)}
+                                            </TableCell>
+                                            {/* 잔여MM */}
+                                            <TableCell align="right" className={cn(
+                                                "px-3 py-0 font-mono text-sm font-bold",
+                                                parseFloat(calculateRemainingMMTotal(row.planned_internal_mm, row.planned_external_mm, row.executed_internal_mm, row.executed_external_mm)) < 0
+                                                    ? "text-red-500" : "text-foreground/80"
+                                            )}>
+                                                {calculateRemainingMMTotal(row.planned_internal_mm, row.planned_external_mm, row.executed_internal_mm, row.executed_external_mm)}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                         </TableBody>
                     </Table>
@@ -320,15 +355,31 @@ export default function ProjectMonitoringPage() {
 
                 {/* Pagination */}
                 <div className="bg-muted/30 px-8 py-3 border-t border-border/20 flex items-center justify-center relative min-h-[56px]">
+                    {/* 좌측: TOTAL + ROWS */}
                     <div className="absolute left-8 flex items-center gap-6">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL : <span className="text-primary ml-1">{filteredData.length}</span></div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            TOTAL : <span className="text-primary ml-1">{filteredData.length}</span>
+                        </div>
+                        <div className="flex items-center gap-2 border-l border-border/40 pl-6">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
+                            <select
+                                value={itemsPerPage}
+                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors font-mono"
+                            >
+                                {[10, 20, 30, 50, 100].map(size => (
+                                    <option key={size} value={size}>{size}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
+                    {/* 중앙: 페이지네이션 */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+                            className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
@@ -351,23 +402,10 @@ export default function ProjectMonitoringPage() {
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all font-bold"
+                            className="p-1.5 rounded-lg border border-border/40 hover:bg-white disabled:opacity-30 transition-all"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </button>
-                    </div>
-
-                    <div className="absolute right-8 flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">ROWS :</span>
-                        <select
-                            value={itemsPerPage}
-                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                            className="bg-transparent text-xs font-bold text-slate-600 focus:outline-none cursor-pointer hover:text-primary transition-colors font-mono"
-                        >
-                            {[10, 20, 30, 50, 100].map(size => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
-                        </select>
                     </div>
                 </div>
             </div>
