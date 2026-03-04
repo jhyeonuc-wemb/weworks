@@ -125,8 +125,20 @@ export default function ProjectMonitoringDetailPage({
     const fetchProfitabilityDetail = async (profitId: number) => {
         try {
             const found = profitabilityVersions.find(v => v.id === profitId);
-            if (found) {
+            if (found && project) {
                 setProfitData(found);
+
+                // 수지분석서 데이터가 있을 경우 공수 정보 자동 반영 (초기 1회 혹은 버전 변경 시)
+                setProject(prev => {
+                    if (!prev) return null;
+                    return {
+                        ...prev,
+                        planned_internal_mm: found.our_mm || prev.planned_internal_mm,
+                        planned_external_mm: found.others_mm || prev.planned_external_mm,
+                        // 실행 공수는 수지분석서에 확정된 값이 있더라도, 모니터링 페이지에서 관리하므로
+                        // 기본적으로 계획 공수를 수지분석서 기준으로 동기화해줍니다.
+                    };
+                });
             }
         } catch (e) {
             console.error(e);
@@ -431,7 +443,7 @@ export default function ProjectMonitoringDetailPage({
                                         </div>
                                         <div className="grid grid-cols-2 gap-6">
                                             <Field>
-                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">Internal (내부)</FieldLabel>
+                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">당사 (Internal)</FieldLabel>
                                                 <Input
                                                     type="number" step="0.1"
                                                     value={project.planned_internal_mm || 0}
@@ -440,7 +452,7 @@ export default function ProjectMonitoringDetailPage({
                                                 />
                                             </Field>
                                             <Field>
-                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">External (외주)</FieldLabel>
+                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">외주 (External)</FieldLabel>
                                                 <Input
                                                     type="number" step="0.1"
                                                     value={project.planned_external_mm || 0}
@@ -462,7 +474,7 @@ export default function ProjectMonitoringDetailPage({
                                         </div>
                                         <div className="grid grid-cols-2 gap-6">
                                             <Field>
-                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">Internal (내부)</FieldLabel>
+                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">당사 (Internal)</FieldLabel>
                                                 <Input
                                                     type="number" step="0.1"
                                                     value={project.executed_internal_mm || 0}
@@ -471,7 +483,7 @@ export default function ProjectMonitoringDetailPage({
                                                 />
                                             </Field>
                                             <Field>
-                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">External (외주)</FieldLabel>
+                                                <FieldLabel className="text-[10px] text-gray-400 uppercase tracking-tighter">외주 (External)</FieldLabel>
                                                 <Input
                                                     type="number" step="0.1"
                                                     value={project.executed_external_mm || 0}
