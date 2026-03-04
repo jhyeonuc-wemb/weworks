@@ -7,6 +7,7 @@ export interface WorkLog {
     workHours?: number | null;
     logType: "plan" | "actual";
     category: string;
+    subCategory?: string | null;   // R&D 지원 / 일반 업무 하위 항목
     projectId?: number | null;
     projectName?: string | null;
     projectCode?: string | null;

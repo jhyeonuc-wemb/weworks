@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         w.id, w.user_id, w.work_date, 
         w.start_time, w.end_time, w.work_hours,
-        w.log_type, w.category, w.project_id,
+        w.log_type, w.category, w.sub_category, w.project_id,
         w.title, w.memo, w.created_at, w.updated_at,
         u.name as user_name,
         p.name as project_name
@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
             workHours: row.work_hours ? Number(row.work_hours) : null,
             logType: row.log_type,
             category: row.category,
+            subCategory: row.sub_category,
             projectId: row.project_id,
             projectName: row.project_name,
             title: row.title,
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
             endTime,
             logType = "actual",
             category,
+            subCategory,
             projectId,
             title,
             memo,
@@ -122,8 +124,8 @@ export async function POST(request: NextRequest) {
 
         const result = await query(
             `INSERT INTO we_work_logs 
-        (user_id, work_date, start_time, end_time, work_hours, log_type, category, project_id, title, memo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (user_id, work_date, start_time, end_time, work_hours, log_type, category, sub_category, project_id, title, memo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
             [
                 user.id,
@@ -133,6 +135,7 @@ export async function POST(request: NextRequest) {
                 workHours,
                 logType,
                 category || null,
+                subCategory || null,
                 projectId || null,
                 title || null,
                 memo || null,
@@ -152,6 +155,7 @@ export async function POST(request: NextRequest) {
                 workHours: row.work_hours ? Number(row.work_hours) : null,
                 logType: row.log_type,
                 category: row.category,
+                subCategory: row.sub_category,
                 projectId: row.project_id,
                 title: row.title,
                 memo: row.memo,

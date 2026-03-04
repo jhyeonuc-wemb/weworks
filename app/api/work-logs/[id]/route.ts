@@ -22,6 +22,7 @@ export async function PUT(
             endTime,
             logType,
             category,
+            subCategory,
             projectId,
             title,
             memo,
@@ -50,9 +51,9 @@ export async function PUT(
         const result = await query(
             `UPDATE we_work_logs SET
         work_date = $1, start_time = $2, end_time = $3, work_hours = $4,
-        log_type = $5, category = $6, project_id = $7, title = $8, memo = $9,
+        log_type = $5, category = $6, sub_category = $7, project_id = $8, title = $9, memo = $10,
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10 AND user_id = $11
+       WHERE id = $11 AND user_id = $12
        RETURNING *`,
             [
                 workDate,
@@ -61,6 +62,7 @@ export async function PUT(
                 workHours,
                 logType || "actual",
                 category || null,
+                subCategory || null,
                 projectId || null,
                 title || null,
                 memo || null,
@@ -86,6 +88,7 @@ export async function PUT(
                 workHours: row.work_hours ? Number(row.work_hours) : null,
                 logType: row.log_type,
                 category: row.category,
+                subCategory: row.sub_category,
                 projectId: row.project_id,
                 title: row.title,
                 memo: row.memo,

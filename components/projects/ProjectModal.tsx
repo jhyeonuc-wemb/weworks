@@ -42,12 +42,14 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     const [phases, setPhases] = useState<any[]>([]);
     const [categoryCodes, setCategoryCodes] = useState<any[]>([]); // CD_002_02 (분야/EESD)
     const [fieldCodes, setFieldCodes] = useState<any[]>([]); // CD_002_01 (영역/분야)
+    const [projectTypeCodes, setProjectTypeCodes] = useState<any[]>([]); // CD_002_05_01 (프로젝트 유형)
     const [loading, setLoading] = useState(false);
 
     // 폼 데이터 (new/page.tsx와 동일하게 구성)
     const [formData, setFormData] = useState({
         projectCode: "",
         name: "",
+        projectType: "", // CD_002_05_01 하위 코드
         category: "",
         field: "", // 분야 추가
         customerId: "",
@@ -98,13 +100,14 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
     const fetchReferenceData = async () => {
         try {
             setLoading(true);
-            const [usersRes, clientsRes, categoriesRes, phasesRes, categoryCodesRes, fieldCodesRes] = await Promise.all([
+            const [usersRes, clientsRes, categoriesRes, phasesRes, categoryCodesRes, fieldCodesRes, projectTypeCodesRes] = await Promise.all([
                 fetch("/api/users"),
                 fetch("/api/clients"),
                 fetch("/api/project-categories"),
                 fetch("/api/settings/phases", { cache: "no-store" }),
                 fetch("/api/codes?parentCode=CD_002_02"), // 분야(EESD)
                 fetch("/api/codes?parentCode=CD_002_01"), // 영역
+                fetch("/api/codes?parentCode=CD_002_05_01"), // 프로젝트 유형
             ]);
 
             let loadedUsers: User[] = [];
@@ -141,12 +144,19 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                 const data = await fieldCodesRes.json();
                 setFieldCodes(data.codes || []);
             }
+            let loadedProjectTypes: any[] = [];
+            if (projectTypeCodesRes.ok) {
+                const data = await projectTypeCodesRes.json();
+                loadedProjectTypes = data.codes || [];
+                setProjectTypeCodes(loadedProjectTypes);
+            }
 
             // 수정 모드일 때 초기 바인딩
             if (project) {
                 setFormData({
                     projectCode: project.projectCode || "",
                     name: project.name || "",
+                    projectType: project.project_type_id?.toString() || (loadedProjectTypes[0]?.id?.toString() ?? ""),
                     category: project.category_id?.toString() || "",
                     field: project.field_id?.toString() || "", // field -> field_id로 매핑 변경
                     customerId: project.customerId?.toString() || "",
@@ -179,6 +189,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                 setFormData({
                     projectCode: "",
                     name: "",
+                    projectType: loadedProjectTypes[0]?.id?.toString() ?? "", // 첫 번째 유형 자동 선택
                     category: "",
                     field: "",
                     customerId: "",
@@ -218,6 +229,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
         const payload = {
             name: formData.name,
             projectCode: formData.projectCode || null,
+            project_type_id: formData.projectType ? parseInt(formData.projectType) : null,
             category_id: formData.category ? parseInt(formData.category) : null,
             field_id: formData.field ? parseInt(formData.field) : null, // field_id 추가
             customerId: formData.customerId ? parseInt(formData.customerId) : null,
@@ -292,6 +304,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                             className="w-full h-10 rounded-xl border border-gray-300 px-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0"
                         />
                     </div>
+
 
                     {/* 분야(EESD) - CD_002_02 */}
                     <div className="space-y-1 col-span-2">
@@ -580,6 +593,18 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                 { value: "low", label: "하" },
                             ]}
                             placeholder="선택하세요"
+                            variant="standard"
+                        />
+                    </div>
+
+                    {/* 프로젝트 유형 - CD_002_05_01 하위 코드 */}
+                    <div className="space-y-1 col-span-2">
+                        <label className="text-xs font-bold text-gray-500">프로젝트 유형</label>
+                        <Dropdown
+                            value={formData.projectType}
+                            onChange={(val) => setFormData(prev => ({ ...prev, projectType: val as string }))}
+                            options={projectTypeCodes.map(code => ({ value: code.id.toString(), label: code.name }))}
+                            placeholder="유형을 선택하세요"
                             variant="standard"
                         />
                     </div>

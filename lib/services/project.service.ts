@@ -37,6 +37,7 @@ export class ProjectService {
             name: data.name,
             projectCode: data.projectCode,
             categoryId: data.categoryId,
+            projectTypeId: data.projectTypeId,
             customerId: data.customerId,
             ordererId: data.ordererId,
             description: data.description,
