@@ -50,6 +50,8 @@ export default function ProjectMonitoringDetailPage({
     const [project, setProject] = useState<ProjectMonitoring | null>(null);
     const [users, setUsers] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
+    const [statusCodes, setStatusCodes] = useState<{ value: string; label: string }[]>([]);
+    const [stateCodes, setStateCodes] = useState<{ value: string; label: string }[]>([]);
     const [activeTab, setActiveTab] = useState("info");
 
     // 수지분석서 관련 상태
@@ -60,6 +62,7 @@ export default function ProjectMonitoringDetailPage({
     useEffect(() => {
         fetchData();
         fetchUsers();
+        fetchCodes();
     }, [id]);
 
     useEffect(() => {
@@ -122,23 +125,44 @@ export default function ProjectMonitoringDetailPage({
         }
     };
 
+    const fetchCodes = async () => {
+        try {
+            // 프로젝트 상태 (CD_002_06)
+            const resStatus = await fetch('/api/codes?parentCode=CD_002_06');
+            if (resStatus.ok) {
+                const data = await resStatus.json();
+                setStatusCodes(data.codes.map((c: any) => ({ value: c.name, label: c.name })));
+            }
+
+            // 진행 상태 (CD_002_07)
+            const resState = await fetch('/api/codes?parentCode=CD_002_07');
+            if (resState.ok) {
+                const data = await resState.json();
+                setStateCodes(data.codes.map((c: any) => ({ value: c.name, label: c.name })));
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     const fetchProfitabilityDetail = async (profitId: number) => {
         try {
-            const found = profitabilityVersions.find(v => v.id === profitId);
-            if (found && project) {
+            // 타입 안전성을 위해 == 대신 타입을 맞춰서 찾거나 유연하게 비교
+            const found = profitabilityVersions.find(v => Number(v.id) === Number(profitId));
+            if (found) {
                 setProfitData(found);
 
-                // 수지분석서 데이터가 있을 경우 공수 정보 자동 반영 (초기 1회 혹은 버전 변경 시)
-                setProject(prev => {
-                    if (!prev) return null;
-                    return {
-                        ...prev,
-                        planned_internal_mm: found.our_mm || prev.planned_internal_mm,
-                        planned_external_mm: found.others_mm || prev.planned_external_mm,
-                        // 실행 공수는 수지분석서에 확정된 값이 있더라도, 모니터링 페이지에서 관리하므로
-                        // 기본적으로 계획 공수를 수지분석서 기준으로 동기화해줍니다.
-                    };
-                });
+                // 프로젝트 정보가 있을 때만 M/M 제안값 업데이트
+                if (project) {
+                    setProject(prev => {
+                        if (!prev) return null;
+                        return {
+                            ...prev,
+                            planned_internal_mm: found.our_mm || prev.planned_internal_mm,
+                            planned_external_mm: found.others_mm || prev.planned_external_mm,
+                        };
+                    });
+                }
             }
         } catch (e) {
             console.error(e);
@@ -369,7 +393,7 @@ export default function ProjectMonitoringDetailPage({
                                     <FieldLabel>상태</FieldLabel>
                                     <Dropdown
                                         value={project.progress_status || '정상'}
-                                        options={[
+                                        options={statusCodes.length > 0 ? statusCodes : [
                                             { value: '정상', label: '정상' },
                                             { value: 'RISK', label: 'RISK' },
                                             { value: '이슈', label: '이슈' }
@@ -383,7 +407,7 @@ export default function ProjectMonitoringDetailPage({
                                     <FieldLabel>진행 상태</FieldLabel>
                                     <Dropdown
                                         value={project.progress_state || '정상'}
-                                        options={[
+                                        options={stateCodes.length > 0 ? stateCodes : [
                                             { value: '정상', label: '정상' },
                                             { value: '일정지연', label: '일정지연' },
                                             { value: '대기', label: '대기' },
@@ -520,16 +544,23 @@ export default function ProjectMonitoringDetailPage({
 
                         {profitData ? (
                             <SummaryTab
-                                projectName={project.project_name}
-                                customerName={project.customer}
-                                projectCode={project.project_code}
+                                project={{
+                                    id: id || '',
+                                    name: project.project_name,
+                                    customerName: project.customer || '미지정',
+                                    projectCode: project.project_code
+                                }}
                                 currency="KRW"
-                                totalRevenue={profitData.total_revenue}
-                                totalCost={profitData.total_cost}
-                                netProfit={profitData.operating_profit}
-                                profitRate={profitData.operating_profit_rate}
-                                ourMm={profitData.our_mm}
-                                othersMm={profitData.others_mm}
+                                totalRevenue={profitData.total_revenue || 0}
+                                serviceProfit={profitData.service_profit || 0}
+                                productProfit={profitData.product_profit || 0}
+                                businessProfit={profitData.business_profit || 0}
+                                extraRevenue={profitData.extra_revenue_amount || 0}
+                                operatingProfit={profitData.operating_profit || 0}
+                                profitRate={profitData.operating_profit_rate || 0}
+                                ourMm={profitData.our_mm || 0}
+                                othersMm={profitData.others_mm || 0}
+                                profitabilityId={profitData.id}
                             />
                         ) : (
                             <div className="py-20 text-center text-slate-400 font-medium bg-slate-50/30 rounded-2xl border-2 border-dashed border-slate-100">

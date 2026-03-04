@@ -10,6 +10,9 @@ import { SearchInput } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { UserProfilePanel } from "@/components/UserProfilePanel";
 
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
 interface User {
   id: string;
   username: string;
@@ -25,8 +28,10 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+function LayoutContent({ children }: MainLayoutProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPopup = searchParams.get('isPopup') === 'true';
   const { showToast } = useToast();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,59 +91,61 @@ export default function MainLayout({ children }: MainLayoutProps) {
     <div className="min-h-screen bg-background text-slate-800 font-sans selection:bg-indigo-50 selection:text-indigo-600">
       <div className="flex h-screen overflow-hidden relative">
         {/* Desktop Sidebar - Minimal & Integrated */}
-        <aside
-          className={cn(
-            "hidden bg-white transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] md:block relative z-30 border-r border-slate-100/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
-            sidebarCollapsed ? "w-20" : "w-64 px-4"
-          )}
-        >
-          <div className={cn(
-            "flex h-20 shrink-0 items-center overflow-hidden transition-all duration-300",
-            sidebarCollapsed ? "justify-center" : "justify-between px-2"
-          )}>
-            {!sidebarCollapsed ? (
-              <div className="flex w-full items-center justify-between gap-3 animate-in fade-in slide-in-from-left-2 duration-500 px-2">
-                <Link href="/dashboard" className="flex items-center gap-2 group/logo py-2">
-                  <div className="flex items-center justify-center transition-transform duration-300 group-hover/logo:scale-105">
-                    <img src="/weworks.png" alt="WEWORKS" className="h-[28px] object-contain" />
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <div className="flex w-full items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-                <button
-                  onClick={() => setSidebarCollapsed(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300"
-                  title="메뉴 펴기"
-                >
-                  <img src="/weworks.png" alt="W" className="h-[20px] w-auto object-contain" />
-                </button>
-              </div>
+        {!isPopup && (
+          <aside
+            className={cn(
+              "hidden bg-white transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] md:block relative z-30 border-r border-slate-100/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
+              sidebarCollapsed ? "w-20" : "w-64 px-4"
             )}
-          </div>
+          >
+            <div className={cn(
+              "flex h-20 shrink-0 items-center overflow-hidden transition-all duration-300",
+              sidebarCollapsed ? "justify-center" : "justify-between px-2"
+            )}>
+              {!sidebarCollapsed ? (
+                <div className="flex w-full items-center justify-between gap-3 animate-in fade-in slide-in-from-left-2 duration-500 px-2">
+                  <Link href="/dashboard" className="flex items-center gap-2 group/logo py-2">
+                    <div className="flex items-center justify-center transition-transform duration-300 group-hover/logo:scale-105">
+                      <img src="/weworks.png" alt="WEWORKS" className="h-[28px] object-contain" />
+                    </div>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex w-full items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+                  <button
+                    onClick={() => setSidebarCollapsed(false)}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300"
+                    title="메뉴 펴기"
+                  >
+                    <img src="/weworks.png" alt="W" className="h-[20px] w-auto object-contain" />
+                  </button>
+                </div>
+              )}
+            </div>
 
-          {/* Desktop Sidebar Toggle Button - Subtle Floating Style (Collapse Only) */}
-          {!sidebarCollapsed && (
-            <button
-              onClick={() => setSidebarCollapsed(true)}
-              className="absolute -right-3 top-[28px] z-50 hidden md:flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:text-slate-600 hover:border-slate-300 transition-all hover:scale-110 active:scale-95 group"
-              title="메뉴 접기"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-            </button>
-          )}
+            {/* Desktop Sidebar Toggle Button - Subtle Floating Style (Collapse Only) */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="absolute -right-3 top-[28px] z-50 hidden md:flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:text-slate-600 hover:border-slate-300 transition-all hover:scale-110 active:scale-95 group"
+                title="메뉴 접기"
+              >
+                <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+              </button>
+            )}
 
-          <div className="pb-6 pt-0 h-[calc(100%-5rem)] overflow-y-auto custom-scrollbar">
-            <Sidebar
-              collapsed={sidebarCollapsed}
-              onExpand={() => setSidebarCollapsed(false)}
-              allowedMenuKeys={allowedMenuKeys}
-            />
-          </div>
-        </aside>
+            <div className="pb-6 pt-0 h-[calc(100%-5rem)] overflow-y-auto custom-scrollbar">
+              <Sidebar
+                collapsed={sidebarCollapsed}
+                onExpand={() => setSidebarCollapsed(false)}
+                allowedMenuKeys={allowedMenuKeys}
+              />
+            </div>
+          </aside>
+        )}
 
         {/* Mobile Sidebar Overlay */}
-        {mobileMenuOpen && (
+        {!isPopup && mobileMenuOpen && (
           <div
             className="fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-sm md:hidden animate-in fade-in duration-300"
             onClick={() => setMobileMenuOpen(false)}
@@ -146,89 +153,93 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* Mobile Sidebar Drawer */}
-        <aside
-          className={cn(
-            "fixed inset-y-0 left-0 z-50 w-72 transform bg-white border-r border-slate-100 px-6 py-8 transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)] md:hidden",
-            mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
-          )}
-        >
-          <div className="mb-8 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-3 py-1">
-              <img src="/weworks.png" alt="WEWORKS" className="h-[24px] object-contain" />
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-slate-50 text-slate-400 transition-all active:scale-95"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <Sidebar onLinkClick={() => setMobileMenuOpen(false)} allowedMenuKeys={allowedMenuKeys} />
-        </aside>
+        {!isPopup && (
+          <aside
+            className={cn(
+              "fixed inset-y-0 left-0 z-50 w-72 transform bg-white border-r border-slate-100 px-6 py-8 transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)] md:hidden",
+              mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+            )}
+          >
+            <div className="mb-8 flex items-center justify-between">
+              <Link href="/dashboard" className="flex items-center gap-3 py-1">
+                <img src="/weworks.png" alt="WEWORKS" className="h-[24px] object-contain" />
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-slate-50 text-slate-400 transition-all active:scale-95"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <Sidebar onLinkClick={() => setMobileMenuOpen(false)} allowedMenuKeys={allowedMenuKeys} />
+          </aside>
+        )}
 
         {/* Main Content Area */}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto relative custom-scrollbar-main bg-[#FBFBFC]">
-          <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-600 hover:bg-slate-50 transition-all md:hidden active:scale-95 shadow-sm"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+          {!isPopup && (
+            <header className="flex h-20 shrink-0 items-center justify-between bg-white px-4 sm:px-6 z-20 border-b border-slate-100/60">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-600 hover:bg-slate-50 transition-all md:hidden active:scale-95 shadow-sm"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
 
-              <div className="flex flex-col ml-1">
-                <h2 className="text-xl font-black tracking-tight leading-none flex items-center sm:text-2xl whitespace-nowrap">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-500 pb-0.5">
-                    프로젝트 통합관리 시스템
-                  </span>
-                </h2>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div className="hidden lg:flex items-center w-80">
-                <SearchInput
-                  placeholder="통합 검색..."
-                  value={globalSearch}
-                  onChange={(e) => setGlobalSearch(e.target.value)}
-                  className="h-11"
-                />
+                <div className="flex flex-col ml-1">
+                  <h2 className="text-xl font-black tracking-tight leading-none flex items-center sm:text-2xl whitespace-nowrap">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-500 pb-0.5">
+                      프로젝트 통합관리 시스템
+                    </span>
+                  </h2>
+                </div>
               </div>
 
-              <div className="flex items-center gap-4 border-l border-slate-100 pl-6 relative">
-                {user ? (
-                  <div className="flex items-center gap-6">
-                    <div
-                      className="flex flex-col items-end text-right cursor-pointer hover:bg-indigo-50 px-3 py-1 -mr-2 rounded-xl transition-all group"
-                      onClick={(e) => {
-                        setProfileTriggerRect(e.currentTarget.getBoundingClientRect());
-                        setShowProfilePanel(true);
-                      }}
-                    >
-                      <span className="text-[15px] font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
-                        {user.name} <span className="text-slate-600 font-medium ml-1 group-hover:text-indigo-500 transition-colors">{user.rank} {user.position && `(${user.position})`}</span>
-                      </span>
-                      <span className="text-[12px] font-medium text-slate-500 mt-0.5 max-w-[240px] truncate">
-                        {user.department || '부서 미지정'}
-                      </span>
+              <div className="flex items-center gap-6">
+                <div className="hidden lg:flex items-center w-80">
+                  <SearchInput
+                    placeholder="통합 검색..."
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 border-l border-slate-100 pl-6 relative">
+                  {user ? (
+                    <div className="flex items-center gap-6">
+                      <div
+                        className="flex flex-col items-end text-right cursor-pointer hover:bg-indigo-50 px-3 py-1 -mr-2 rounded-xl transition-all group"
+                        onClick={(e) => {
+                          setProfileTriggerRect(e.currentTarget.getBoundingClientRect());
+                          setShowProfilePanel(true);
+                        }}
+                      >
+                        <span className="text-[15px] font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
+                          {user.name} <span className="text-slate-600 font-medium ml-1 group-hover:text-indigo-500 transition-colors">{user.rank} {user.position && `(${user.position})`}</span>
+                        </span>
+                        <span className="text-[12px] font-medium text-slate-500 mt-0.5 max-w-[240px] truncate">
+                          {user.department || '부서 미지정'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        로그아웃
+                      </button>
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      로그아웃
-                    </button>
-                  </div>
-                ) : (
-                  <Link href="/login" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-                    로그인
-                  </Link>
-                )}
+                  ) : (
+                    <Link href="/login" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
+                      로그인
+                    </Link>
+                  )}
+                </div>
               </div>
-            </div>
-          </header>
+            </header>
+          )}
 
           <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 relative z-10">
             {/* User Profile Modal */}
@@ -247,14 +258,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </main>
 
-          <footer className="shrink-0 pb-8 pt-4 px-6">
-            <p className="text-xs font-medium text-slate-400 text-center tracking-tight">
-              본 시스템은 (주)위엠비의 내부 업무용으로, 인가된 인원만 사용할 수 있습니다.
-              <span className="ml-2 font-normal opacity-70">Copyright © 2026 (주)위엠비. All rights reserved.</span>
-            </p>
-          </footer>
+          {!isPopup && (
+            <footer className="shrink-0 pb-8 pt-4 px-6">
+              <p className="text-xs font-medium text-slate-400 text-center tracking-tight">
+                본 시스템은 (주)위엠비의 내부 업무용으로, 인가된 인원만 사용할 수 있습니다.
+                <span className="ml-2 font-normal opacity-70">Copyright © 2026 (주)위엠비. All rights reserved.</span>
+              </p>
+            </footer>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MainLayout({ children }: MainLayoutProps) {
+  return (
+    <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-slate-50 text-slate-400 font-medium">Loading layout...</div>}>
+      <LayoutContent>{children}</LayoutContent>
+    </Suspense>
   );
 }

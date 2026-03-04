@@ -49,9 +49,27 @@ export default function ProjectMonitoringPage() {
     const [searchYear, setSearchYear] = useState("전체");
     const [searchStatus, setSearchStatus] = useState("전체");
 
+    const [statusOptions, setStatusOptions] = useState<{ value: string; label: string }[]>([
+        { value: "전체", label: "상태" }
+    ]);
+
     useEffect(() => {
         fetchData();
+        fetchStatusCodes();
     }, []);
+
+    const fetchStatusCodes = async () => {
+        try {
+            const res = await fetch('/api/codes?parentCode=CD_002_06');
+            if (res.ok) {
+                const json = await res.json();
+                const codes = json.codes.map((c: any) => ({ value: c.name, label: c.name }));
+                setStatusOptions([{ value: "전체", label: "상태" }, ...codes]);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -110,13 +128,6 @@ export default function ProjectMonitoringPage() {
         });
         return ["전체", ...Array.from(years).sort().reverse()].map(y => ({ value: y, label: y === "전체" ? "년도" : `${y}년` }));
     }, [data]);
-
-    const statusOptions = [
-        { value: "전체", label: "상태" },
-        { value: "정상", label: "정상" },
-        { value: "RISK", label: "RISK" },
-        { value: "이슈", label: "이슈" }
-    ];
 
     const filteredData = useMemo(() => {
         let filtered = data.filter(item =>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { calculateProfitabilitySummary } from "@/lib/utils/calculations";
 
 // 수지분석서 목록 조회
 export async function GET(request: NextRequest) {
@@ -72,12 +73,77 @@ export async function GET(request: NextRequest) {
 
     const result = await query(sql, params);
 
-    return NextResponse.json({
-      profitabilities: result.rows.map((row: any) => ({
+    // 상세 지표 계산 (projectId가 있을 때만 수행하여 성능 최적화)
+    const profitabilities = await Promise.all(result.rows.map(async (row: any) => {
+      const pId = row.id;
+
+      // 인력 계획 조회
+      const manpowerRes = await query(`
+        SELECT * FROM we_project_manpower_plan WHERE profitability_id = $1
+      `, [pId]);
+
+      // 제품 계획 조회
+      const productRes = await query(`
+        SELECT * FROM we_project_product_plan WHERE profitability_id = $1
+      `, [pId]);
+
+      // 경비 계획 조회
+      const expenseRes = await query(`
+        SELECT * FROM we_project_expense_plan WHERE profitability_id = $1
+      `, [pId]);
+
+      // 부가 수익/비용 조회
+      const extraRes = await query(`
+        SELECT extra_revenue, extra_expense FROM we_project_profitability_extra_revenue WHERE profitability_id = $1
+      `, [pId]);
+
+      const extra = extraRes.rows[0] || { extra_revenue: 0, extra_expense: 0 };
+
+      const summary = calculateProfitabilitySummary(
+        manpowerRes.rows.map((r: any) => ({
+          ...r,
+          affiliationGroup: r.affiliation_group,
+          monthlyAllocation: r.monthly_allocation,
+          proposedAmount: r.proposed_amount ? Number(r.proposed_amount) : null,
+          proposedUnitPrice: Number(r.proposed_unit_price),
+          internalUnitPrice: Number(r.internal_unit_price),
+          internalAmount: r.internal_amount ? Number(r.internal_amount) : null,
+        })),
+        productRes.rows.map((r: any) => ({
+          ...r,
+          proposalPrice: Number(r.proposal_price),
+          costPrice: Number(r.cost_price),
+        })),
+        expenseRes.rows.map((r: any) => ({
+          ...r,
+          monthlyValues: r.monthly_values,
+        })),
+        Number(extra.extra_revenue),
+        Number(extra.extra_expense)
+      );
+
+      return {
         ...row,
         projectCode: row.project_code,
-        customerName: row.customer_name
-      }))
+        customerName: row.customer_name,
+        // 상세 지표 추가
+        service_profit: summary.srv.total.profit,
+        product_profit: summary.prd.total.profit,
+        business_profit: summary.coreProfit,
+        extra_revenue_amount: summary.extraRevenue,
+        extra_expense_amount: summary.extraExpense,
+        // 기존 요약 정보 덮어쓰기 (정확성 보장)
+        total_revenue: summary.totalRevenue,
+        total_cost: summary.totalCost,
+        operating_profit: summary.netProfit,
+        operating_profit_rate: summary.profitRate,
+        our_mm: summary.ourMm,
+        others_mm: summary.othersMm
+      };
+    }));
+
+    return NextResponse.json({
+      profitabilities
     });
   } catch (error: any) {
     console.error("Error fetching profitabilities:", error);

@@ -73,6 +73,14 @@ export default function ProfitabilityPage({
   // 버전 관리 상태
   const [versions, setVersions] = useState<any[]>([]);
   const [selectedVersionId, setSelectedVersionId] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const versionId = searchParams.get('versionId');
+    if (versionId) {
+      setSelectedVersionId(Number(versionId));
+    }
+  }, []);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
   const [projectUnitPrices, setProjectUnitPrices] = useState<ProjectUnitPrice[]>([]);
   const [header, setHeader] = useState<any>(null);
