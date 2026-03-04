@@ -74,7 +74,8 @@ export async function PUT(
     let paramIndex = 1;
 
     const allowedFields = [
-      'name', 'project_code', 'category_id', 'field_id', 'project_type_id', 'customer_id', 'orderer_id', 'description',
+      'name', 'project_code', 'maintenance_free_code', 'maintenance_paid_code', 'research_code',
+      'category_id', 'field_id', 'project_type_id', 'customer_id', 'orderer_id', 'description',
       'contract_start_date', 'contract_end_date', 'actual_start_date', 'actual_end_date',
       'expected_amount', 'currency', 'manager_id', 'sales_representative_id',
       'process_status', 'risk_level', 'status', 'current_phase'

@@ -151,6 +151,9 @@ interface Project {
     projectCode: string | null;
     actualEndDate: string | null;
     projectTypeId: number | null;
+    maintenanceFreeCode: string | null;
+    maintenancePaidCode: string | null;
+    researchCode: string | null;
 }
 
 interface WorkLogPanelProps {
@@ -178,8 +181,10 @@ for (let h = 0; h < 24; h++) {
 // 프로젝트 선택 노출 카테고리 코드
 const PRESALES_CODE = "CD_002_05_02";  // 프리세일즈 → 코드 없는 프로젝트
 const GENERAL_CODE = "CD_002_05_01";  // 일반 프로젝트 → 유형 선택 + 코드 있는 프로젝트
-// 계약 프로젝트 목록(코드 있는)을 그냥 보여주는 카테고리들
-const EXTRA_PROJECT_CODES = ["CD_002_05_06", "CD_002_05_03", "CD_002_05_04"]; // 연구과제, 무상/유상 유지보수
+const MAINTENANCE_FREE_CODE = "CD_002_05_03"; // 무상 유지보수
+const MAINTENANCE_PAID_CODE = "CD_002_05_04"; // 유상 유지보수
+const RESEARCH_CODE = "CD_002_05_06";         // 연구과제
+const EXTRA_PROJECT_CODES = [MAINTENANCE_FREE_CODE, MAINTENANCE_PAID_CODE, RESEARCH_CODE];
 const PROJECT_CATEGORY_CODES = [GENERAL_CODE, PRESALES_CODE, ...EXTRA_PROJECT_CODES];
 
 // 하위 카테고리 선택이 필요한 업무유형
@@ -351,14 +356,20 @@ export function WorkLogPanel({
                 .map(p => ({ value: p.id, label: `[${p.projectCode}] ${p.name}` }));
         }
         if (EXTRA_PROJECT_CODES.includes(form.category)) {
-            // 연구과제/유지보수: 계약 프로젝트 목록과 동일 (코드 있고 이번달까지)
+            // 무상/유상 유지보수 / 연구과제: 해당 코드가 있는 프로젝트만
             return projects
                 .filter(p => {
-                    if (!p.projectCode) return false;
-                    if (!p.actualEndDate) return true;
-                    return new Date(p.actualEndDate) <= thisMonthEnd;
+                    if (form.category === MAINTENANCE_FREE_CODE) return !!p.maintenanceFreeCode;
+                    if (form.category === MAINTENANCE_PAID_CODE) return !!p.maintenancePaidCode;
+                    if (form.category === RESEARCH_CODE) return !!p.researchCode;
+                    return false;
                 })
-                .map(p => ({ value: p.id, label: `[${p.projectCode}] ${p.name}` }));
+                .map(p => {
+                    const code = form.category === MAINTENANCE_FREE_CODE ? p.maintenanceFreeCode
+                        : form.category === MAINTENANCE_PAID_CODE ? p.maintenancePaidCode
+                            : p.researchCode;
+                    return { value: p.id, label: `[${code}] ${p.name}` };
+                });
         }
         return [];
     }, [projects, form.category, projectTypeFilter]);
