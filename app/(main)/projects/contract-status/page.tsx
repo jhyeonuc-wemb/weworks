@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FileSignature, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileSignature, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import {
     SearchInput,
     Dropdown,
+    Button,
     Table,
     TableHeader,
     TableBody,
@@ -29,8 +30,16 @@ interface Contract {
     expectedAmount: number | null;
     currentPhase: string;
     contractStatus: string;
+    contractCount: number;
     startedAt: string | null;
     completedAt: string | null;
+}
+
+interface Project {
+    id: number;
+    projectCode: string | null;
+    name: string;
+    customerName: string | null;
 }
 
 interface Meta {
@@ -49,6 +58,7 @@ const sortOptions = [
 export default function ContractStatusPage() {
     const router = useRouter();
     const [contracts, setContracts] = useState<Contract[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
     const [meta, setMeta] = useState<Meta>({ total: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -58,8 +68,9 @@ export default function ContractStatusPage() {
     const [sortOption, setSortOption] = useState("project_code_desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-    const fetchContracts = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -67,11 +78,18 @@ export default function ContractStatusPage() {
             if (searchYear !== "전체") params.set("year", searchYear);
             if (searchStatus !== "전체") params.set("status", searchStatus);
 
-            const res = await fetch(`/api/contracts?${params.toString()}`);
-            if (res.ok) {
-                const data = await res.json();
+            const [contractsRes, projectsRes] = await Promise.all([
+                fetch(`/api/contracts?${params.toString()}`),
+                fetch("/api/projects"),
+            ]);
+            if (contractsRes.ok) {
+                const data = await contractsRes.json();
                 setContracts(data.contracts || []);
                 setMeta({ total: data.meta?.total || 0 });
+            }
+            if (projectsRes.ok) {
+                const data = await projectsRes.json();
+                setProjects(data.projects || []);
             }
         } catch (e) {
             console.error("계약 현황 조회 오류:", e);
@@ -81,11 +99,11 @@ export default function ContractStatusPage() {
     };
 
     useEffect(() => {
-        fetchContracts();
+        fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery, searchYear, searchStatus]);
 
-    // 연도 옵션 (project_code 기반, P25-, P24- 형식)
+    // 연도 옵션
     const yearOptions = useMemo(() => {
         const years = new Set<string>();
         contracts.forEach((c) => {
@@ -100,7 +118,7 @@ export default function ContractStatusPage() {
         ];
     }, [contracts]);
 
-    // 상태 옵션 (settlement 페이지 방식 — phase-statuses API)
+    // 상태 옵션
     const [statusOptions, setStatusOptions] = useState<{ value: string; label: string }[]>([
         { value: "전체", label: "상태" },
     ]);
@@ -118,6 +136,26 @@ export default function ContractStatusPage() {
             })
             .catch(console.error);
     }, []);
+
+    // 계약이 없는 프로젝트만 드롭다운에 표시
+    const availableProjects = projects.filter(
+        (p) => !contracts.some((c) => c.id === p.id)
+    );
+    const projectOptions = availableProjects
+        .slice()
+        .sort((a, b) => (b.projectCode || "").localeCompare(a.projectCode || ""))
+        .map((p) => ({
+            value: p.id,
+            label: `${p.projectCode || "N/A"}_${p.name}`,
+        }));
+
+    const handleCreateNew = () => {
+        if (!selectedProjectId) {
+            alert("프로젝트를 선택해주세요.");
+            return;
+        }
+        router.push(`/projects/${selectedProjectId}/contract-status`);
+    };
 
     // 정렬
     const sortedContracts = useMemo(() => {
@@ -156,16 +194,31 @@ export default function ContractStatusPage() {
     return (
         <div className="space-y-8 max-w-[1920px]">
             {/* 헤더 */}
-            <div className="flex items-start justify-between px-2">
+            <div className="flex items-center justify-between px-2">
                 <div>
-                    <div className="h-10 flex items-center">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                            계약 현황
-                        </h1>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        VRB 완료 후 계약 단계에 있는 프로젝트 목록입니다.
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        계약 현황
+                    </h1>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Dropdown
+                        value={selectedProjectId || ""}
+                        onChange={(value) => setSelectedProjectId(value as number)}
+                        options={projectOptions}
+                        placeholder="프로젝트 선택"
+                        className="w-64"
+                        align="center"
+                        listAlign="left"
+                        listClassName="min-w-[400px]"
+                    />
+                    <Button
+                        variant="primary"
+                        onClick={handleCreateNew}
+                        disabled={!selectedProjectId}
+                    >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        계약
+                    </Button>
                 </div>
             </div>
 

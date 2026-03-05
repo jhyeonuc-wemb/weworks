@@ -106,7 +106,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const projectId = Number(id);
 
     const { showToast, confirm } = useToast();
-    const { phaseStatus, isReadOnly, handleComplete } = useProjectPhase(projectId, "contract");
+    const { status: phaseStatus, isFinalStatus, onCompleteSuccess } = useProjectPhase(projectId, "contract");
+    const isReadOnly = isFinalStatus;
+    const handleComplete = onCompleteSuccess;
 
     // 계약 목록
     const [contractList, setContractList] = useState<ContractSummary[]>([]);
@@ -290,7 +292,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* Phase Nav */}
-            <ProjectPhaseNav projectId={projectId} currentPhase="contract" />
+            <ProjectPhaseNav projectId={projectId} />
 
             {/* 본문 */}
             <div className="grid grid-cols-[280px_1fr] gap-6 items-start">
