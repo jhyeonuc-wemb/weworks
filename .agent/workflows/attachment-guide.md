@@ -58,3 +58,29 @@ import { AttachmentSection } from "@/components/ui";
 
 `app/api/attachments/route.ts` POST 핸들러에서 `writeFile` 부분을 파일서버 업로드 로직으로 교체하고,
 `file_path` 컬럼 값을 파일서버 URL로 저장하면 됩니다. 나머지 코드는 변경 없음.
+
+## 보안 필터 (업로드 차단 확장자)
+
+`lib/utils/file-security.ts`의 `BLOCKED_EXTENSIONS`에서 관리합니다.
+클라이언트(선택 즉시)와 서버(저장 전) 양쪽에서 모두 검증합니다.
+
+**현재 차단 범주:**
+
+| 범주 | 예시 |
+|---|---|
+| 실행 파일 | exe, bat, cmd, com, msi |
+| 스크립트 | ps1, vbs, sh, py, rb, js |
+| 시스템 | dll, sys, drv, scr, reg |
+| 웹 실행 | php, asp, aspx, jsp, cgi |
+| 기타 | jar, lnk, iso, swf |
+
+**차단 확장자 추가/제거 방법:**
+```ts
+// lib/utils/file-security.ts
+export const BLOCKED_EXTENSIONS = new Set([
+    "exe", "bat", // ... 기존 목록
+    "xyz",  // ← 추가
+]);
+```
+서버 재시작 없이 파일만 수정하면 클라이언트·서버 모두 자동 반영됩니다.
+
