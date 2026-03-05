@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Upload, Download, Trash2, FileText, File, Image, FileSpreadsheet, Paperclip } from "lucide-react";
 import { useToast } from "./Toast";
 import { cn } from "@/lib/utils";
+import { isBlockedFile } from "@/lib/utils/file-security";
 
 interface Attachment {
     id: number;
@@ -65,12 +66,27 @@ export function AttachmentSection({ entityType, entityId, readonly = false, clas
 
     const uploadFiles = async (files: FileList | File[]) => {
         if (!files || files.length === 0) return;
+
+        const allFiles = Array.from(files);
+
+        // 클라이언트 사전 차단
+        const blockedFiles = allFiles.filter(f => isBlockedFile(f.name));
+        const allowedFiles = allFiles.filter(f => !isBlockedFile(f.name));
+
+        if (blockedFiles.length > 0) {
+            const names = blockedFiles.map(f => f.name).join(", ");
+            showToast(
+                `업로드 차단: ${names} (보안 위험 파일)`,
+                "error"
+            );
+        }
+        if (allowedFiles.length === 0) return;
         setUploading(true);
         try {
             const formData = new FormData();
             formData.append("entityType", entityType);
             formData.append("entityId", String(entityId));
-            Array.from(files).forEach(f => formData.append("files", f));
+            allowedFiles.forEach(f => formData.append("files", f));
 
             const res = await fetch("/api/attachments", { method: "POST", body: formData });
             if (!res.ok) throw new Error();

@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { isBlockedFile } from "@/lib/utils/file-security";
 
 // GET: 첨부파일 목록 조회
 export async function GET(request: NextRequest) {
@@ -65,6 +66,18 @@ export async function POST(request: NextRequest) {
         // 저장 디렉토리 생성
         const uploadDir = path.join(process.cwd(), "public", "uploads", entityType, entityId);
         await mkdir(uploadDir, { recursive: true });
+
+        // 차단 확장자 검사
+        const blocked = files.filter(f => isBlockedFile(f.name));
+        if (blocked.length > 0) {
+            return NextResponse.json(
+                {
+                    error: `보안상 업로드가 허용되지 않는 파일 형식입니다.`,
+                    blocked: blocked.map(f => f.name),
+                },
+                { status: 400 }
+            );
+        }
 
         const saved = [];
         for (const file of files) {
