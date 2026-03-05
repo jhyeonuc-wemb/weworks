@@ -261,38 +261,44 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     return (
         <div className="space-y-6">
             {/* 헤더 */}
-            <div className="flex items-start justify-between px-2">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Link href="/projects/contract-status">
-                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
+                    <Link
+                        href="/projects/contract-status"
+                        className="p-2 -ml-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-300"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">계약 현황</h1>
-                        {contract && (
-                            <p className="text-sm text-gray-400 mt-0.5">
-                                {contract.projectCode && <span className="font-mono">[{contract.projectCode}]</span>} {contract.projectName}
-                            </p>
-                        )}
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl font-semibold tracking-tight text-gray-900 line-clamp-2 max-w-[300px] sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[800px] leading-snug">
+                                <span className="text-blue-600">계약</span> - {contract?.projectName || "프로젝트"}
+                            </h1>
+                            <StatusBadge status={phaseStatus} className="h-9" />
+                            <ProjectPhaseNav projectId={projectId} />
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {contract?.projectCode && <span className="font-mono">{contract.projectCode}</span>}
+                        </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {phaseStatus && <StatusBadge status={phaseStatus} />}
-                    {!isReadOnly && (
-                        <button
+
+                {/* 헤더 우측: 작성완료 버튼 */}
+                {!isReadOnly && (
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="primary"
                             onClick={handleComplete}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-9 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                            className="flex items-center gap-2"
                         >
                             <Save className="h-4 w-4" />
                             작성완료
-                        </button>
-                    )}
-                </div>
+                        </Button>
+                    </div>
+                )}
             </div>
 
-            {/* Phase Nav */}
-            <ProjectPhaseNav projectId={projectId} />
+
 
             {/* 본문 */}
             <div className="grid grid-cols-[280px_1fr] gap-6 items-start">
