@@ -823,7 +823,7 @@ function UsersContent() {
                   readOnly
                   disabled
                   placeholder="이메일 입력 시 자동 생성"
-                  className="w-full rounded-md border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-400 cursor-not-allowed outline-none focus:ring-0"
+                  className="w-full rounded-md border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-400 cursor-default outline-none focus:ring-0"
                 />
               </div>
               <div className="col-span-2 space-y-1">

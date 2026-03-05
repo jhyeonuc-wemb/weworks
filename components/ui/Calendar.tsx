@@ -144,7 +144,7 @@ function Calendar({
                 ),
                 today: "text-indigo-600 font-bold bg-indigo-50/50 rounded-lg",
                 outside: "text-gray-300 opacity-40",
-                disabled: "text-gray-200 opacity-40 cursor-not-allowed",
+                disabled: "text-gray-200 opacity-40 cursor-default",
                 hidden: "invisible",
                 ...classNames,
             }}

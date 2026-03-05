@@ -1,26 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-
-const MENU_KEY_TO_PATH: Record<string, string> = {
-  'dashboard': '/dashboard',
-  'sales': '/sales',
-  'projects': '/projects',
-  'vrb-review': '/vrb-review',
-  'contract-status': '/contract-status',
-  'profitability': '/profitability',
-  'settlement': '/settlement',
-  'maintenance/free': '/maintenance/free',
-  'maintenance/paid': '/maintenance/paid',
-  'resources/work-logs': '/resources/work-logs',
-  'settings/clients': '/settings/clients',
-  'settings/codes': '/settings/codes',
-  'settings/departments': '/settings/departments',
-  'settings/users': '/settings/users',
-  'settings/permissions': '/settings/permissions',
-  'settings/difficulty-checklist': '/settings/difficulty-checklist',
-  'settings/md-estimation': '/settings/md-estimation',
-  'settings/holidays': '/settings/holidays',
-};
+import { getMenuKeyToPath } from "@/lib/menu-config";
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -30,6 +10,7 @@ export default async function Home() {
     try {
       const sessionData = JSON.parse(session.value);
       const allowedMenuKeys: string[] = sessionData.allowedMenuKeys ?? [];
+      const MENU_KEY_TO_PATH = getMenuKeyToPath();
 
       // 첫 번째 접근 가능한 경로로 이동
       for (const key of allowedMenuKeys) {

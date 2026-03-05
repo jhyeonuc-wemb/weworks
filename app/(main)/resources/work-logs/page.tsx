@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { WorkLogPanel } from "./components/WorkLogPanel";
+import { WorkLogPanel } from "./components/work-log-panel";
 import type FullCalendar from "@fullcalendar/react";
 import type { WorkLog } from "./types";
 

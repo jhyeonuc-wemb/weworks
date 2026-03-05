@@ -386,7 +386,9 @@ export default function SettlementListPage() {
                         </span>
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
-                        <StatusBadge status={s.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
+                        <div className="flex items-center justify-center">
+                          <StatusBadge status={s.status} className="h-7 px-3 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border-none" />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

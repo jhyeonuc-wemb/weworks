@@ -32,8 +32,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           baseStyles,
           variantStyles[variant],
           sizeStyles[size],
-          props.disabled && "cursor-not-allowed opacity-50",
-          className
+          props.disabled && "cursor-default opacity-50",
+          className  // className은 항상 마지막 → 외부에서 cursor-default 등으로 오버라이드 가능
         )}
         {...props}
       >

@@ -2859,7 +2859,7 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                           }
                           className={cn(
                             "h-4 w-4 rounded-none border-gray-300 text-blue-600 focus:ring-blue-500",
-                            isReadOnly ? "opacity-50 cursor-default" : (!vrbData.bestCase.includeExternalPurchase ? "opacity-50 cursor-not-allowed" : "")
+                            isReadOnly ? "opacity-50 cursor-default" : (!vrbData.bestCase.includeExternalPurchase ? "opacity-50 cursor-default" : "")
                           )}
                           disabled={isReadOnly || !vrbData.bestCase.includeExternalPurchase}
                           title={(!isReadOnly && !vrbData.bestCase.includeExternalPurchase) ? "외부 매입1을 먼저 선택해야 합니다." : ""}

@@ -54,7 +54,7 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
               type="button"
               onClick={(e) => handleSave(e)}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-default disabled:opacity-60 transition-colors"
             >
               <Save className="h-4 w-4" />
               {saving ? "저장 중..." : "저장"}
@@ -191,7 +191,7 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                               }
                             }}
                             disabled={isReadOnly}
-                            className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-not-allowed bg-gray-50" : ""}`}
+                            className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-default bg-gray-50" : ""}`}
                           />
                         ) : (
                           <span className="text-sm text-gray-900">
@@ -220,7 +220,7 @@ export function StandardExpenseTab({ projectId, onSave, isReadOnly = false }: St
                           }
                         }}
                         disabled={isReadOnly}
-                        className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-not-allowed bg-gray-50" : ""}`}
+                        className={`w-full h-[35px] border-none rounded-none px-[10px] text-right text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:bg-white bg-transparent hover:bg-blue-50 transition-colors placeholder:text-gray-400 ${isReadOnly ? "cursor-default bg-gray-50" : ""}`}
                       />
                     ) : expense.id === 9 ? (
                       ""

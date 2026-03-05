@@ -27,7 +27,6 @@ import { useRouter } from "next/navigation";
 import { Currency, formatCurrency } from "@/lib/utils/currency";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { DatePicker, Dropdown, Button, StatusBadge, useToast } from "@/components/ui";
-import type { AlertType } from "@/components/ui";
 import { ProjectModal } from "@/components/projects/ProjectModal";
 import { format } from "date-fns";
 
@@ -143,7 +142,7 @@ export default function ProjectDetailPage({
 
   const { showToast, confirm } = useToast();
 
-  const showAlert = (message: string, type: AlertType = "info", title?: string, onConfirm?: () => void) => {
+  const showAlert = (message: string, type: "info" | "success" | "error" | "warning" | "confirm" = "info", title?: string, onConfirm?: () => void) => {
     if (type === "confirm") {
       confirm({
         message,
@@ -385,8 +384,12 @@ export default function ProjectDetailPage({
                         switch (code) {
                           case 'vrb':
                             return `/projects/${id}/vrb-review`;
+                          case 'contract':
+                            return `/projects/${id}/contract-status`;
                           case 'profitability':
                             return `/projects/${id}/profitability`;
+                          case 'in_progress':
+                            return `/projects/${id}/monitoring`;
                           case 'settlement':
                             return `/projects/${id}/settlement`;
                           default:

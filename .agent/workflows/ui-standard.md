@@ -138,6 +138,24 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 - **특화 레이아웃:**
   - 좌측 구분 컬럼은 `bg-gray-50/50 font-bold` 처리하여 시각적 위계를 줍니다.
 
+### 3.3 상세 폼 페이지 섹션 헤더 (Section Header in Detail Pages)
+기준: **계약현황 상세, VRB 상세** 등 폼 기반의 상세 입력 페이지
+
+- **카드 컨테이너:** `neo-light-card border border-border/40 overflow-hidden`을 사용합니다.
+- **카드 최상단 헤더:** `bg-muted/30 px-8 py-5 border-b border-border/20` + 좌측 컬러 바 (`w-1 h-5 bg-primary rounded-full`) + `text-base font-bold text-gray-900` 제목
+- **섹션 구분 제목 (`h4`):** `text-sm font-bold text-slate-500 mb-4`
+  - ❌ `text-xs font-black uppercase tracking-widest` — 너무 작고 과한 스타일로 사용 금지
+  - ✅ `text-sm font-bold text-slate-500 mb-4` — 가이드 표준 준수
+
+  ```tsx
+  // ✅ 올바른 섹션 구분 헤더
+  <h4 className="text-sm font-bold text-slate-500 mb-4">기본 정보</h4>
+  // 섹션 구분선
+  <div className="h-px bg-gray-100" />
+  ```
+
+- **하단 액션 바:** `bg-muted/20 px-8 py-4 border-t border-border/20 flex items-center justify-end gap-3`
+
 
 
 ### 4. 상태 배지 (Badge)
@@ -358,3 +376,6 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 - 인라인 스타일보다는 Tailwind CSS 클래스를 우선 사용합니다.
 - `oklch` 색상 체계를 깨지 않도록 주의합니다.
 - 하드코딩된 색상보다는 CSS 변수(`--primary`, `--border` 등)를 사용합니다.
+- **`cursor-not-allowed` 사용 금지:** 시스템 전체에서 `cursor-not-allowed`는 사용하지 않습니다. disabled 또는 읽기 전용 상태에서는 반드시 `cursor-default`를 사용합니다.
+  - ❌ `disabled:cursor-not-allowed`, `cursor-not-allowed`
+  - ✅ `disabled:cursor-default`, `cursor-default`

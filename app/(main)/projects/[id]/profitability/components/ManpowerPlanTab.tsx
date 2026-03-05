@@ -283,7 +283,7 @@ export function ManpowerPlanTab({
               type="button"
               onClick={(e) => handleSave(e)}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-default transition-colors"
             >
               <Save className="h-4 w-4" />
               {saving ? "저장 중..." : "저장"}

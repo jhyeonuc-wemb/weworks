@@ -206,6 +206,8 @@ export default function PermissionsPage() {
 
             if (res.ok) {
                 setSavedMap({ ...permMap });
+                // 세션 쿠키의 allowedMenuKeys를 최신 DB 값으로 갱신 (proxy 접근 체크 즉시 반영)
+                await fetch("/api/auth/refresh-session", { method: "POST" });
                 showToast(`'${selectedRole.name}' 역할의 권한이 저장되었습니다.`, "success");
             } else {
                 showToast("저장에 실패했습니다.", "error");

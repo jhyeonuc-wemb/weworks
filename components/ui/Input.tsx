@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           type={type}
           className={cn(
             "block w-full h-10 rounded-xl border border-gray-300 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 transition-all duration-200",
-            "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500",
+            "disabled:bg-gray-50 disabled:cursor-default disabled:text-gray-500",
             error && "border-red-500 focus:border-red-500 focus:ring-red-500",
             className
           )}
@@ -65,7 +65,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           className={cn(
             "block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 resize-none transition-all duration-200",
-            "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500",
+            "disabled:bg-gray-50 disabled:cursor-default disabled:text-gray-500",
             error && "border-red-500 focus:border-red-500 focus:ring-red-500",
             className
           )}

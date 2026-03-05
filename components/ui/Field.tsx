@@ -22,7 +22,7 @@ const FieldLabel = React.forwardRef<
     <label
         ref={ref}
         className={cn(
-            "text-sm font-bold leading-none text-gray-500 peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+            "text-sm font-bold leading-none text-gray-500 peer-disabled:cursor-default peer-disabled:opacity-70",
             className
         )}
         {...props}

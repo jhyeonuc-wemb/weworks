@@ -17,10 +17,10 @@ export const ProjectPhaseNav = ({ projectId }: ProjectPhaseNavProps) => {
 
     const options = [
         { value: `/projects/${projectId}`, label: "프로젝트 상세" },
-
-        { value: `/projects/${projectId}/vrb-review`, label: "VRB 심의" },
+        { value: `/projects/${projectId}/vrb-review`, label: "VRB" },
+        { value: `/projects/${projectId}/contract-status`, label: "계약" },
         { value: `/projects/${projectId}/profitability`, label: "수지분석" },
-        { value: `/progress-management/monitoring/${projectId}`, label: "프로젝트 모니터링" },
+        { value: `/projects/${projectId}/monitoring`, label: "프로젝트 진행" },
         { value: `/projects/${projectId}/settlement`, label: "수지정산" },
     ];
 

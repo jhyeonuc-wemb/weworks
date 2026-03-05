@@ -38,10 +38,11 @@ export async function GET() {
       ['sales', '영업/PS', 'top', 20],
       // 프로젝트 그룹 서브메뉴
       ['projects', '프로젝트 현황', '프로젝트', 30],
-      ['vrb-review', 'VRB 현황', '프로젝트', 40],
-      ['contract-status', '계약 현황', '프로젝트', 50],
-      ['profitability', '수지분석서 현황', '프로젝트', 60],
-      ['settlement', '수지정산서 현황', '프로젝트', 70],
+      ['projects/vrb', 'VRB 현황', '프로젝트', 40],
+      ['projects/contract-status', '계약 현황', '프로젝트', 50],
+      ['projects/monitoring', '프로젝트 진행 현황', '프로젝트', 55],
+      ['projects/profitability', '수지분석서 현황', '프로젝트', 60],
+      ['projects/settlement', '수지정산서 현황', '프로젝트', 70],
       // 유지보수 그룹 서브메뉴
       ['maintenance/free', '무상 유지보수 현황', '유지보수', 80],
       ['maintenance/paid', '유상 유지보수 현황', '유지보수', 90],

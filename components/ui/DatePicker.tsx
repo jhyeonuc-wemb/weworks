@@ -140,7 +140,7 @@ export function DatePicker({
                             "w-full justify-start text-left font-normal border border-gray-300 bg-white px-3 h-10 rounded-xl transition-all duration-200 focus:outline-none focus:ring-0",
                             !date && "text-gray-400",
                             buttonClassName,
-                            disabled && "opacity-100 cursor-default text-gray-900 hover:bg-white"
+                            disabled && "opacity-100 !cursor-default bg-slate-50 border-gray-200 text-gray-700 hover:bg-slate-50"
                         )}
                     >
                         {!disabled && <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />}

@@ -188,9 +188,7 @@ export default function ProjectMonitoringDetailPage({
                 }),
             });
 
-            if (res.ok) {
-                router.push('/progress-management/monitoring');
-            }
+            res.ok ? router.push('/projects/monitoring') : null;
         } catch (e) {
             console.error(e);
         } finally {
@@ -244,7 +242,7 @@ export default function ProjectMonitoringDetailPage({
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <Link
-                        href="/progress-management/monitoring"
+                        href="/projects/monitoring"
                         className="p-2 -ml-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-300"
                     >
                         <ArrowLeft className="h-5 w-5" />
@@ -575,7 +573,7 @@ export default function ProjectMonitoringDetailPage({
                 {/* Bottom Bar */}
                 <div className="bg-slate-50 p-4 border-t border-gray-100 flex justify-end gap-3">
                     <Link
-                        href="/progress-management/monitoring"
+                        href="/projects/monitoring"
                         className="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
                     >
                         취소

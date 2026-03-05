@@ -114,7 +114,7 @@ export default function ProjectMonitoringPage() {
     };
 
     const handleRowClick = (projectId: string | number) => {
-        router.push(`/progress-management/monitoring/${projectId}`);
+        router.push(`/projects/${projectId}/monitoring`);
     };
 
     // 년도 옵션 추출
@@ -204,21 +204,21 @@ export default function ProjectMonitoringPage() {
                 <div className="overflow-x-auto custom-scrollbar-main">
                     <Table className="w-full table-fixed">
                         <TableHeader className="bg-muted/30">
-                            <TableRow className="h-[46px]">
-                                <TableHead className="w-[90px] px-3 py-0 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
-                                <TableHead className="px-4 py-0 text-sm text-slate-900 text-center">프로젝트명</TableHead>
-                                <TableHead className="w-[110px] px-3 py-0 text-sm text-slate-900 text-center">분야</TableHead>
-                                <TableHead className="w-[120px] px-3 py-0 text-sm text-slate-900 text-center">고객사</TableHead>
-                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center">PM</TableHead>
-                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center">PL</TableHead>
-                                <TableHead className="w-[120px] px-3 py-0 text-sm text-slate-900 text-center whitespace-nowrap">단계</TableHead>
-                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">건전성</TableHead>
-                                <TableHead className="w-[70px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">일정</TableHead>
-                                <TableHead className="w-[80px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">계획(%)</TableHead>
-                                <TableHead className="w-[80px] px-2 py-0 text-sm text-slate-900 text-center whitespace-nowrap">실적(%)</TableHead>
-                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">계획MM</TableHead>
-                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">실행MM</TableHead>
-                                <TableHead className="w-[72px] px-3 py-0 text-sm text-slate-900 text-right whitespace-nowrap">잔여MM</TableHead>
+                            <TableRow>
+                                <TableHead className="w-[90px] px-3 py-3 text-sm text-slate-900 text-center whitespace-nowrap">코드</TableHead>
+                                <TableHead className="px-4 py-3 text-sm text-slate-900 text-center">프로젝트명</TableHead>
+                                <TableHead className="w-[110px] px-3 py-3 text-sm text-slate-900 text-center">분야</TableHead>
+                                <TableHead className="w-[120px] px-3 py-3 text-sm text-slate-900 text-center">고객사</TableHead>
+                                <TableHead className="w-[70px] px-2 py-3 text-sm text-slate-900 text-center">PM</TableHead>
+                                <TableHead className="w-[70px] px-2 py-3 text-sm text-slate-900 text-center">PL</TableHead>
+                                <TableHead className="w-[120px] px-3 py-3 text-sm text-slate-900 text-center whitespace-nowrap">단계</TableHead>
+                                <TableHead className="w-[70px] px-2 py-3 text-sm text-slate-900 text-center whitespace-nowrap">건전성</TableHead>
+                                <TableHead className="w-[70px] px-2 py-3 text-sm text-slate-900 text-center whitespace-nowrap">일정</TableHead>
+                                <TableHead className="w-[80px] px-2 py-3 text-sm text-slate-900 text-center whitespace-nowrap">계획(%)</TableHead>
+                                <TableHead className="w-[80px] px-2 py-3 text-sm text-slate-900 text-center whitespace-nowrap">실적(%)</TableHead>
+                                <TableHead className="w-[72px] px-3 py-3 text-sm text-slate-900 text-right whitespace-nowrap">계획MM</TableHead>
+                                <TableHead className="w-[72px] px-3 py-3 text-sm text-slate-900 text-right whitespace-nowrap">실행MM</TableHead>
+                                <TableHead className="w-[72px] px-3 py-3 text-sm text-slate-900 text-right whitespace-nowrap">잔여MM</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/10">
@@ -262,43 +262,43 @@ export default function ProjectMonitoringPage() {
                                     return (
                                         <TableRow
                                             key={row.id}
-                                            className="h-[46px] hover:bg-primary/[0.02] transition-colors group cursor-pointer"
+                                            className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
                                             onClick={() => handleRowClick(row.id)}
                                         >
                                             {/* 코드 */}
-                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-3 py-3 whitespace-nowrap">
                                                 <span className="text-sm text-foreground/80 font-mono">{row.project_code}</span>
                                             </TableCell>
                                             {/* 프로젝트명 */}
-                                            <TableCell align="left" className="px-4 py-0">
+                                            <TableCell align="left" className="px-4 py-3">
                                                 <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors tracking-tight line-clamp-1 leading-snug">
                                                     {row.project_name}
                                                 </div>
                                             </TableCell>
                                             {/* 분야 */}
-                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-3 py-3 whitespace-nowrap">
                                                 <span className="text-sm text-foreground/80">{row.field || '-'}</span>
                                             </TableCell>
                                             {/* 고객사 */}
-                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-3 py-3 whitespace-nowrap">
                                                 <span className="text-sm text-foreground/80 truncate">{row.customer || '-'}</span>
                                             </TableCell>
                                             {/* PM */}
-                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-2 py-3 whitespace-nowrap">
                                                 <span className="text-sm text-foreground/80">{row.pm || '-'}</span>
                                             </TableCell>
                                             {/* PL */}
-                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap border-r border-border/5">
+                                            <TableCell align="center" className="px-2 py-3 whitespace-nowrap border-r border-border/5">
                                                 <span className="text-sm text-foreground/80">{row.pl || '-'}</span>
                                             </TableCell>
                                             {/* 단계 - 프로젝트 현황 스타일 */}
-                                            <TableCell align="center" className="px-3 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-3 py-3 whitespace-nowrap">
                                                 <span className={`inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm ${phaseStyle}`}>
                                                     {row.current_phase || '미지정'}
                                                 </span>
                                             </TableCell>
                                             {/* 건전성 */}
-                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-2 py-3 whitespace-nowrap">
                                                 <span className={cn(
                                                     "inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm",
                                                     (row.progress_status === '정상' || !row.progress_status) ? "bg-green-100 text-green-700" :
@@ -310,7 +310,7 @@ export default function ProjectMonitoringPage() {
                                                 </span>
                                             </TableCell>
                                             {/* 일정 상태 */}
-                                            <TableCell align="center" className="px-2 py-0 whitespace-nowrap">
+                                            <TableCell align="center" className="px-2 py-3 whitespace-nowrap">
                                                 <span className={cn(
                                                     "inline-flex items-center h-6 px-2.5 rounded-full text-xs font-bold shadow-sm",
                                                     (row.progress_state === '정상' || !row.progress_state) ? "bg-green-100 text-green-700" :
@@ -323,7 +323,7 @@ export default function ProjectMonitoringPage() {
                                                 </span>
                                             </TableCell>
                                             {/* 계획(%) */}
-                                            <TableCell align="center" className="px-2 py-0">
+                                            <TableCell align="center" className="px-2 py-3">
                                                 <div className="flex flex-col items-center gap-0.5">
                                                     <span className="font-mono text-sm text-foreground/80">{calculateScheduleProgress(row.actual_start_date, row.actual_end_date)}%</span>
                                                     <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
@@ -332,7 +332,7 @@ export default function ProjectMonitoringPage() {
                                                 </div>
                                             </TableCell>
                                             {/* 실적(%) */}
-                                            <TableCell align="center" className="px-2 py-0">
+                                            <TableCell align="center" className="px-2 py-3">
                                                 <div className="flex flex-col items-center gap-0.5">
                                                     <span className="font-mono text-sm text-foreground/80">{row.performance_rate}%</span>
                                                     <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
@@ -341,16 +341,16 @@ export default function ProjectMonitoringPage() {
                                                 </div>
                                             </TableCell>
                                             {/* 계획MM */}
-                                            <TableCell align="right" className="px-3 py-0 font-mono text-sm text-foreground/80">
+                                            <TableCell align="right" className="px-3 py-3 font-mono text-sm text-foreground/80">
                                                 {calculateTotalMM(row.planned_internal_mm, row.planned_external_mm)}
                                             </TableCell>
                                             {/* 실행MM */}
-                                            <TableCell align="right" className="px-3 py-0 font-mono text-sm text-foreground/80">
+                                            <TableCell align="right" className="px-3 py-3 font-mono text-sm text-foreground/80">
                                                 {calculateTotalMM(row.executed_internal_mm, row.executed_external_mm)}
                                             </TableCell>
                                             {/* 잔여MM */}
                                             <TableCell align="right" className={cn(
-                                                "px-3 py-0 font-mono text-sm font-bold",
+                                                "px-3 py-3 font-mono text-sm font-bold",
                                                 parseFloat(calculateRemainingMMTotal(row.planned_internal_mm, row.planned_external_mm, row.executed_internal_mm, row.executed_external_mm)) < 0
                                                     ? "text-red-500" : "text-foreground/80"
                                             )}>
