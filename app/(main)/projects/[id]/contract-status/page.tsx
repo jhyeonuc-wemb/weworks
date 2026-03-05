@@ -216,7 +216,7 @@ export default function ContractDetailPage({
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-2xl font-semibold tracking-tight text-gray-900 line-clamp-2 max-w-[300px] sm:max-w-[500px] lg:max-w-[700px] leading-snug">
-                                <span className="text-blue-600">계약 현황</span> -{" "}
+                                <span className="text-blue-600">계약</span> -{" "}
                                 {contract.name}
                             </h1>
                             <StatusBadge status={status} className="h-9" />
