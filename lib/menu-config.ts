@@ -117,6 +117,7 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
         displayOrder: 50,
         children: [
             { menuKey: "resources/work-logs", href: "/resources/work-logs", label: "개인별 작업 일지", icon: Calendar, displayOrder: 51 },
+            { menuKey: "resources/utilization", href: "/resources/utilization", label: "가동률 현황", icon: TrendingUp, displayOrder: 52 },
         ],
     },
     {
