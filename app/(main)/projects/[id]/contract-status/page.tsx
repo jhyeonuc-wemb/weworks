@@ -15,6 +15,7 @@ import {
 import { ProjectPhaseNav } from "@/components/projects/ProjectPhaseNav";
 import { useProjectPhase } from "@/hooks/useProjectPhase";
 import { formatNumber } from "@/lib/utils/format";
+import { AttachmentSection } from "@/components/ui";
 
 interface Contract {
     id: number;
@@ -500,8 +501,17 @@ export default function ContractDetailPage({
                             </Field>
                         </div>
                     </div>
+                    {/* ── 첨부파일 ── */}
+                    <div className="pt-2">
+                        <div className="h-px bg-gray-100 mb-6" />
+                        <AttachmentSection
+                            entityType="contract"
+                            entityId={Number(id)}
+                            readonly={isReadOnly}
+                        />
+                    </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

@@ -37,3 +37,5 @@ export { DatePicker } from "./DatePicker";
 export { MonthPicker } from "./MonthPicker";
 export { ToastProvider, useToast } from "./Toast";
 export type { ToastType } from "./Toast";
+
+export { AttachmentSection } from "./AttachmentSection";
