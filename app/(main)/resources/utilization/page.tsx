@@ -370,7 +370,7 @@ export default function UtilizationDashboard() {
                 rate: Number(rate.toFixed(1)),
                 target: 80
             };
-        }).slice(0, currentMonthIdx + 1);
+        }).slice(0, 12);
 
         // Pie Chart Data
         const pieData = Object.keys(overallCategorySum).map(code => {
@@ -398,16 +398,42 @@ export default function UtilizationDashboard() {
             return path.join('_');
         };
 
-        const orgData = Array.from(new Set(filteredUsers.map(u => u.department_id).filter(Boolean))).map(deptId => {
-            const deptUsers = filteredUsers.filter(u => u.department_id === deptId);
-            const summ = getUtilSummaryForUsers(deptUsers);
-            const target = deptUsers.length * targetWorkingHoursCurrent;
-            const rate = target > 0 ? (summ.totalHours / target) * 100 : 0;
-            const department = allDepts.find(d => d.id === deptId);
-            const deptName = department?.name || '기타';
-            const sortPath = getDeptSortPath(deptId);
-            return { deptId, name: deptName, rate: Number(rate.toFixed(1)), sortPath };
-        }).sort((a, b) => a.sortPath.localeCompare(b.sortPath));
+        // Helper to get display name (only the current department name)
+        const getDeptDisplayName = (deptId: number) => {
+            const dept = allDepts.find(d => Number(d.id) === deptId);
+            return dept?.name || '기타';
+        };
+
+        const orgData = Array.from(activeFilterDeptIds)
+            .filter(id => id !== Number(businessDiv?.id)) // Exclude root 'Business Headquarters' from bars
+            .map(deptId => {
+                // Get all users in the subtree of this department for rollup
+                const subtreeIds = new Set<number>();
+                const buildSubtree = (pid: number) => {
+                    subtreeIds.add(pid);
+                    allDepts.forEach(d => {
+                        if (d.parent_department_id && Number(d.parent_department_id) === pid) {
+                            if (!subtreeIds.has(Number(d.id))) buildSubtree(Number(d.id));
+                        }
+                    });
+                };
+                buildSubtree(deptId);
+
+                const deptSubtreeUsers = allUsers.filter(u => subtreeIds.has(Number(u.department_id)));
+                const summ = getUtilSummaryForUsers(deptSubtreeUsers);
+                const target = deptSubtreeUsers.length * targetWorkingHoursCurrent;
+                const rate = target > 0 ? (summ.totalHours / target) * 100 : 0;
+
+                return {
+                    deptId,
+                    name: getDeptDisplayName(deptId),
+                    rate: Number(rate.toFixed(1)),
+                    sortPath: getDeptSortPath(deptId),
+                    userCount: deptSubtreeUsers.length
+                };
+            })
+            .filter(d => d.userCount > 0) // Only show departments that have people in their hierarchy
+            .sort((a, b) => a.sortPath.localeCompare(b.sortPath));
 
         // Top/Bottom Users
         const sortedUsers = [...userUtils].sort((a, b) => b.rate - a.rate);
@@ -550,12 +576,19 @@ export default function UtilizationDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                         <h3 className="text-lg font-bold mb-4 text-gray-800">조직별 평균 가동률</h3>
-                        <div className="h-72">
+                        <div className="h-[420px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={orgData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+                                <BarChart data={orgData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
                                     <XAxis type="number" domain={[0, 120]} hide />
-                                    <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{ fill: '#4B5563', fontSize: 12, fontWeight: 500 }} />
+                                    <YAxis
+                                        dataKey="name"
+                                        type="category"
+                                        width={120}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#4B5563', fontSize: 12, fontWeight: 500 }}
+                                    />
                                     <Tooltip
                                         cursor={{ fill: '#F3F4F6' }}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -716,7 +749,7 @@ export default function UtilizationDashboard() {
         const uLogs = processedLogs[user.id];
 
         // Monthly trend data
-        const months = Array.from({ length: currentMonthIdx + 1 }, (_, i) => i);
+        const months = Array.from({ length: 12 }, (_, i) => i);
         const trendData = months.map(m => {
             let mTotal = 0;
             let categories: Record<string, number> = {};

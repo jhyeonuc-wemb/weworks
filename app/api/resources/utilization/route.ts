@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         // 1. 사용자 정보 (부서 포함)
         const usersRes = await query(`
             SELECT u.id, u.name, u.grade, u.position, u.status, d.name as department_name, d.id as department_id,
-                   (SELECT name FROM we_ranks r WHERE r.id = u.rank_id) as rank_name
+                   (SELECT name FROM we_codes r WHERE r.id = u.rank_id) as rank_name
             FROM we_users u
             LEFT JOIN we_departments d ON u.department_id = d.id
             WHERE UPPER(u.status) = 'ACTIVE'

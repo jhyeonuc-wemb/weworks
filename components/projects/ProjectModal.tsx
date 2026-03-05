@@ -162,9 +162,9 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     maintenancePaidCode: project.maintenancePaidCode || "",
                     researchCode: project.researchCode || "",
                     name: project.name || "",
-                    projectType: project.project_type_id?.toString() || (loadedProjectTypes[0]?.id?.toString() ?? ""),
-                    category: project.category_id?.toString() || "",
-                    field: project.field_id?.toString() || "",
+                    projectType: project.projectTypeId?.toString() || (loadedProjectTypes[0]?.id?.toString() ?? ""),
+                    category: project.categoryId?.toString() || "",
+                    field: project.fieldId?.toString() || "",
                     customerId: project.customerId?.toString() || "",
                     ordererId: project.ordererId?.toString() || "",
                     description: project.description || "",
@@ -241,9 +241,9 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             maintenanceFreeCode: formData.maintenanceFreeCode || null,
             maintenancePaidCode: formData.maintenancePaidCode || null,
             researchCode: formData.researchCode || null,
-            project_type_id: formData.projectType ? parseInt(formData.projectType) : null,
-            category_id: formData.category ? parseInt(formData.category) : null,
-            field_id: formData.field ? parseInt(formData.field) : null,
+            projectTypeId: formData.projectType ? parseInt(formData.projectType) : null,
+            categoryId: formData.category ? parseInt(formData.category) : null,
+            fieldId: formData.field ? parseInt(formData.field) : null,
             customerId: formData.customerId ? parseInt(formData.customerId) : null,
             ordererId: formData.ordererId ? parseInt(formData.ordererId) : null,
             description: formData.description,
@@ -286,7 +286,7 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
             triggerRect={triggerRect}
             title={project ? "프로젝트 수정" : "신규 프로젝트 등록"}
             description="프로젝트의 기본 정보와 계약 내용을 관리합니다."
-            className="max-w-4xl"
+            panelWidth={960}
         >
             <form onSubmit={handleSubmit} className="space-y-2">
                 <div className="grid grid-cols-4 gap-x-4 gap-y-2">

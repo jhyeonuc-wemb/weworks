@@ -40,6 +40,7 @@ export class ProjectService {
             maintenancePaidCode: data.maintenancePaidCode,
             researchCode: data.researchCode,
             categoryId: data.categoryId,
+            projectTypeId: data.projectTypeId,
             customerId: data.customerId,
             ordererId: data.ordererId,
             description: data.description,
@@ -52,7 +53,7 @@ export class ProjectService {
             managerId: data.managerId,
             salesRepresentativeId: data.salesRepresentativeId,
             processStatus: selectedPhase,
-            currentPhase: selectedPhase || 'tbd', // 임시값, 아래에서 실제값으로 교체
+            currentPhase: selectedPhase || 'tbd',
             riskLevel: data.riskLevel,
             fieldId: data.fieldId,
             createdBy: data.createdBy,
