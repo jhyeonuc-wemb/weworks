@@ -95,7 +95,13 @@ export default function ContractDetailPage({
             const c: Contract = data.contract;
             setContract(c);
             // 폼 초기화
-            setSupplyAmount(c.supplyAmount ? String(c.supplyAmount) : "");
+            setSupplyAmount(
+                c.supplyAmount
+                    ? String(c.supplyAmount)
+                    : c.expectedAmount
+                        ? String(Math.round(c.expectedAmount / 1.1))
+                        : ""
+            );
             setStampDuty(c.stampDuty ? String(c.stampDuty) : "");
             setPerformanceBondRate(String(c.performanceBondRate ?? 10));
             setDefectBondRate(String(c.defectBondRate ?? 2));

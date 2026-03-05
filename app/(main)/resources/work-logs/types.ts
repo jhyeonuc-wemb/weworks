@@ -7,6 +7,9 @@ export interface WorkLog {
     workHours?: number | null;
     logType: "plan" | "actual";
     category: string;
+    categoryName?: string | null;
+    subCategory?: string | null;
+    subCategoryName?: string | null;
     projectId?: number | null;
     projectName?: string | null;
     projectCode?: string | null;

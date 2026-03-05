@@ -121,7 +121,7 @@ export default function WorkLogsPage() {
                         </h1>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                        나의 업무 계획 및 실행 내역을 관리합니다.
+                        나의 업무 실행 내역을 관리합니다.
                         <span className="ml-2 text-xs">
                             {loading && <span className="text-blue-500">불러오는 중...</span>}
                         </span>

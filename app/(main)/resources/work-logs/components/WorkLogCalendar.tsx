@@ -39,7 +39,7 @@ const DEFAULT_COLOR = "#94a3b8";
 function renderEventContent(arg: EventContentArg) {
   const log: WorkLog = arg.event.extendedProps.log;
   const isPlan = log.logType === "plan";
-  const label = log.title || log.projectName || log.category || "작업";
+  const label = log.title || log.projectName || log.subCategoryName || log.categoryName || "작업";
 
   return (
     <div
@@ -83,7 +83,7 @@ export default function WorkLogCalendar({
 
     return {
       id: String(log.id),
-      title: log.title || log.projectName || log.category || "작업",
+      title: log.title || log.projectName || log.subCategoryName || log.categoryName || "작업",
       start,
       end,
       backgroundColor: color,

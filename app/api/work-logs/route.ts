@@ -14,20 +14,24 @@ export async function GET(request: NextRequest) {
         const userId = searchParams.get("userId") ? Number(searchParams.get("userId")) : Number(user.id);
         const dateFrom = searchParams.get("dateFrom");
         const dateTo = searchParams.get("dateTo");
-        const logType = searchParams.get("logType"); // plan | actual
+        const logType = searchParams.get("logType");
 
         const params: any[] = [userId];
         let sql = `
       SELECT 
         w.id, w.user_id, w.work_date, 
         w.start_time, w.end_time, w.work_hours,
-        w.log_type, w.category, w.project_id,
+        w.log_type, w.category, w.sub_category, w.project_id,
         w.title, w.memo, w.created_at, w.updated_at,
         u.name as user_name,
-        p.name as project_name
+        p.name as project_name,
+        c.name as category_name,
+        sc.name as sub_category_name
       FROM we_work_logs w
       LEFT JOIN we_users u ON u.id = w.user_id
       LEFT JOIN we_projects p ON p.id = w.project_id
+      LEFT JOIN we_codes c ON c.code = w.category
+      LEFT JOIN we_codes sc ON sc.code = w.sub_category
       WHERE w.user_id = $1
     `;
 
@@ -60,6 +64,9 @@ export async function GET(request: NextRequest) {
             workHours: row.work_hours ? Number(row.work_hours) : null,
             logType: row.log_type,
             category: row.category,
+            categoryName: row.category_name,
+            subCategory: row.sub_category,
+            subCategoryName: row.sub_category_name,
             projectId: row.project_id,
             projectName: row.project_name,
             title: row.title,
@@ -91,6 +98,7 @@ export async function POST(request: NextRequest) {
             endTime,
             logType = "actual",
             category,
+            subCategory,
             projectId,
             title,
             memo,
@@ -107,7 +115,6 @@ export async function POST(request: NextRequest) {
             const [eh, em] = endTime.split(":").map(Number);
             const minutes = (eh * 60 + em) - (sh * 60 + sm);
             if (minutes > 0) {
-                // 점심시간(1시간) 제외: 시작~12시, 13시~종료
                 const lunchStart = 12 * 60;
                 const lunchEnd = 13 * 60;
                 const startMin = sh * 60 + sm;
@@ -122,8 +129,8 @@ export async function POST(request: NextRequest) {
 
         const result = await query(
             `INSERT INTO we_work_logs 
-        (user_id, work_date, start_time, end_time, work_hours, log_type, category, project_id, title, memo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (user_id, work_date, start_time, end_time, work_hours, log_type, category, sub_category, project_id, title, memo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
             [
                 user.id,
@@ -133,6 +140,7 @@ export async function POST(request: NextRequest) {
                 workHours,
                 logType,
                 category || null,
+                subCategory || null,
                 projectId || null,
                 title || null,
                 memo || null,
@@ -152,6 +160,7 @@ export async function POST(request: NextRequest) {
                 workHours: row.work_hours ? Number(row.work_hours) : null,
                 logType: row.log_type,
                 category: row.category,
+                subCategory: row.sub_category,
                 projectId: row.project_id,
                 title: row.title,
                 memo: row.memo,

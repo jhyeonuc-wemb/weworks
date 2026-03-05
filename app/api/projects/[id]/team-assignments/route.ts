@@ -33,7 +33,7 @@ export async function GET(
         d.name as department_name
       FROM we_project_team_assignments ta
       LEFT JOIN we_users u ON ta.user_id = u.id
-      LEFT JOIN we_ranks r ON u.rank_id = r.id
+      LEFT JOIN we_codes r ON u.rank_id = r.id
       LEFT JOIN we_departments d ON u.department_id = d.id
       WHERE ta.project_id = $1
       ORDER BY ta.start_date DESC, u.name

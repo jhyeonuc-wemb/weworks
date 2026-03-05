@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Save, Trash2, Clock, ChevronDown } from "lucide-react";
+import { Save, Trash2, Clock, ChevronDown, Repeat2 } from "lucide-react";
 import { DraggablePanel } from "@/components/ui/DraggablePanel";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useToast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { WorkLog } from "../types";
 
-// ─── 검색 가능한 인라인 드롭다운 (인력계획탭 이름선택 스타일) ─────────────
+// ─── 검색 가능한 인라인 드롭다운 ─────────────────────────────────────────────
 interface ComboOption { value: number; label: string; }
 
 function SearchableCombobox({
@@ -26,23 +26,18 @@ function SearchableCombobox({
 
     const selected = options.find(o => o.value === value);
 
-    // 선택된 값이 바뀌면 inputText 동기화
     useEffect(() => {
-        if (!open) {
-            setInputText(selected?.label ?? "");
-        }
+        if (!open) setInputText(selected?.label ?? "");
     }, [value, open, selected]);
 
     const filtered = options.filter(o =>
         o.label.toLowerCase().includes(inputText.toLowerCase())
     );
 
-    // 외부 클릭 시 닫기
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setOpen(false);
-                // 닫힐 때 현재 선택값으로 텍스트 복원
                 setInputText(selected?.label ?? "");
             }
         };
@@ -53,38 +48,18 @@ function SearchableCombobox({
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputText(e.target.value);
         setOpen(true);
-        // 텍스트 바꾸면 선택 해제
-        if (selected && e.target.value !== selected.label) {
-            onChange(null);
-        }
+        if (selected && e.target.value !== selected.label) onChange(null);
     };
 
-    const handleFocus = () => {
-        setInputText("");
-        setOpen(true);
-    };
-
-    const handleSelect = (opt: ComboOption) => {
-        onChange(opt.value);
-        setInputText(opt.label);
-        setOpen(false);
-    };
-
-    const handleClear = () => {
-        onChange(null);
-        setInputText("");
-        setOpen(false);
-        inputRef.current?.focus();
-    };
+    const handleFocus = () => { setInputText(""); setOpen(true); };
+    const handleSelect = (opt: ComboOption) => { onChange(opt.value); setInputText(opt.label); setOpen(false); };
+    const handleClear = () => { onChange(null); setInputText(""); setOpen(false); inputRef.current?.focus(); };
 
     return (
         <div ref={containerRef} className="relative">
-            {/* 인력계획탭 이름 셀과 동일한 인라인 input 스타일 */}
             <div className={cn(
                 "flex items-center w-full h-10 rounded-xl border text-sm transition-colors focus-within:ring-2 focus-within:ring-gray-900 focus-within:ring-offset-0",
-                open
-                    ? "border-gray-900 bg-white"
-                    : "border-gray-300 bg-white hover:border-gray-400"
+                open ? "border-gray-900 bg-white" : "border-gray-300 bg-white hover:border-gray-400"
             )}>
                 <input
                     ref={inputRef}
@@ -95,33 +70,18 @@ function SearchableCombobox({
                     placeholder={placeholder || "검색하여 선택"}
                     className="flex-1 h-full bg-transparent px-3 outline-none focus:outline-none focus:ring-0 focus:shadow-none text-sm text-gray-900 placeholder:text-gray-400"
                 />
-                {/* 선택됐을 때 X 버튼 */}
                 {value !== null && (
-                    <button
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); handleClear(); }}
-                        className="px-2 text-gray-400 hover:text-gray-600"
-                    >
+                    <button type="button" onMouseDown={(e) => { e.preventDefault(); handleClear(); }} className="px-2 text-gray-400 hover:text-gray-600">
                         <span className="text-xs leading-none">✕</span>
                     </button>
                 )}
-                {/* 드롭다운 화살표 */}
-                <ChevronDown
-                    className={cn(
-                        "h-4 w-4 text-gray-400 shrink-0 mr-2 transition-transform duration-150",
-                        open && "rotate-180"
-                    )}
-                />
+                <ChevronDown className={cn("h-4 w-4 text-gray-400 shrink-0 mr-2 transition-transform duration-150", open && "rotate-180")} />
             </div>
-
-            {/* 드롭다운 목록 */}
             {open && (
                 <div className="absolute z-50 mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
                     <div className="overflow-y-auto max-h-52">
                         {filtered.length === 0 ? (
-                            <div className="px-3 py-4 text-sm text-gray-400 text-center">
-                                검색 결과 없음
-                            </div>
+                            <div className="px-3 py-4 text-sm text-gray-400 text-center">검색 결과 없음</div>
                         ) : (
                             filtered.map(o => (
                                 <div
@@ -129,9 +89,7 @@ function SearchableCombobox({
                                     onMouseDown={(e) => { e.preventDefault(); handleSelect(o); }}
                                     className={cn(
                                         "px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors",
-                                        o.value === value
-                                            ? "bg-slate-50 font-semibold text-slate-900"
-                                            : "text-gray-700"
+                                        o.value === value ? "bg-slate-50 font-semibold text-slate-900" : "text-gray-700"
                                     )}
                                 >
                                     {o.label}
@@ -159,8 +117,8 @@ interface Project {
 interface WorkLogPanelProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    initialDate?: string; // yyyy-MM-dd
-    initialTime?: string; // HH:MM (주간/일간 뷰 클릭 시간)
+    initialDate?: string;
+    initialTime?: string;
     editLog?: WorkLog | null;
     onSaved: () => void;
 }
@@ -178,17 +136,28 @@ for (let h = 0; h < 24; h++) {
     }
 }
 
-// 프로젝트 선택 노출 카테고리 코드
-const PRESALES_CODE = "CD_002_05_02";  // 프리세일즈 → 코드 없는 프로젝트
-const GENERAL_CODE = "CD_002_05_01";  // 일반 프로젝트 → 유형 선택 + 코드 있는 프로젝트
-const MAINTENANCE_FREE_CODE = "CD_002_05_03"; // 무상 유지보수
-const MAINTENANCE_PAID_CODE = "CD_002_05_04"; // 유상 유지보수
-const RESEARCH_CODE = "CD_002_05_06";         // 연구과제
+const PRESALES_CODE = "CD_002_05_02";
+const GENERAL_CODE = "CD_002_05_01";
+const MAINTENANCE_FREE_CODE = "CD_002_05_03";
+const MAINTENANCE_PAID_CODE = "CD_002_05_04";
+const RESEARCH_CODE = "CD_002_05_06";
 const EXTRA_PROJECT_CODES = [MAINTENANCE_FREE_CODE, MAINTENANCE_PAID_CODE, RESEARCH_CODE];
 const PROJECT_CATEGORY_CODES = [GENERAL_CODE, PRESALES_CODE, ...EXTRA_PROJECT_CODES];
+const SUB_CATEGORY_CODES = ["CD_002_05_07", "CD_002_05_05"];
 
-// 하위 카테고리 선택이 필요한 업무유형
-const SUB_CATEGORY_CODES = ["CD_002_05_07", "CD_002_05_05"]; // R&D 지원, 일반 업무
+// 날짜 범위 내 모든 날짜 생성
+function getDateRange(from: string, to: string): string[] {
+    const dates: string[] = [];
+    const start = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return dates;
+    const cur = new Date(start);
+    while (cur <= end) {
+        dates.push(cur.toLocaleDateString("en-CA"));
+        cur.setDate(cur.getDate() + 1);
+    }
+    return dates;
+}
 
 export function WorkLogPanel({
     open,
@@ -198,13 +167,20 @@ export function WorkLogPanel({
     editLog,
     onSaved,
 }: WorkLogPanelProps) {
-    const { showToast } = useToast();
+    const { showToast, confirm } = useToast();
     const [saving, setSaving] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [subCategories, setSubCategories] = useState<Category[]>([]);
-    const [projectTypeCodes, setProjectTypeCodes] = useState<Category[]>([]); // CD_002_05_01 하위
-    const [projectTypeFilter, setProjectTypeFilter] = useState<string>(""); // 선택된 프로젝트 유형 id
+    const [projectTypeCodes, setProjectTypeCodes] = useState<Category[]>([]);
+    const [projectTypeFilter, setProjectTypeFilter] = useState<string>("");
+
+    // 반복 입력 상태
+    const [repeatMode, setRepeatMode] = useState(false);
+    const [repeatFrom, setRepeatFrom] = useState<string>("");
+    const [repeatTo, setRepeatTo] = useState<string>("");
+    const [excludeHolidays, setExcludeHolidays] = useState(true);
+    const [holidays, setHolidays] = useState<Set<string>>(new Set());
 
     const defaultForm = (): WorkLog => {
         const snapTime = (t: string): string => {
@@ -212,10 +188,8 @@ export function WorkLogPanel({
             const snapped = m < 30 ? 0 : 30;
             return `${String(h).padStart(2, "0")}:${String(snapped).padStart(2, "0")}`;
         };
-
         let start = "09:00";
         let end = "18:00";
-
         if (initialTime) {
             start = snapTime(initialTime);
             const endHour = parseInt(start.split(":")[0]) + 1;
@@ -226,7 +200,7 @@ export function WorkLogPanel({
             startTime: start,
             endTime: end,
             logType: "actual",
-            category: GENERAL_CODE, // 디폴트: 일반 프로젝트
+            category: GENERAL_CODE,
             subCategory: null,
             projectId: null,
             title: null,
@@ -244,8 +218,14 @@ export function WorkLogPanel({
                     startTime: editLog.startTime ? editLog.startTime.substring(0, 5) : null,
                     endTime: editLog.endTime ? editLog.endTime.substring(0, 5) : null,
                 });
+                setRepeatMode(false);
             } else {
                 setForm(defaultForm());
+                // 반복 모드 초기 날짜 세팅
+                const today = initialDate || new Date().toLocaleDateString("en-CA");
+                setRepeatFrom(today);
+                setRepeatTo(today);
+                setRepeatMode(false);
             }
         }
     }, [open, editLog, initialDate, initialTime]);
@@ -264,13 +244,24 @@ export function WorkLogPanel({
             .then((data) => {
                 const codes = data.codes || [];
                 setProjectTypeCodes(codes);
-                // 디폴트: 첫 번째 유형 (계약 프로젝트)
                 if (codes.length > 0) setProjectTypeFilter(codes[0].id.toString());
             })
             .catch(() => { });
     }, []);
 
-    // R&D 지원 / 일반 업무 선택 시 하위 공통코드 로드
+    // 반복 모드 활성화 시 or 날짜 범위 변경 시 해당 연도 휴일 로드
+    useEffect(() => {
+        if (!repeatMode || !repeatFrom) return;
+        const year = repeatFrom.substring(0, 4);
+        fetch(`/api/holidays?year=${year}`)
+            .then(r => r.json())
+            .then(data => {
+                const set = new Set<string>((data.holidays || []).map((h: any) => h.holiday_date as string));
+                setHolidays(set);
+            })
+            .catch(() => setHolidays(new Set()));
+    }, [repeatMode, repeatFrom]);
+
     useEffect(() => {
         if (SUB_CATEGORY_CODES.includes(form.category)) {
             fetch(`/api/codes?parentCode=${form.category}`)
@@ -290,11 +281,9 @@ export function WorkLogPanel({
         setForm((prev) => ({ ...prev, startTime: "09:00", endTime: "18:00" }));
     };
 
+    // 단일 저장
     const handleSave = async () => {
-        if (!form.workDate) {
-            showToast("날짜를 선택하세요.", "error");
-            return;
-        }
+        if (!form.workDate) { showToast("날짜를 선택하세요.", "error"); return; }
         setSaving(true);
         try {
             const url = form.id ? `/api/work-logs/${form.id}` : "/api/work-logs";
@@ -304,45 +293,93 @@ export function WorkLogPanel({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             });
-            if (!res.ok) throw new Error("저장 실패");
+            if (!res.ok) throw new Error();
             showToast(form.id ? "수정되었습니다." : "저장되었습니다.", "success");
             onSaved();
             onOpenChange(false);
-        } catch (e) {
+        } catch {
             showToast("저장에 실패했습니다.", "error");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleDelete = async () => {
-        if (!form.id) return;
-        if (!confirm("삭제하시겠습니까?")) return;
+    // 반복 저장
+    const handleRepeatSave = async () => {
+        if (!repeatFrom || !repeatTo) { showToast("날짜 범위를 선택하세요.", "error"); return; }
+        if (repeatFrom > repeatTo) { showToast("시작일이 종료일보다 늦습니다.", "error"); return; }
+
+        let dates = getDateRange(repeatFrom, repeatTo);
+
+        // 토/일 항상 제외
+        dates = dates.filter(d => {
+            const day = new Date(d + "T00:00:00").getDay();
+            return day !== 0 && day !== 6;
+        });
+
+        // 휴일 제외
+        if (excludeHolidays) {
+            dates = dates.filter(d => !holidays.has(d));
+        }
+
+        if (dates.length === 0) {
+            showToast("저장할 날짜가 없습니다 (주말/휴일 제외 후).", "warning");
+            return;
+        }
+
+        setSaving(true);
         try {
-            const res = await fetch(`/api/work-logs/${form.id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("삭제 실패");
-            showToast("삭제되었습니다.", "success");
+            const results = await Promise.allSettled(
+                dates.map(date =>
+                    fetch("/api/work-logs", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...form, workDate: date }),
+                    })
+                )
+            );
+            const failed = results.filter(r => r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)).length;
+            if (failed === 0) {
+                showToast(`${dates.length}일치 작업일지가 등록되었습니다.`, "success");
+            } else {
+                showToast(`${dates.length - failed}건 성공, ${failed}건 실패.`, "warning");
+            }
             onSaved();
             onOpenChange(false);
-        } catch (e) {
-            showToast("삭제에 실패했습니다.", "error");
+        } catch {
+            showToast("저장에 실패했습니다.", "error");
+        } finally {
+            setSaving(false);
         }
     };
 
+    const handleDelete = () => {
+        if (!form.id) return;
+        confirm({
+            title: "작업 삭제",
+            message: "이 작업일지를 삭제하시겠습니까?",
+            onConfirm: async () => {
+                try {
+                    const res = await fetch(`/api/work-logs/${form.id}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error();
+                    showToast("삭제되었습니다.", "success");
+                    onSaved();
+                    onOpenChange(false);
+                } catch {
+                    showToast("삭제에 실패했습니다.", "error");
+                }
+            },
+        });
+    };
+
     const today = new Date();
-    // 이번달 말일
     const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    // 업무유형별 프로젝트 옵션 필터링
     const projectOptions = useMemo<ComboOption[]>(() => {
         if (form.category === PRESALES_CODE) {
-            // 프리세일즈: 프로젝트 코드 없는 프로젝트 (코드 없으니 이름만)
-            return projects
-                .filter(p => !p.projectCode)
-                .map(p => ({ value: p.id, label: p.name }));
+            return projects.filter(p => !p.projectCode).map(p => ({ value: p.id, label: p.name }));
         }
         if (form.category === GENERAL_CODE) {
-            // 일반 프로젝트: 코드 있고 실제종료일이 이번달까지 + 프로젝트 유형 필터
             return projects
                 .filter(p => {
                     if (!p.projectCode) return false;
@@ -356,7 +393,6 @@ export function WorkLogPanel({
                 .map(p => ({ value: p.id, label: `[${p.projectCode}] ${p.name}` }));
         }
         if (EXTRA_PROJECT_CODES.includes(form.category)) {
-            // 무상/유상 유지보수 / 연구과제: 해당 코드가 있는 프로젝트만
             return projects
                 .filter(p => {
                     if (form.category === MAINTENANCE_FREE_CODE) return !!p.maintenanceFreeCode;
@@ -374,18 +410,26 @@ export function WorkLogPanel({
         return [];
     }, [projects, form.category, projectTypeFilter]);
 
-    // 카테고리 변경 시 프로젝트 + 서브카테고리 초기화
     const handleCategoryChange = (code: string) => {
         setForm(prev => ({ ...prev, category: code, subCategory: null, projectId: null }));
-        // 일반 프로젝트로 전환 시 첫 번째 프로젝트 유형으로 리셋
         if (code === GENERAL_CODE && projectTypeCodes.length > 0) {
             setProjectTypeFilter(projectTypeCodes[0].id.toString());
         }
     };
 
     const showSubCategory = SUB_CATEGORY_CODES.includes(form.category) && subCategories.length > 0;
-
     const showProject = PROJECT_CATEGORY_CODES.includes(form.category);
+
+    // 반복 모드 미리보기 날짜 수
+    const previewCount = useMemo(() => {
+        if (!repeatFrom || !repeatTo || repeatFrom > repeatTo) return 0;
+        let dates = getDateRange(repeatFrom, repeatTo).filter(d => {
+            const day = new Date(d + "T00:00:00").getDay();
+            return day !== 0 && day !== 6;
+        });
+        if (excludeHolidays) dates = dates.filter(d => !holidays.has(d));
+        return dates.length;
+    }, [repeatFrom, repeatTo, excludeHolidays, holidays]);
 
     return (
         <DraggablePanel
@@ -396,25 +440,93 @@ export function WorkLogPanel({
             panelWidth={780}
         >
             <div className="space-y-5">
-                {/* 날짜 + 시간 (한 라인, 업무유형 행과 동일 비율) */}
+
+                {/* 반복 입력 토글 (신규 등록 시에만 표시) */}
+                {!form.id && (
+                    <div className="flex items-center gap-3 pb-1 border-b border-gray-100">
+                        <button
+                            type="button"
+                            onClick={() => setRepeatMode(false)}
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 h-8 rounded-lg text-sm font-medium transition-colors border",
+                                !repeatMode
+                                    ? "bg-slate-900 text-white border-slate-900"
+                                    : "bg-white text-gray-500 border-gray-300 hover:border-gray-400"
+                            )}
+                        >
+                            단일 입력
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRepeatMode(true)}
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 h-8 rounded-lg text-sm font-medium transition-colors border",
+                                repeatMode
+                                    ? "bg-blue-600 text-white border-blue-600"
+                                    : "bg-white text-gray-500 border-gray-300 hover:border-gray-400"
+                            )}
+                        >
+                            <Repeat2 className="h-3.5 w-3.5" />
+                            반복 입력
+                        </button>
+                        {repeatMode && previewCount > 0 && (
+                            <span className="ml-auto text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                                {previewCount}일 등록 예정
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* 날짜 행 */}
                 <div className="grid grid-cols-4 gap-3">
-                    {/* 날짜 - col-span-1 (업무유형과 동일 너비) */}
-                    <div className="col-span-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">날짜</label>
-                        <DatePicker
-                            date={(() => {
-                                if (!form.workDate) return undefined;
-                                const dateStr = String(form.workDate).slice(0, 10);
-                                const d = new Date(dateStr + "T00:00:00");
-                                return isNaN(d.getTime()) ? undefined : d;
-                            })()}
-                            setDate={(d) => setField("workDate", d ? d.toLocaleDateString("en-CA") : "")}
-                            className="h-10 w-full"
-                        />
+                    {/* 날짜 영역 */}
+                    <div className={repeatMode ? "col-span-2" : "col-span-1"}>
+                        {!repeatMode ? (
+                            <>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">날짜</label>
+                                <DatePicker
+                                    date={(() => {
+                                        if (!form.workDate) return undefined;
+                                        const d = new Date(String(form.workDate).slice(0, 10) + "T00:00:00");
+                                        return isNaN(d.getTime()) ? undefined : d;
+                                    })()}
+                                    setDate={(d) => setField("workDate", d ? d.toLocaleDateString("en-CA") : "")}
+                                    className="h-10 w-full"
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-4 mb-1.5">
+                                    <label className="block text-sm font-medium text-gray-700">날짜 범위</label>
+                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={excludeHolidays}
+                                            onChange={e => setExcludeHolidays(e.target.checked)}
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-600">휴일 제외</span>
+                                    </label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <DatePicker
+                                        date={repeatFrom ? new Date(repeatFrom + "T00:00:00") : undefined}
+                                        setDate={(d) => setRepeatFrom(d ? d.toLocaleDateString("en-CA") : "")}
+                                        className="h-10 flex-1"
+                                    />
+                                    <span className="text-gray-400 text-sm shrink-0">~</span>
+                                    <DatePicker
+                                        date={repeatTo ? new Date(repeatTo + "T00:00:00") : undefined}
+                                        setDate={(d) => setRepeatTo(d ? d.toLocaleDateString("en-CA") : "")}
+                                        className="h-10 flex-1"
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
-                    {/* 시간 - col-span-3 */}
-                    <div className="col-span-3">
+                    {/* 시간 - col-span-3 or col-span-2 */}
+                    <div className={repeatMode ? "col-span-2" : "col-span-3"}>
                         <div className="flex items-center justify-between mb-1.5">
                             <label className="block text-sm font-medium text-gray-700">시간</label>
                             <button
@@ -432,9 +544,7 @@ export function WorkLogPanel({
                                 onChange={(e) => setField("startTime", e.target.value)}
                                 className="flex-1 h-10 rounded-xl border border-gray-300 text-sm px-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 focus:outline-none"
                             >
-                                {TIME_OPTIONS.map((t) => (
-                                    <option key={t} value={t}>{t}</option>
-                                ))}
+                                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
                             <span className="text-gray-400 text-sm">~</span>
                             <select
@@ -442,17 +552,14 @@ export function WorkLogPanel({
                                 onChange={(e) => setField("endTime", e.target.value)}
                                 className="flex-1 h-10 rounded-xl border border-gray-300 text-sm px-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 focus:outline-none"
                             >
-                                {TIME_OPTIONS.map((t) => (
-                                    <option key={t} value={t}>{t}</option>
-                                ))}
+                                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
                         </div>
                     </div>
                 </div>
 
-                {/* 업무 유형 + 프로젝트/하위업무 (같은 라인) */}
+                {/* 업무 유형 + 프로젝트/하위업무 */}
                 <div className="grid grid-cols-4 gap-3">
-                    {/* 업무 유형 드롭다운 - 1/4 */}
                     <div className="col-span-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">업무 유형</label>
                         <select
@@ -466,19 +573,14 @@ export function WorkLogPanel({
                         </select>
                     </div>
 
-                    {/* 프로젝트 선택 or 하위업무 선택 - 3/4 */}
                     <div className="col-span-3">
                         {showProject && form.category === GENERAL_CODE && (
                             <div className="grid grid-cols-3 gap-3">
-                                {/* 프로젝트 유형 (1/3) */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">프로젝트 유형</label>
                                     <select
                                         value={projectTypeFilter}
-                                        onChange={(e) => {
-                                            setProjectTypeFilter(e.target.value);
-                                            setField("projectId", null); // 유형 변경 시 프로젝트 선택 초기화
-                                        }}
+                                        onChange={(e) => { setProjectTypeFilter(e.target.value); setField("projectId", null); }}
                                         className="w-full h-10 rounded-xl border border-gray-300 text-sm px-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 focus:outline-none bg-white"
                                     >
                                         {projectTypeCodes.map((t) => (
@@ -486,7 +588,6 @@ export function WorkLogPanel({
                                         ))}
                                     </select>
                                 </div>
-                                {/* 프로젝트 선택 (2/3) */}
                                 <div className="col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">프로젝트</label>
                                     <SearchableCombobox
@@ -534,9 +635,7 @@ export function WorkLogPanel({
                                 />
                             </>
                         )}
-                        {!showProject && !showSubCategory && (
-                            <div className="h-full" />
-                        )}
+                        {!showProject && !showSubCategory && <div className="h-full" />}
                     </div>
                 </div>
 
@@ -563,9 +662,7 @@ export function WorkLogPanel({
                             <Trash2 className="h-4 w-4" />
                             삭제
                         </button>
-                    ) : (
-                        <div />
-                    )}
+                    ) : <div />}
                     <div className="flex gap-2">
                         <button
                             type="button"
@@ -576,12 +673,15 @@ export function WorkLogPanel({
                         </button>
                         <button
                             type="button"
-                            onClick={handleSave}
+                            onClick={repeatMode ? handleRepeatSave : handleSave}
                             disabled={saving}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-10 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            className={cn(
+                                "inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-medium text-white disabled:opacity-50 transition-colors",
+                                repeatMode ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-900 hover:bg-gray-800"
+                            )}
                         >
-                            <Save className="h-4 w-4" />
-                            {saving ? "저장 중..." : "저장"}
+                            {repeatMode ? <Repeat2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                            {saving ? "저장 중..." : repeatMode ? `${previewCount}일 일괄 등록` : "저장"}
                         </button>
                     </div>
                 </div>

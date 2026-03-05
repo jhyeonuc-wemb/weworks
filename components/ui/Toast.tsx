@@ -125,7 +125,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
             {/* 확인 알림 (중앙) */}
             {toasts.filter(t => t.type === "confirm").length > 0 && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/5 animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/20 animate-in fade-in duration-300">
                     <div className="flex flex-col gap-3">
                         {toasts.filter(t => t.type === "confirm").map((toast) => (
                             <div

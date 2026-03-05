@@ -49,10 +49,10 @@ export async function GET(
             LEFT JOIN we_clients c ON p.customer_id = c.id
             LEFT JOIN we_clients o ON p.orderer_id = o.id
             LEFT JOIN we_users u_m ON p.manager_id = u_m.id
-            LEFT JOIN we_ranks r_m ON u_m.rank_id = r_m.id
+            LEFT JOIN we_codes r_m ON u_m.rank_id = r_m.id
             LEFT JOIN we_departments d_m ON u_m.department_id = d_m.id
             LEFT JOIN we_users u_s ON p.sales_representative_id = u_s.id
-            LEFT JOIN we_ranks r_s ON u_s.rank_id = r_s.id
+            LEFT JOIN we_codes r_s ON u_s.rank_id = r_s.id
             LEFT JOIN we_departments d_s ON u_s.department_id = d_s.id
             WHERE p.id = $1`,
             [projectId]
