@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
                     c.contract_title,
                     c.contract_type,
                     c.supply_amount,
-                    c.contract_date,
-                    c.contract_start_date,
-                    c.contract_end_date,
+                    c.contract_date::text          AS contract_date,
+                    c.contract_start_date::text    AS contract_start_date,
+                    c.contract_end_date::text      AS contract_end_date,
                     c.created_at,
                     c.updated_at
                 FROM we_contracts c
@@ -40,9 +40,9 @@ export async function GET(request: NextRequest) {
                     contractTitle: r.contract_title || null,
                     contractType: r.contract_type || null,
                     supplyAmount: r.supply_amount ? Number(r.supply_amount) : null,
-                    contractDate: r.contract_date ? new Date(r.contract_date).toISOString().slice(0, 10) : null,
-                    contractStartDate: r.contract_start_date ? new Date(r.contract_start_date).toISOString().slice(0, 10) : null,
-                    contractEndDate: r.contract_end_date ? new Date(r.contract_end_date).toISOString().slice(0, 10) : null,
+                    contractDate: r.contract_date ? String(r.contract_date).slice(0, 10) : null,
+                    contractStartDate: r.contract_start_date ? String(r.contract_start_date).slice(0, 10) : null,
+                    contractEndDate: r.contract_end_date ? String(r.contract_end_date).slice(0, 10) : null,
                     createdAt: r.created_at,
                 })),
             });
@@ -53,16 +53,8 @@ export async function GET(request: NextRequest) {
         const year = searchParams.get('year') || '';
         const statusCode = searchParams.get('status') || '';
 
-        const phaseStatusDefs = await pool.query(
-            `SELECT pps.code, pps.name, pps.color, pps.display_order
-             FROM project_phase_statuses pps
-             JOIN project_phases pp ON pp.id = pps.phase_id
-             WHERE pp.code = 'contract' AND pps.is_active = true
-             ORDER BY pps.display_order ASC`
-        );
-        const statusDefs = phaseStatusDefs.rows;
-        const initialStatus = statusDefs[0]?.code || 'STANDBY';
-        const finalStatus = statusDefs[statusDefs.length - 1]?.code || 'COMPLETED';
+        // VRB/수지분석서와 동일 패턴:
+        // we_project_phase_progress.phase_code = 'contract', status != 'STANDBY'
 
         let query = `
             SELECT
@@ -74,32 +66,23 @@ export async function GET(request: NextRequest) {
                 c.name AS customer_name,
                 o.name AS orderer_name,
                 u.name AS manager_name,
-                COALESCE(pp_prog.status_code, $1) AS contract_status,
-                pp_prog.started_at,
-                pp_prog.completed_at,
+                COALESCE(pp.status, 'STANDBY') AS contract_status,
+                pp.started_at,
+                pp.completed_at,
                 (SELECT COUNT(*) FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_count,
                 (SELECT MAX(wc.contract_start_date) FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_start_date,
-                (SELECT MAX(wc.contract_end_date) FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_end_date
+                (SELECT MAX(wc.contract_end_date)   FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_end_date
             FROM we_projects p
             LEFT JOIN we_clients c ON p.customer_id = c.id
             LEFT JOIN we_clients o ON p.orderer_id = o.id
-            LEFT JOIN we_users u ON p.manager_id = u.id
-            LEFT JOIN (
-                SELECT
-                    ppp.project_id,
-                    pps.code AS status_code,
-                    ppp.started_at,
-                    ppp.completed_at
-                FROM we_project_phase_progress ppp
-                JOIN project_phase_statuses pps ON pps.id = ppp.status_id
-                JOIN project_phases ph ON ph.id = pps.phase_id
-                WHERE ph.code = 'contract'
-            ) pp_prog ON pp_prog.project_id = p.id
-            WHERE p.current_phase = 'contract'
+            LEFT JOIN we_users   u ON p.manager_id = u.id
+            LEFT JOIN we_project_phase_progress pp
+                   ON pp.project_id = p.id AND pp.phase_code = 'contract'
+            WHERE COALESCE(pp.status, 'STANDBY') != 'STANDBY'
         `;
 
-        const params: any[] = [initialStatus];
-        let paramIdx = 2;
+        const params: any[] = [];
+        let paramIdx = 1;
 
         if (search) {
             query += ` AND (p.name ILIKE $${paramIdx} OR p.project_code ILIKE $${paramIdx} OR c.name ILIKE $${paramIdx})`;
@@ -113,7 +96,7 @@ export async function GET(request: NextRequest) {
             paramIdx++;
         }
         if (statusCode) {
-            query += ` AND COALESCE(pp_prog.status_code, $1) = $${paramIdx}`;
+            query += ` AND COALESCE(pp.status, 'STANDBY') = $${paramIdx}`;
             params.push(statusCode);
             paramIdx++;
         }
@@ -143,9 +126,6 @@ export async function GET(request: NextRequest) {
             contracts,
             meta: {
                 total: contracts.length,
-                statusDefs: statusDefs.map((s: any) => ({ code: s.code, name: s.name, color: s.color })),
-                initialStatus,
-                finalStatus,
             }
         });
     } catch (error: any) {

@@ -104,11 +104,20 @@ function getCurrentStepIndex(phases: any[], currentPhaseCode: string): number {
 }
 
 
-/** phaseProgress의 status → 스테퍼 표시 상태 변환 */
-function toStepperStatus(phaseStatus: string): "completed" | "current" | "pending" {
-  if (phaseStatus === 'COMPLETED') return 'completed';
-  if (phaseStatus === 'IN_PROGRESS') return 'current';
-  return 'pending';
+/**
+ * phaseProgress의 status → 스테퍼 표시 상태 변환
+ * - initial_status : 해당 단계의 첫 번째 상태 (= 대기중)
+ * - final_status   : 해당 단계의 마지막 상태 (= 완료)
+ * 하드코딩(COMPLETED, IN_PROGRESS) 없이 동적 판단 (project-status 워크플로우 준수)
+ */
+function toStepperStatus(
+  phaseStatus: string,
+  initialStatus: string,
+  finalStatus: string
+): "completed" | "current" | "pending" {
+  if (phaseStatus === finalStatus) return 'completed';
+  if (phaseStatus === initialStatus) return 'pending';
+  return 'current'; // 그 사이 = 진행 중
 }
 
 
@@ -275,10 +284,23 @@ export default function ProjectDetailPage({
   const currentStep = phaseProgress.find(p => p.code === (currentPhaseCode || project.currentPhase));
   const currentStepIndex = getCurrentStepIndex(phaseProgress, currentPhaseCode || project.currentPhase || '');
 
-  // phase-status API의 path 기반 동적 next action 계산
+  // 시스템 권장 작업 단계 — 현재 단계의 화면으로 이동
+  // DB path는 "/projects/:id/monitoring" 형식으로 저장 → :id를 실제 프로젝트 ID로 치환
+  // DB path가 없을 때는 PHASE_URLS fallback 사용
+  const PHASE_URLS: Record<string, string> = {
+    vrb: `/projects/${id}/vrb-review`,
+    contract: `/projects/${id}/contract-status`,
+    profitability: `/projects/${id}/profitability`,
+    in_progress: `/projects/${id}/monitoring`,
+    settlement: `/projects/${id}/settlement`,
+  };
+
   const nextAction = (() => {
-    if (!currentStep || !currentStep.path) return null;
-    const href = currentStep.path.replace(':id', id);
+    if (!currentStep) return null;
+    const href = (currentStep.path ? currentStep.path.replace(':id', id) : null)
+      || PHASE_URLS[currentStep.code]
+      || null;
+    if (!href) return null;
     return { label: currentStep.name, href };
   })();
 
@@ -329,7 +351,7 @@ export default function ProjectDetailPage({
           <div className="relative flex items-start justify-between gap-4">
             {phaseProgress.map((step: any, index: number) => {
               const Icon = PHASE_ICONS[step.code] || FileText;
-              const stepStatus = toStepperStatus(step.status);
+              const stepStatus = toStepperStatus(step.status, step.initialStatus, step.finalStatus);
               const isLast = index === phaseProgress.length - 1;
 
               const statusConfigs: Record<string, { ring: string, bg: string, text: string, iconColor: string }> = {
@@ -474,7 +496,7 @@ export default function ProjectDetailPage({
             </div>
 
             <div className="flex flex-col items-center text-center gap-2">
-              <h3 className="text-sm font-bold text-gray-900">시스템 권장 다음 작업 단계</h3>
+              <h3 className="text-sm font-bold text-gray-900">시스템 권장 작업 단계</h3>
             </div>
 
             {nextAction ? (

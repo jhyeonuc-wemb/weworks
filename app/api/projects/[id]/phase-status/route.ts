@@ -20,6 +20,13 @@ export async function GET(
 
         const phases = await getProjectPhaseProgress(projectId);
 
+        // we_projects.current_phase를 단일 소스로 사용 (advance-phase가 항상 최신 유지)
+        const projectRes = await query(
+            `SELECT current_phase FROM we_projects WHERE id = $1`,
+            [projectId]
+        );
+        const currentPhaseFromProject = projectRes.rows[0]?.current_phase || null;
+
         // ── 단계별 도메인 날짜 한 번에 조회 ──────────────────────────────
         const dateRes = await query(
             `SELECT
@@ -70,11 +77,9 @@ export async function GET(
             },
         };
 
-        // 현재 단계 계산
-        const currentPhase =
-            phases.find(p => p.status !== p.initial_status && p.status !== p.final_status)
-            || phases.find(p => p.status === p.initial_status)
-            || phases[phases.length - 1];
+        // 현재 단계: we_projects.current_phase 직접 사용
+        const currentPhase = phases.find(p => p.code === currentPhaseFromProject)
+            || phases[0];
 
         return NextResponse.json({
             phases: phases.map(p => {

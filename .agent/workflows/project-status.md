@@ -49,8 +49,17 @@ description: 프로젝트 단계 관리 및 단계별 상태 표준 가이드
        advance-phase API →
          ① 현재 단계의 마지막 상태로 업데이트
          ② we_projects.current_phase = 다음 단계
-         ③ 다음 단계의 첫 번째 상태로 초기화
+              ⚠️ 단, current_phase는 절대 뒤로 밀리지 않음
+                 nextPhase.display_order > 현재 current_phase.display_order 일 때만 갱신
+                 (예: 수지분석 완료 후 VRB를 뒤늦게 완료해도 current_phase는 유지)
+         ③ 다음 단계의 첫 번째 상태로 초기화 (ON CONFLICT DO NOTHING — 이미 초기화됨)
 ```
+
+> [!IMPORTANT]
+> **중간 단계 완료 처리 규칙**  
+> 프로젝트는 단계를 순서대로 진행하지 않고 중간 단계를 건너뛰거나 나중에 소급 완료할 수 있습니다.  
+> `advance-phase` API는 `current_phase`를 갱신할 때 반드시 **단방향 전진**만 허용합니다.  
+> `we_projects.current_phase`는 항상 **가장 최근에 진입한(display_order가 가장 높은) 단계**를 유지해야 합니다.
 
 ---
 

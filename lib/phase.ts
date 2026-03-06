@@ -170,9 +170,22 @@ export async function advanceProjectPhase(
     const nextInitialStatus = nextPhase.initial_status ?? 'STANDBY';
 
     // 4. we_projects.current_phase 업데이트
+    //    단, 이미 더 앞선 단계가 current_phase인 경우 뒤로 밀리지 않도록
+    //    nextPhase의 display_order가 현재 current_phase보다 클 때만 갱신
     await query(
-        `UPDATE we_projects SET current_phase = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [nextPhaseCode, projectId]
+        `UPDATE we_projects
+         SET current_phase = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+           AND (
+             current_phase IS NULL
+             OR current_phase = $3
+             OR (
+               SELECT COALESCE(pp_cur.display_order, 0)
+               FROM project_phases pp_cur
+               WHERE pp_cur.code = we_projects.current_phase
+             ) < $4
+           )`,
+        [nextPhaseCode, projectId, currentPhaseCode, currentOrder + 1]
     );
 
     // 5. 다음 단계의 phase_progress 초기화 (첫 번째 상태로)
