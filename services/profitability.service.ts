@@ -357,7 +357,9 @@ export class ProfitabilityService {
 
       const response = await fetch(url.toString());
       if (!response.ok) {
-        throw new Error("Failed to fetch order proposal");
+        const errorText = await response.text();
+        console.error(`[fetchOrderProposal] HTTP ${response.status}:`, errorText);
+        throw new Error(`Failed to fetch order proposal (HTTP ${response.status})`);
       }
       return await response.json();
     } catch (error) {

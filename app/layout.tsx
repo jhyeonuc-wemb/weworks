@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className="min-h-screen bg-white antialiased" suppressHydrationWarning>
+      <body className="min-h-screen bg-white antialiased font-sans" suppressHydrationWarning>
         <ToastProvider>
           {children}
         </ToastProvider>

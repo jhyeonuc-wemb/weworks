@@ -20,6 +20,7 @@ interface AttachmentSectionProps {
     entityType: string;   // 'contract' | 'vrb' | 'profitability' | 'settlement' | 'md'
     entityId: number;
     readonly?: boolean;
+    hideUpload?: boolean;
     className?: string;
 }
 
@@ -41,7 +42,7 @@ function FileIcon({ mimeType, className }: { mimeType: string | null; className?
     return <File className={cls} />;
 }
 
-export function AttachmentSection({ entityType, entityId, readonly = false, className }: AttachmentSectionProps) {
+export function AttachmentSection({ entityType, entityId, readonly = false, hideUpload = false, className }: AttachmentSectionProps) {
     const { showToast, confirm } = useToast();
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -141,16 +142,7 @@ export function AttachmentSection({ entityType, entityId, readonly = false, clas
                         <span className="ml-1 text-sm font-medium text-gray-400">({attachments.length})</span>
                     )}
                 </h4>
-                {!readonly && (
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 h-9 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
-                    >
-                        <Upload className="h-4 w-4" />
-                        {uploading ? "업로드 중..." : "파일 추가"}
-                    </button>
-                )}
+
                 <input
                     ref={fileInputRef}
                     type="file"

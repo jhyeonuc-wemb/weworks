@@ -10,6 +10,7 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 interface User {
     id: number;
     name: string;
+    rank_name: string | null;
     email: string;
     role_name: string;
     roles?: { id: number; name: string; is_primary: boolean }[];
@@ -180,14 +181,17 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                     riskLevel: project.riskLevel || "",
                 });
 
-                // 이름 검색 필드 초기화
+                // 이름 검색 필드 초기화 (이름 + 직급)
                 const pm = loadedUsers.find(u => u.id === project.managerId);
                 const sales = loadedUsers.find(u => u.id === project.salesRepresentativeId);
                 const customer = loadedClients.find(c => c.id === project.customerId);
                 const orderer = loadedClients.find(c => c.id === project.ordererId);
 
-                setPmSearch(pm?.name || "");
-                setSalesSearch(sales?.name || "");
+                const pmDisplay = pm ? [pm.name, pm.rank_name].filter(Boolean).join(' ') : "";
+                const salesDisplay = sales ? [sales.name, sales.rank_name].filter(Boolean).join(' ') : "";
+
+                setPmSearch(pmDisplay);
+                setSalesSearch(salesDisplay);
                 setCustomerSearch(customer?.name || "");
                 setOrdererSearch(orderer?.name || "");
             } else {
@@ -462,12 +466,13 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                             type="button"
                                             className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
                                             onClick={() => {
+                                                const display = [u.name, u.rank_name].filter(Boolean).join(' ');
                                                 setFormData(prev => ({ ...prev, managerId: u.id.toString() }));
-                                                setPmSearch(u.name);
+                                                setPmSearch(display);
                                                 setShowPmDropdown(false);
                                             }}
                                         >
-                                            {u.name}
+                                            {u.name} {u.rank_name}
                                         </button>
                                     ))}
                                 </div>
@@ -499,12 +504,13 @@ export function ProjectModal({ open, onOpenChange, project, onSave, triggerRect 
                                             type="button"
                                             className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
                                             onClick={() => {
+                                                const display = [u.name, u.rank_name].filter(Boolean).join(' ');
                                                 setFormData(prev => ({ ...prev, salesRepresentativeId: u.id.toString() }));
-                                                setSalesSearch(u.name);
+                                                setSalesSearch(display);
                                                 setShowSalesDropdown(false);
                                             }}
                                         >
-                                            {u.name}
+                                            {u.name} {u.rank_name}
                                         </button>
                                     ))}
                                 </div>

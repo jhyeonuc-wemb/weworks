@@ -40,6 +40,7 @@ interface Project {
     projectCode: string | null;
     name: string;
     customerName: string | null;
+    ordererName: string | null;
 }
 
 interface Meta {

@@ -20,6 +20,7 @@ export async function GET(
                 c.id            AS contract_id,
                 c.project_id,
                 c.contract_title,
+                c.contract_type,
                 c.supply_amount,
                 c.stamp_duty,
                 c.performance_bond_rate,
@@ -36,17 +37,17 @@ export async function GET(
                 p.expected_amount,
                 p.current_phase,
                 pc.id           AS customer_id,
-                pc.name         AS customer_name,
+                COALESCE(c.customer_name,  pc.name)  AS customer_name,
                 pc.code         AS customer_code,
                 po.id           AS orderer_id,
-                po.name         AS orderer_name,
+                COALESCE(c.orderer_name,   po.name)  AS orderer_name,
                 po.code         AS orderer_code,
                 u_m.id          AS manager_id,
-                u_m.name        AS manager_name,
+                COALESCE(c.manager_name,   u_m.name) AS manager_name,
                 r_m.name        AS manager_rank_name,
                 d_m.name        AS manager_dept_name,
                 u_s.id          AS sales_rep_id,
-                u_s.name        AS sales_rep_name,
+                COALESCE(c.sales_rep_name, u_s.name) AS sales_rep_name,
                 r_s.name        AS sales_rep_rank_name,
                 d_s.name        AS sales_rep_dept_name
             FROM we_contracts c
@@ -108,6 +109,7 @@ export async function GET(
                 salesRepName: row.sales_rep_name || null,
                 salesRepRankName: row.sales_rep_rank_name || null,
                 salesRepDeptName: row.sales_rep_dept_name || null,
+                contractType: row.contract_type || '신규',
             }
         });
     } catch (error: any) {
@@ -133,6 +135,11 @@ export async function PUT(
 
         const {
             contractTitle,
+            contractType,
+            ordererName,
+            customerName,
+            managerName,
+            salesRepName,
             supplyAmount,
             stampDuty,
             performanceBondRate,
@@ -148,20 +155,30 @@ export async function PUT(
         const result = await pool.query(
             `UPDATE we_contracts SET
                 contract_title        = $1,
-                supply_amount         = $2,
-                stamp_duty            = $3,
-                performance_bond_rate = $4,
-                defect_bond_rate      = $5,
-                payment_schedule      = $6,
-                contract_notes        = $7,
-                contract_date         = $8,
-                contract_start_date   = $9,
-                contract_end_date     = $10,
+                contract_type         = $2,
+                orderer_name          = $3,
+                customer_name         = $4,
+                manager_name          = $5,
+                sales_rep_name        = $6,
+                supply_amount         = $7,
+                stamp_duty            = $8,
+                performance_bond_rate = $9,
+                defect_bond_rate      = $10,
+                payment_schedule      = $11,
+                contract_notes        = $12,
+                contract_date         = $13,
+                contract_start_date   = $14,
+                contract_end_date     = $15,
                 updated_at            = CURRENT_TIMESTAMP
-            WHERE id = $11
+            WHERE id = $16
             RETURNING id, project_id`,
             [
                 contractTitle || null,
+                contractType || '신규',
+                ordererName || null,
+                customerName || null,
+                managerName || null,
+                salesRepName || null,
                 supplyAmount || null,
                 stampDuty || null,
                 performanceBondRate ?? 10,
