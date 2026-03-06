@@ -164,28 +164,6 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
                 />
             )}
 
-            {/* 드래그앤드롭 영역 (읽기전용 아닐 때만) */}
-            {!readonly && (
-                <div
-                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={cn(
-                        "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200",
-                        dragOver
-                            ? "border-primary bg-primary/5 scale-[1.01]"
-                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    )}
-                >
-                    <Upload className={cn("h-8 w-8 mx-auto mb-2 transition-colors", dragOver ? "text-primary" : "text-gray-300")} />
-                    <p className="text-sm text-gray-400">
-                        파일을 드래그하거나 <span className="text-primary font-medium">클릭</span>하여 업로드
-                    </p>
-                    <p className="text-xs text-gray-300 mt-1">여러 파일 동시 업로드 가능</p>
-                </div>
-            )}
-
             {/* 파일 목록 */}
             {loading ? (
                 <div className="flex items-center justify-center py-6 text-sm text-gray-400">
@@ -193,9 +171,11 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
                     불러오는 중...
                 </div>
             ) : attachments.length === 0 ? (
-                <div className="py-6 text-center text-sm text-gray-400">
-                    {readonly ? "첨부된 파일이 없습니다." : "업로드된 파일이 없습니다."}
-                </div>
+                !readonly && (
+                    <div className="py-3 text-center text-sm text-gray-400">
+                        업로드된 파일이 없습니다.
+                    </div>
+                )
             ) : (
                 <div className="space-y-2">
                     {attachments.map(att => (
@@ -205,7 +185,13 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
                         >
                             <FileIcon mimeType={att.mimeType} className="text-gray-400" />
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate">{att.fileName}</p>
+                                <p
+                                    className="text-sm font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                                    onClick={() => handleDownload(att)}
+                                    title="클릭하여 다운로드"
+                                >
+                                    {att.fileName}
+                                </p>
                                 <p className="text-xs text-gray-400 mt-0.5">
                                     {formatFileSize(att.fileSize)}
                                     {att.uploadedByName && ` · ${att.uploadedByName}`}
@@ -232,6 +218,28 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* 드래그앤드롭 영역 (읽기전용 아닐 때만) */}
+            {!readonly && (
+                <div
+                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                        "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200",
+                        dragOver
+                            ? "border-primary bg-primary/5 scale-[1.01]"
+                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    )}
+                >
+                    <Upload className={cn("h-8 w-8 mx-auto mb-2 transition-colors", dragOver ? "text-primary" : "text-gray-300")} />
+                    <p className="text-sm text-gray-400">
+                        파일을 드래그하거나 <span className="text-primary font-medium">클릭</span>하여 업로드
+                    </p>
+                    <p className="text-xs text-gray-300 mt-1">여러 파일 동시 업로드 가능</p>
                 </div>
             )}
         </div>

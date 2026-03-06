@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -341,211 +341,264 @@ export default function ProjectSettlementPage() {
     latestProdCostOwn: 0,
   });
 
-  const fetchData = async () => {
+const fetchData = async () => {
     try {
-      setLoading(true);
+        setLoading(true);
+        const currentYear = new Date().getFullYear();
 
-      // 사용자 목록 가져오기
-      const usersRes = await fetch('/api/users');
-      if (usersRes.ok) {
-        const userData = await usersRes.json();
-        const fetchedUsers = (userData.users || []).map((u: any) => ({
-          id: u.id,
-          name: u.name,
-          rankName: u.rank_name,
-          departmentName: u.department_name,
-          grade: u.grade,
-        }));
-        setUsers(fetchedUsers);
-        setUsers(fetchedUsers);
-      }
+        // ── Batch 1: 독립적인 API 10개 병렬 호출 ─────────────────────────
+        const [
+            usersRes, meRes, unitPriceRes, projectRes,
+            profitabilityListRes, settlementRes, phaseRes,
+            standardExpRes, expPlanRes, manpowerRes,
+        ] = await Promise.all([
+            fetch('/api/users'),
+            fetch('/api/auth/me'),
+            fetch(`/api/unit-prices?year=${currentYear}&isActive=true`),
+            fetch(`/api/projects/${projectId}`),
+            fetch(`/api/profitability?projectId=${projectId}`),
+            fetch(`/api/projects/${projectId}/settlement`),
+            fetch(`/api/projects/${projectId}/phase-status`),
+            fetch(`/api/projects/${projectId}/profitability-standard-expenses`),
+            fetch(`/api/projects/${projectId}/expense-plan`),
+            fetch(`/api/projects/${projectId}/manpower-plan`),
+        ]);
 
-      // 내 정보 로드
-      const meRes = await fetch("/api/auth/me");
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        setCurrentUser(meData.user);
-      }
+        // JSON 파싱도 병렬로
+        const [
+            usersData, meData, unitPriceData, projectRaw,
+            profData, settlementRaw, phaseData,
+            standardExpData, expPlanData, manpowerData,
+        ] = await Promise.all([
+            usersRes.ok ? usersRes.json() : Promise.resolve(null),
+            meRes.ok ? meRes.json() : Promise.resolve(null),
+            unitPriceRes.ok ? unitPriceRes.json() : Promise.resolve(null),
+            projectRes.ok ? projectRes.json() : Promise.resolve(null),
+            profitabilityListRes.ok ? profitabilityListRes.json() : Promise.resolve(null),
+            settlementRes.ok ? settlementRes.json() : Promise.resolve(null),
+            phaseRes.ok ? phaseRes.json() : Promise.resolve(null),
+            standardExpRes.ok ? standardExpRes.json() : Promise.resolve(null),
+            expPlanRes.ok ? expPlanRes.json() : Promise.resolve(null),
+            manpowerRes.ok ? manpowerRes.json() : Promise.resolve(null),
+        ]);
 
-      // 기준 단가 조회
-      const currentYear = new Date().getFullYear();
-      const unitPriceRes = await fetch(`/api/unit-prices?year=${currentYear}&isActive=true`);
-      if (unitPriceRes.ok) {
-        const unitPriceData = await unitPriceRes.json();
-        const prices = (unitPriceData.unitPrices || []).map((p: any) => ({
-          id: Number(p.id),
-          affiliationGroup: p.affiliation_group || p.affiliationGroup,
-          jobGroup: p.job_group || p.jobGroup,
-          jobLevel: p.job_level || p.jobLevel,
-          grade: p.grade,
-          year: p.year,
-          proposedStandard: p.proposed_standard,
-          proposedApplied: p.proposed_applied,
-          internalApplied: p.internal_applied || p.internalApplied,
-        }));
-        setProjectUnitPrices(prices);
-      }
-
-      // 프로젝트 정보 조회
-      const projectRes = await fetch(`/api/projects/${projectId}`);
-      if (projectRes.ok) {
-        const projectData = await projectRes.json();
-        const project = projectData.project;
-        setProjectName(project.name || "");
-        setProjectCode(project.projectCode || "");
-        setCustomerName(project.customerName || "");
-        setContractStartDate(project.actualStartDate ? project.actualStartDate.split('T')[0] : (project.contractStartDate ? project.contractStartDate.split('T')[0] : ""));
-        setContractEndDate(project.actualEndDate ? project.actualEndDate.split('T')[0] : (project.contractEndDate ? project.contractEndDate.split('T')[0] : ""));
-        setManagerName(project.managerName || "");
-        setSalesPersonName(project.salesRepresentativeName || "");
-
-        // 담당자 정보 조회 (직급 포함)
-        if (project.managerId) {
-          const managerRes = await fetch(`/api/users/${project.managerId}`);
-          if (managerRes.ok) {
-            const managerData = await managerRes.json();
-            setManagerPosition(managerData.user?.rank_name || managerData.user?.position || "");
-          }
+        // ─── 사용자 목록 ──────────────────────────────────────────────────
+        if (usersData) {
+            setUsers((usersData.users || []).map((u: any) => ({
+                id: u.id, name: u.name, rankName: u.rank_name,
+                departmentName: u.department_name, grade: u.grade,
+            })));
         }
 
-        if (project.salesRepresentativeId) {
-          const salesRes = await fetch(`/api/users/${project.salesRepresentativeId}`);
-          if (salesRes.ok) {
-            const salesData = await salesRes.json();
-            setSalesPersonPosition(salesData.user?.rank_name || salesData.user?.position || "");
-          }
+        // ─── 내 정보 ──────────────────────────────────────────────────────
+        if (meData) setCurrentUser(meData.user);
+
+        // ─── 단가 ─────────────────────────────────────────────────────────
+        if (unitPriceData) {
+            setProjectUnitPrices((unitPriceData.unitPrices || []).map((p: any) => ({
+                id: Number(p.id),
+                affiliationGroup: p.affiliation_group || p.affiliationGroup,
+                jobGroup: p.job_group || p.jobGroup,
+                jobLevel: p.job_level || p.jobLevel,
+                grade: p.grade, year: p.year,
+                proposedStandard: p.proposed_standard,
+                proposedApplied: p.proposed_applied,
+                internalApplied: p.internal_applied || p.internalApplied,
+            })));
         }
-      }
 
-      // 수지분석서 버전 조회 (최초/최종)
-      const profitabilityListRes = await fetch(`/api/profitability?projectId=${projectId}`);
-      if (profitabilityListRes.ok) {
-        const profData = await profitabilityListRes.json();
-        if (profData.profitabilities && profData.profitabilities.length > 0) {
-          // 생성일자 및 ID 기준 정렬
-          const sorted = [...profData.profitabilities].sort((a: any, b: any) => {
-            const dateA = new Date(a.created_at).getTime();
-            const dateB = new Date(b.created_at).getTime();
-            if (dateA !== dateB) return dateA - dateB;
-            return a.id - b.id;
-          });
+        // ─── 프로젝트 ─────────────────────────────────────────────────────
+        const project = projectRaw?.project;
+        if (project) {
+            setProjectName(project.name || '');
+            setProjectCode(project.projectCode || '');
+            setCustomerName(project.customerName || '');
+            setContractStartDate(project.actualStartDate ? project.actualStartDate.split('T')[0] : (project.contractStartDate ? project.contractStartDate.split('T')[0] : ''));
+            setContractEndDate(project.actualEndDate ? project.actualEndDate.split('T')[0] : (project.contractEndDate ? project.contractEndDate.split('T')[0] : ''));
+            setManagerName(project.managerName || '');
+            setSalesPersonName(project.salesRepresentativeName || '');
+        }
 
-          const first = sorted[0];
-          const latest = sorted[sorted.length - 1];
+        // ─── 수지분석서 버전 목록 ─────────────────────────────────────────
+        let firstProf: any = null;
+        let latestProf: any = null;
+        if (profData?.profitabilities?.length > 0) {
+            const sorted = [...profData.profitabilities].sort((a: any, b: any) => {
+                const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                return diff !== 0 ? diff : a.id - b.id;
+            });
+            firstProf = sorted[0];
+            latestProf = sorted[sorted.length - 1];
 
-          setFirstProfitabilityId(first.id);
-          setLatestProfitabilityId(latest.id);
+            setFirstProfitabilityId(firstProf.id);
+            setLatestProfitabilityId(latestProf.id);
+            setFirstProfitabilityApprovedDate(firstProf.approved_date || firstProf.written_date || (firstProf.created_at ? firstProf.created_at.split('T')[0] : ''));
+            setLatestProfitabilityApprovedDate(latestProf.approved_date || latestProf.written_date || (latestProf.created_at ? latestProf.created_at.split('T')[0] : ''));
+            setTotalRevenue(Number(latestProf.total_revenue || latestProf.revenue || 0));
 
-          setFirstProfitabilityApprovedDate(first.approved_date || first.written_date || (first.created_at ? first.created_at.split('T')[0] : ""));
-          setLatestProfitabilityApprovedDate(latest.approved_date || latest.written_date || (latest.created_at ? latest.created_at.split('T')[0] : ""));
+            const makeSummary = (p: any) => ({
+                prodRevOwn: Number(p.product_revenue_own || p.product_revenue || 0),
+                prodRevExt: Number(p.product_revenue_ext || 0),
+                svcRevOwn: Number(p.service_revenue_own || p.service_revenue || 0),
+                svcRevExt: Number(p.service_revenue_ext || 0),
+                total_revenue: Number(p.total_revenue || p.revenue || 0),
+                prodCostOwn: Number(p.product_cost_own || p.purchase_cost || 0),
+                prodCostExt: Number(p.product_cost_ext || 0),
+                svcCostOwn: Number(p.service_cost_own || p.internal_labor_cost || 0),
+                svcCostExt: Number(p.service_cost_ext || p.external_labor_cost || 0),
+                expense_cost: Number(p.expense_cost || 0),
+                internalMM: Number(p.internal_mm || 0),
+                externalMM: Number(p.external_mm || 0),
+                profit: Number(p.net_profit || p.profit || 0),
+                profit_rate: Number(p.profit_rate || 0),
+            });
+            setBasePlanSummary(makeSummary(firstProf));
+            setLatestPlanSummary(makeSummary(latestProf));
+        }
 
-          const latestRev = Number(latest.total_revenue || latest.revenue || 0);
-          setTotalRevenue(latestRev);
-
-          setBasePlanSummary({
-            prodRevOwn: Number(first.product_revenue_own || first.product_revenue || 0),
-            prodRevExt: Number(first.product_revenue_ext || 0),
-            svcRevOwn: Number(first.service_revenue_own || first.service_revenue || 0),
-            svcRevExt: Number(first.service_revenue_ext || 0),
-            total_revenue: Number(first.total_revenue || first.revenue || 0),
-            prodCostOwn: Number(first.product_cost_own || first.purchase_cost || 0),
-            prodCostExt: Number(first.product_cost_ext || 0),
-            svcCostOwn: Number(first.service_cost_own || first.internal_labor_cost || 0),
-            svcCostExt: Number(first.service_cost_ext || first.external_labor_cost || 0),
-            expense_cost: Number(first.expense_cost || 0),
-            internalMM: Number(first.internal_mm || 0),
-            externalMM: Number(first.external_mm || 0),
-            profit: Number(first.net_profit || first.profit || 0),
-            profit_rate: Number(first.profit_rate || 0),
-          });
-
-          setLatestPlanSummary({
-            prodRevOwn: Number(latest.product_revenue_own || latest.product_revenue || 0),
-            prodRevExt: Number(latest.product_revenue_ext || 0),
-            svcRevOwn: Number(latest.service_revenue_own || latest.service_revenue || 0),
-            svcRevExt: Number(latest.service_revenue_ext || 0),
-            total_revenue: latestRev,
-            prodCostOwn: Number(latest.product_cost_own || latest.purchase_cost || 0),
-            prodCostExt: Number(latest.product_cost_ext || 0),
-            svcCostOwn: Number(latest.service_cost_own || latest.internal_labor_cost || 0),
-            svcCostExt: Number(latest.service_cost_ext || latest.external_labor_cost || 0),
-            expense_cost: Number(latest.expense_cost || 0),
-            internalMM: Number(latest.internal_mm || 0),
-            externalMM: Number(latest.external_mm || 0),
-            profit: Number(latest.net_profit || latest.profit || 0),
-            profit_rate: Number(latest.profit_rate || 0),
-          });
-
-          // 제품계획 데이터 가져오기 (최초 버전)
-          if (first.id) {
-            const firstProductRes = await fetch(`/api/projects/${projectId}/product-plan?profitabilityId=${first.id}`);
-            if (firstProductRes.ok) {
-              const firstProductData = await firstProductRes.json();
-              setBaseProductPlan(firstProductData.items || []);
-            }
-          }
-
-          // 제품계획 데이터 가져오기 (최종 버전)
-          if (latest.id && latest.id !== first.id) {
-            const latestProductRes = await fetch(`/api/projects/${projectId}/product-plan?profitabilityId=${latest.id}`);
-            if (latestProductRes.ok) {
-              const latestProductData = await latestProductRes.json();
-              setLatestProductPlan(latestProductData.items || []);
-            }
-          } else if (latest.id === first.id) {
-            // 최초와 최종이 같으면 동일 데이터 사용
-            setLatestProductPlan(baseProductPlan);
-          }
-
-          // 인력계획 데이터 가져오기 (최초 버전)
-          if (first.id) {
-            const firstManpowerRes = await fetch(`/api/projects/${projectId}/manpower-plan`);
-            if (firstManpowerRes.ok) {
-              const firstManpowerData = await firstManpowerRes.json();
-              setBaseManpowerPlan(firstManpowerData.items || []);
-
-              // 월 컬럼 생성
-              if (firstManpowerData.analysisStartMonth && firstManpowerData.analysisEndMonth) {
+        // ─── 인력계획 ─────────────────────────────────────────────────────
+        if (manpowerData?.items) {
+            setBaseManpowerPlan(manpowerData.items);
+            setLatestManpowerPlan(manpowerData.items);
+            if (manpowerData.analysisStartMonth && manpowerData.analysisEndMonth) {
                 const months: string[] = [];
-                const start = new Date(firstManpowerData.analysisStartMonth + '-01');
-                const end = new Date(firstManpowerData.analysisEndMonth + '-01');
-
-                const current = new Date(start);
-                while (current <= end) {
-                  const year = current.getFullYear();
-                  const month = current.getMonth() + 1;
-                  months.push(`${year}-${String(month).padStart(2, '0')}`);
-                  current.setMonth(current.getMonth() + 1);
+                const cur = new Date(manpowerData.analysisStartMonth + '-01');
+                const endM = new Date(manpowerData.analysisEndMonth + '-01');
+                while (cur <= endM) {
+                    months.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
+                    cur.setMonth(cur.getMonth() + 1);
                 }
                 setMonthColumns(months);
                 setInitialMonthCount(months.length);
-              }
             }
-          }
+        }
 
-          // 인력계획 데이터 가져오기 (최종 버전)
-          if (latest.id && latest.id !== first.id) {
-            const latestManpowerRes = await fetch(`/api/projects/${projectId}/manpower-plan`);
-            if (latestManpowerRes.ok) {
-              const latestManpowerData = await latestManpowerRes.json();
-              setLatestManpowerPlan(latestManpowerData.items || []);
+        // ─── 경비 기준 합계 ───────────────────────────────────────────────
+        if (standardExpData?.items) {
+            setStandardExpenseTotal(standardExpData.items.reduce((s: number, i: any) => s + (Number(i.finalAmount) || 0), 0));
+        }
+
+        // ─── 경비 계획 ────────────────────────────────────────────────────
+        if (expPlanData?.items) {
+            const calc = (cat: string) => (expPlanData.items as any[])
+                .filter(i => i.category === cat)
+                .reduce((s: number, i: any) => s + Object.values(i.monthlyValues || {}).reduce((a: number, v: any) => a + (Number(v) || 0), 0), 0);
+            setExpenseBreakdown({ general: calc('일반경비'), special: calc('특별경비') });
+        }
+
+        // ─── phase-status ─────────────────────────────────────────────────
+        let settlementPhaseStatus = 'STANDBY';
+        if (phaseData?.phases) {
+            settlementPhaseStatus = phaseData.phases.find((p: any) => p.code === 'settlement')?.status || 'STANDBY';
+        }
+
+        // ─── 정산서 ───────────────────────────────────────────────────────
+        let settlementExists = false;
+        if (settlementRaw?.settlement) {
+            settlementExists = true;
+            const s = settlementRaw.settlement;
+            const n = (v: any) => Number(v || 0);
+            setSettlement({
+                ...s,
+                status: settlementPhaseStatus,
+                planned_revenue: n(s.planned_revenue), planned_cost: n(s.planned_cost),
+                planned_labor_cost: n(s.planned_labor_cost), planned_other_cost: n(s.planned_other_cost),
+                planned_profit: n(s.planned_profit), planned_profit_rate: n(s.planned_profit_rate),
+                actual_revenue: n(s.actual_revenue), actual_cost: n(s.actual_cost),
+                actual_labor_cost: n(s.actual_labor_cost), actual_other_cost: n(s.actual_other_cost),
+                actual_prod_rev_own: n(s.actual_prod_rev_own), actual_prod_rev_ext: n(s.actual_prod_rev_ext),
+                actual_svc_rev_own: n(s.actual_svc_rev_own), actual_svc_rev_ext: n(s.actual_svc_rev_ext),
+                actual_prod_cost_own: n(s.actual_prod_cost_own), actual_prod_cost_ext: n(s.actual_prod_cost_ext),
+                actual_svc_cost_own: n(s.actual_svc_cost_own), actual_svc_cost_ext: n(s.actual_svc_cost_ext),
+                actual_svc_mm_own: n(s.actual_svc_mm_own), actual_svc_mm_ext: n(s.actual_svc_mm_ext),
+                actual_expense_general: n(s.actual_expense_general), actual_expense_special: n(s.actual_expense_special),
+                planned_svc_mm_own: n(s.planned_svc_mm_own), planned_svc_mm_ext: n(s.planned_svc_mm_ext),
+            });
+
+            if (settlementRaw.expenses?.length > 0) {
+                setExpenseDetails(settlementRaw.expenses.map((e: any) => ({
+                    item: e.item_name,
+                    planStandard: n(e.plan_standard), planLatest: n(e.plan_latest),
+                    execTotal: n(e.exec_total), sellAdmin: n(e.sell_admin), cost: n(e.cost),
+                })));
             }
-          } else if (latest.id === first.id) {
-            setLatestManpowerPlan(baseManpowerPlan);
-          }
 
-          // 수지차 데이터 (부가수익/비용) 가져오기
-          try {
-            const [baseDiffRes, latestDiffRes] = await Promise.all([
-              fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${first.id}`),
-              fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${latest.id}`)
-            ]);
+            setLaborItems((settlementRaw.labor || []).map((l: any) => ({
+                ...l,
+                planned_mm: n(l.planned_mm), planned_cost: n(l.planned_cost),
+                actual_mm: n(l.actual_mm), actual_cost: n(l.actual_cost),
+                actual_monthly_allocation: l.actual_monthly_allocation || {},
+                affiliation_group: l.affiliation_group,
+                actual_internal_amount: n(l.actual_internal_amount),
+            })));
 
-            if (baseDiffRes.ok && latestDiffRes.ok) {
-              const baseDiff = await baseDiffRes.json();
-              const latestDiff = await latestDiffRes.json();
+            if (settlementRaw.labor?.length > 0) {
+                setBaseManpowerPlan(prev => prev.map((p, idx) => {
+                    const m = settlementRaw.labor[idx];
+                    return m ? {
+                        ...p, id: m.id,
+                        actualMonthlyAllocation: m.actual_monthly_allocation || {},
+                        actualInternalAmount: Number(m.actual_internal_amount || m.actual_cost || 0),
+                        affiliationGroup: m.affiliation_group || p.affiliationGroup,
+                    } : p;
+                }));
+            }
 
-              setExtraData({
+            setExtCompanyPlans((settlementRaw.extCompanies || []).map((c: any) => ({
+                id: c.id, companyName: c.company_name, role1: c.role1, role2: c.role2,
+                planMM: c.plan_mm || {}, planAmt: c.plan_amt || {},
+                execMM: c.exec_mm || {}, execAmt: c.exec_amt || {},
+            })));
+        }
+
+        if (!settlementExists) {
+            await loadProfitabilityData();
+        }
+
+        // ── Batch 2: 첫 번째 배치 결과에 의존하는 병렬 호출 ─────────────
+        const batch2: { key: string; promise: Promise<Response> }[] = [];
+        if (project?.managerId) batch2.push({ key: 'manager', promise: fetch(`/api/users/${project.managerId}`) });
+        if (project?.salesRepresentativeId) batch2.push({ key: 'sales', promise: fetch(`/api/users/${project.salesRepresentativeId}`) });
+        if (firstProf?.id) batch2.push({ key: 'firstProduct', promise: fetch(`/api/projects/${projectId}/product-plan?profitabilityId=${firstProf.id}`) });
+        if (latestProf?.id && latestProf.id !== firstProf?.id) batch2.push({ key: 'latestProduct', promise: fetch(`/api/projects/${projectId}/product-plan?profitabilityId=${latestProf.id}`) });
+        if (firstProf?.id) batch2.push({ key: 'firstDiff', promise: fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${firstProf.id}`) });
+        if (latestProf?.id) batch2.push({ key: 'latestDiff', promise: fetch(`/api/projects/${projectId}/profitability-diff?profitabilityId=${latestProf.id}`) });
+
+        if (batch2.length > 0) {
+            const b2Responses = await Promise.all(batch2.map(b => b.promise));
+            const b2Data = await Promise.all(b2Responses.map(r => r.ok ? r.json() : Promise.resolve(null)));
+
+            let baseDiff: any = {};
+            let latestDiff: any = {};
+
+            batch2.forEach(({ key }, i) => {
+                const data = b2Data[i];
+                if (!data) return;
+                if (key === 'manager') {
+                    setManagerPosition(data.user?.rank_name || data.user?.position || '');
+                } else if (key === 'sales') {
+                    setSalesPersonPosition(data.user?.rank_name || data.user?.position || '');
+                } else if (key === 'firstProduct') {
+                    const items: any[] = data.items || [];
+                    const syncProduct = (arr: any[]) => settlementRaw?.products?.length > 0
+                        ? arr.map((p, idx) => { const m = settlementRaw.products[idx]; return m ? { ...p, actualProposalPrice: Number(m.actual_proposal_price || 0), actualCostPrice: Number(m.actual_cost_price || 0), productPlanId: m.product_plan_id } : p; })
+                        : arr;
+                    setBaseProductPlan(syncProduct(items));
+                    if (latestProf?.id === firstProf?.id) setLatestProductPlan(syncProduct(items));
+                } else if (key === 'latestProduct') {
+                    const items: any[] = data.items || [];
+                    const synced = settlementRaw?.products?.length > 0
+                        ? items.map((p, idx) => { const m = settlementRaw.products[idx]; return m ? { ...p, actualProposalPrice: Number(m.actual_proposal_price || 0), actualCostPrice: Number(m.actual_cost_price || 0), productPlanId: m.product_plan_id } : p; })
+                        : items;
+                    setLatestProductPlan(synced);
+                } else if (key === 'firstDiff') {
+                    baseDiff = data;
+                } else if (key === 'latestDiff') {
+                    latestDiff = data;
+                }
+            });
+
+            setExtraData({
                 baseExtraRevenue: baseDiff.extraRevenue || 0,
                 baseExtraExpense: baseDiff.extraExpense || 0,
                 latestExtraRevenue: latestDiff.extraRevenue || 0,
@@ -554,187 +607,16 @@ export default function ProjectSettlementPage() {
                 latestBizCostIndirect: latestDiff.bizCostIndirect || 0,
                 baseProdCostOwn: baseDiff.prodCostOwn || 0,
                 latestProdCostOwn: latestDiff.prodCostOwn || 0,
-              });
-            }
-          } catch (e) {
-            console.error("Error fetching profitability diff data:", e);
-          }
+            });
         }
-      }
-
-      // 정산서 조회 (있으면)
-      const [settlementRes, phaseRes] = await Promise.all([
-        fetch(`/api/projects/${projectId}/settlement`),
-        fetch(`/api/projects/${projectId}/phase-status`),  // 단일 소스
-      ]);
-
-      // phase-status API에서 settlement 상태 로드 (단일 소스)
-      let settlementPhaseStatus = 'STANDBY';
-      if (phaseRes.ok) {
-        const phaseData = await phaseRes.json();
-        const settlementPhase = phaseData.phases?.find((p: any) => p.code === 'settlement');
-        settlementPhaseStatus = settlementPhase?.status || 'STANDBY';
-      }
-
-      if (settlementRes.ok) {
-        const data = await settlementRes.json();
-        if (data.settlement) {
-          const s = data.settlement;
-          setSettlement({
-            ...s,
-            status: settlementPhaseStatus,  // phase-status API(단일 소스)에서 덮어씀
-            planned_revenue: Number(s.planned_revenue || 0),
-            planned_cost: Number(s.planned_cost || 0),
-            planned_labor_cost: Number(s.planned_labor_cost || 0),
-            planned_other_cost: Number(s.planned_other_cost || 0),
-            planned_profit: Number(s.planned_profit || 0),
-            planned_profit_rate: Number(s.planned_profit_rate || 0),
-            actual_revenue: Number(s.actual_revenue || 0),
-            actual_cost: Number(s.actual_cost || 0),
-            actual_labor_cost: Number(s.actual_labor_cost || 0),
-            actual_other_cost: Number(s.actual_other_cost || 0),
-            actual_prod_rev_own: Number(s.actual_prod_rev_own || 0),
-            actual_prod_rev_ext: Number(s.actual_prod_rev_ext || 0),
-            actual_svc_rev_own: Number(s.actual_svc_rev_own || 0),
-            actual_svc_rev_ext: Number(s.actual_svc_rev_ext || 0),
-            actual_prod_cost_own: Number(s.actual_prod_cost_own || 0),
-            actual_prod_cost_ext: Number(s.actual_prod_cost_ext || 0),
-            actual_svc_cost_own: Number(s.actual_svc_cost_own || 0),
-            actual_svc_cost_ext: Number(s.actual_svc_cost_ext || 0),
-            actual_svc_mm_own: Number(s.actual_svc_mm_own || 0),
-            actual_svc_mm_ext: Number(s.actual_svc_mm_ext || 0),
-            actual_expense_general: Number(s.actual_expense_general || 0),
-            actual_expense_special: Number(s.actual_expense_special || 0),
-            planned_svc_mm_own: Number(s.planned_svc_mm_own || 0),
-            planned_svc_mm_ext: Number(s.planned_svc_mm_ext || 0),
-          });
-
-          if (data.expenses && data.expenses.length > 0) {
-            setExpenseDetails(data.expenses.map((e: any) => ({
-              item: e.item_name,
-              planStandard: Number(e.plan_standard || 0),
-              planLatest: Number(e.plan_latest || 0),
-              execTotal: Number(e.exec_total || 0),
-              sellAdmin: Number(e.sell_admin || 0),
-              cost: Number(e.cost || 0)
-            })));
-          }
-
-          setLaborItems((data.labor || []).map((l: any) => ({
-            ...l,
-            planned_mm: Number(l.planned_mm || 0),
-            planned_cost: Number(l.planned_cost || 0),
-            actual_mm: Number(l.actual_mm || 0),
-            actual_cost: Number(l.actual_cost || 0),
-            actual_monthly_allocation: l.actual_monthly_allocation || {},
-            affiliation_group: l.affiliation_group,
-            actual_internal_amount: Number(l.actual_internal_amount || 0),
-          })));
-
-          // 인력계획 상태와 동기화 (기존 로직 보완)
-          if (data.labor && data.labor.length > 0) {
-            setBaseManpowerPlan(prev => prev.map((p, idx) => {
-              // Try matching by index for robust row-level mapping (especially for TBDs)
-              const matched = data.labor[idx];
-              // Optional: Add a simple check to ensure it's likely the same row, but for TBDs, index is the only way anyway.
-              if (matched) {
-                return {
-                  ...p,
-                  id: matched.id,
-                  actualMonthlyAllocation: matched.actual_monthly_allocation || {},
-                  actualInternalAmount: Number(matched.actual_internal_amount || matched.actual_cost || 0),
-                  affiliationGroup: matched.affiliation_group || p.affiliationGroup
-                };
-              }
-              return p;
-            }));
-          }
-
-          setExtCompanyPlans((data.extCompanies || []).map((c: any) => ({
-            id: c.id,
-            companyName: c.company_name,
-            role1: c.role1,
-            role2: c.role2,
-            planMM: c.plan_mm || {},
-            planAmt: c.plan_amt || {},
-            execMM: c.exec_mm || {},
-            execAmt: c.exec_amt || {},
-          })));
-
-          // 제품/상품 실적 데이터 동기화
-          if (data.products && data.products.length > 0) {
-            setBaseProductPlan(prev => prev.map((p, idx) => {
-              const matched = data.products[idx];
-              if (matched) {
-                return {
-                  ...p,
-                  actualProposalPrice: Number(matched.actual_proposal_price || 0),
-                  actualCostPrice: Number(matched.actual_cost_price || 0),
-                  productPlanId: matched.product_plan_id
-                };
-              }
-              return p;
-            }));
-            setLatestProductPlan(prev => prev.map((p, idx) => {
-              const matched = data.products[idx];
-              if (matched) {
-                return {
-                  ...p,
-                  actualProposalPrice: Number(matched.actual_proposal_price || 0),
-                  actualCostPrice: Number(matched.actual_cost_price || 0),
-                  productPlanId: matched.product_plan_id
-                };
-              }
-              return p;
-            }));
-          }
-
-        } else {
-          // 없으면 수지분석서에서 계획 데이터 가져오기
-          await loadProfitabilityData();
-        }
-      } else {
-        await loadProfitabilityData();
-      }
-
-      // 기준-경비 합계 및 상세 조회 (일반경비, 특별경비)
-      const expRes = await fetch(`/api/projects/${projectId}/profitability-standard-expenses`);
-      if (expRes.ok) {
-        const expData = await expRes.json();
-        const items = expData.items || [];
-
-        // Row ID mapping based on ProjectExpenseTab logic (assuming standard structure)
-        // Usually: Row 8 is Total General, Row 9 is Total Special? 
-        // Let's verify with View File, but assuming user request context:
-        // "General Expense Subtotal" and "Special Expense Subtotal".
-
-        // Temporarily, let's store the raw items or key sums if we can't confirm IDs yet.
-        // But better to check.
-
-        const total = items.reduce((sum: number, item: any) => sum + (Number(item.finalAmount) || 0), 0);
-        setStandardExpenseTotal(total);
-      }
-      // 프로젝트 경비 계획 조회 (일반/특별 경비 상세)
-      const expPlanRes = await fetch(`/api/projects/${projectId}/expense-plan`);
-      if (expPlanRes.ok) {
-        const { items } = await expPlanRes.json();
-        const general = items
-          .filter((i: any) => i.category === '일반경비')
-          .reduce((sum: number, i: any) => sum + Object.values(i.monthlyValues || {}).reduce((s: number, v: any) => s + (Number(v) || 0), 0), 0);
-        const special = items
-          .filter((i: any) => i.category === '특별경비')
-          .reduce((sum: number, i: any) => sum + Object.values(i.monthlyValues || {}).reduce((s: number, v: any) => s + (Number(v) || 0), 0), 0);
-
-        setExpenseBreakdown({ general, special });
-      }
 
     } catch (error) {
-      console.error("Error fetching data:", error);
-      showToast("데이터 조회 실패", "error");
+        console.error('Error fetching data:', error);
+        showToast('데이터 조회 실패', 'error');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const loadProfitabilityData = async () => {
     if (isNaN(projectId)) return;

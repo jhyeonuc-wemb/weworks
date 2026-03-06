@@ -289,7 +289,7 @@ export default function ProjectDetailPage({
   // DB path가 없을 때는 PHASE_URLS fallback 사용
   const PHASE_URLS: Record<string, string> = {
     vrb: `/projects/${id}/vrb-review`,
-    contract: `/projects/${id}/contract-status`,
+    contract: `/projects/${id}/contract`,
     profitability: `/projects/${id}/profitability`,
     in_progress: `/projects/${id}/monitoring`,
     settlement: `/projects/${id}/settlement`,
@@ -407,7 +407,7 @@ export default function ProjectDetailPage({
                           case 'vrb':
                             return `/projects/${id}/vrb-review`;
                           case 'contract':
-                            return `/projects/${id}/contract-status`;
+                            return `/projects/${id}/contract`;
                           case 'profitability':
                             return `/projects/${id}/profitability`;
                           case 'in_progress':

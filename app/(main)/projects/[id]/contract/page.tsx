@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, FileSignature, Trash2, ChevronRight, CheckCircle2, Paperclip } from "lucide-react";
 import {
@@ -40,6 +40,7 @@ interface ContractDetail {
     expectedAmount: number | null;
     supplyAmount: number | null;
     stampDuty: number | null;
+    performanceBondAmount: number | null;
     performanceBondRate: number;
     defectBondRate: number;
     paymentSchedule: string;
@@ -105,6 +106,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
     const [isNewContract, setIsNewContract] = useState(false);
     const [contract, setContract] = useState<ContractDetail | null>(null);
+    const [prevContract, setPrevContract] = useState<ContractDetail | null>(null);
     const [loadingList, setLoadingList] = useState(true);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -114,8 +116,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const [contractTypeForm, setContractTypeForm] = useState<"신규" | "변경">("\uc2e0\uaddc"); // 신규 | 변경
     const [supplyAmount, setSupplyAmount] = useState("");
     const [stampDuty, setStampDuty] = useState("");
-    const [performanceBondRate, setPerformanceBondRate] = useState("10");
-    const [defectBondRate, setDefectBondRate] = useState("2");
+    const [performanceBondAmount, setPerformanceBondAmount] = useState("0");
+    const [performanceBondRate, setPerformanceBondRate] = useState("0");
+    const [defectBondRate, setDefectBondRate] = useState("0");
     const [paymentSchedule, setPaymentSchedule] = useState("");
     const [contractNotes, setContractNotes] = useState("");
     const [contractDate, setContractDate] = useState("");       // "YYYY-MM-DD"
@@ -200,15 +203,16 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         setLoadingDetail(true);
         fetch(`/api/contracts/${selectedContractId}`)
             .then(r => r.json())
-            .then(data => {
+            .then(async (data) => {
                 const c: ContractDetail = data.contract;
                 setContract(c);
                 setContractTitle(c.contractTitle || "");
                 setContractTypeForm((c.contractType as "신규" | "변경") || "신규");
                 setSupplyAmount(c.supplyAmount ? c.supplyAmount.toLocaleString() : "");
                 setStampDuty(c.stampDuty ? c.stampDuty.toLocaleString() : "");
-                setPerformanceBondRate(String(c.performanceBondRate ?? 10));
-                setDefectBondRate(String(c.defectBondRate ?? 2));
+                setPerformanceBondAmount(c.performanceBondAmount != null ? c.performanceBondAmount.toLocaleString() : "0");
+                setPerformanceBondRate(String(c.performanceBondRate ?? 0));
+                setDefectBondRate(String(c.defectBondRate ?? 0));
                 setPaymentSchedule(c.paymentSchedule || "");
                 setContractNotes(c.contractNotes || "");
                 setContractDate(c.contractDate?.split("T")[0] || "");
@@ -223,6 +227,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 setPmSearch(c.managerName || "");
                 setSelectedSalesRepId(c.salesRepId ?? null);
                 setSalesSearch(c.salesRepName || "");
+
+                // 변경 계약이면 직전 계약 로드
+                if (c.contractType === "변경") {
+                    const curIdx = contractList.findIndex(x => x.id === selectedContractId);
+                    const prevId = curIdx > 0 ? contractList[curIdx - 1].id : null;
+                    if (prevId) {
+                        const prevRes = await fetch(`/api/contracts/${prevId}`);
+                        if (prevRes.ok) { const pd = await prevRes.json(); setPrevContract(pd.contract); }
+                    } else { setPrevContract(null); }
+                } else {
+                    setPrevContract(null);
+                }
             })
             .finally(() => setLoadingDetail(false));
     }, [selectedContractId]);
@@ -241,8 +257,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 salesRepName: salesSearch || null,
                 supplyAmount: supply,
                 stampDuty: stampDuty ? Number(stampDuty.replace(/,/g, "")) : null,
-                performanceBondRate: parseFloat(performanceBondRate) || 10,
-                defectBondRate: parseFloat(defectBondRate) || 2,
+                performanceBondAmount: performanceBondAmount ? Number(performanceBondAmount.replace(/,/g, "")) : null,
+                performanceBondRate: parseFloat(performanceBondRate) || 0,
+                defectBondRate: parseFloat(defectBondRate) || 0,
                 paymentSchedule,
                 contractNotes,
                 contractDate: contractDate || null,
@@ -299,6 +316,49 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
             showToast("저장되었습니다.", "success");
             await onSaveSuccess();
+
+            // 변경 계약에서 날짜·계약금액이 바뀐 경우 → 프로젝트 정보 업데이트 여부 확인
+            if (contractTypeForm === "변경" && prevContract) {
+                const prevStart = prevContract.contractStartDate?.split("T")[0] || "";
+                const prevEnd = prevContract.contractEndDate?.split("T")[0] || "";
+                const prevSupply = prevContract.supplyAmount ?? null;
+                const currentSupply = supplyAmount ? Number(supplyAmount.replace(/,/g, "")) : null;
+
+                const startChanged = contractStartDate !== prevStart;
+                const endChanged = contractEndDate !== prevEnd;
+                const amountChanged = currentSupply !== prevSupply;
+
+                if (startChanged || endChanged || amountChanged) {
+                    const items = [
+                        startChanged && "시작일",
+                        endChanged && "종료일",
+                        amountChanged && "계약금액",
+                    ].filter(Boolean).join(", ");
+
+                    confirm({
+                        title: "프로젝트 정보 업데이트",
+                        message: `${items}이(가) 변경되었습니다.\n프로젝트 정보도 업데이트하시겠습니까?`,
+                        onConfirm: async () => {
+                            const patch: Record<string, string | number | null> = {};
+                            if (startChanged) patch.contractStartDate = contractStartDate || null;
+                            if (endChanged) patch.contractEndDate = contractEndDate || null;
+                            if (amountChanged) patch.expectedAmount = currentSupply ?? null;
+                            try {
+                                const r = await fetch(`/api/projects/${projectId}`, {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(patch),
+                                });
+                                if (r.ok) showToast("프로젝트 정보가 업데이트되었습니다.", "success");
+                                else showToast("프로젝트 업데이트에 실패했습니다.", "error");
+                            } catch {
+                                showToast("프로젝트 업데이트에 실패했습니다.", "error");
+                            }
+                        },
+                    });
+                }
+            }
+
         } catch {
             showToast("저장에 실패했습니다.", "error");
         } finally {
@@ -328,8 +388,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             setContractTitle(contract.contractTitle || "");
             setSupplyAmount(contract.supplyAmount ? contract.supplyAmount.toLocaleString() : "");
             setStampDuty(contract.stampDuty ? String(contract.stampDuty) : "");
-            setPerformanceBondRate(String(contract.performanceBondRate ?? 10));
-            setDefectBondRate(String(contract.defectBondRate ?? 2));
+            setPerformanceBondAmount(contract.performanceBondAmount != null ? contract.performanceBondAmount.toLocaleString() : "0");
+            setPerformanceBondRate(String(contract.performanceBondRate ?? 0));
+            setDefectBondRate(String(contract.defectBondRate ?? 0));
             setPaymentSchedule(contract.paymentSchedule || "");
             setContractNotes(contract.contractNotes || "");
             setContractDate(contract.contractDate?.split("T")[0] || "");
@@ -348,8 +409,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             setContractTitle("");
             setSupplyAmount("");
             setStampDuty("");
-            setPerformanceBondRate("10");
-            setDefectBondRate("2");
+            setPerformanceBondAmount("0");
+            setPerformanceBondRate("0");
+            setDefectBondRate("0");
             setPaymentSchedule("");
             setContractNotes("");
             setContractDate("");
@@ -420,6 +482,32 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         }
     }
 
+    // ── 변경 계약: 이전 계약과 달라진 필드 감지 ─────────────────────────
+    const changedFields = useMemo(() => {
+        const s = new Set<string>();
+        if (!contract || contract.contractType !== "변경" || !prevContract) return s;
+        const eq = (a: any, b: any) => String(a ?? "").trim() === String(b ?? "").trim();
+        if (!eq(contract.contractTitle, prevContract.contractTitle)) s.add("contractTitle");
+        if (!eq(contract.supplyAmount, prevContract.supplyAmount)) s.add("supplyAmount");
+        if (!eq(contract.stampDuty, prevContract.stampDuty)) s.add("stampDuty");
+        if (!eq(contract.performanceBondAmount, prevContract.performanceBondAmount)) s.add("performanceBondAmount");
+        if (!eq(contract.performanceBondRate, prevContract.performanceBondRate)) s.add("performanceBondRate");
+        if (!eq(contract.defectBondRate, prevContract.defectBondRate)) s.add("defectBondRate");
+        if (!eq(contract.contractDate, prevContract.contractDate)) s.add("contractDate");
+        if (!eq(contract.contractStartDate, prevContract.contractStartDate)) s.add("contractStartDate");
+        if (!eq(contract.contractEndDate, prevContract.contractEndDate)) s.add("contractEndDate");
+        if (!eq(contract.customerName, prevContract.customerName)) s.add("customerName");
+        if (!eq(contract.ordererName, prevContract.ordererName)) s.add("ordererName");
+        if (!eq(contract.managerName, prevContract.managerName)) s.add("managerName");
+        if (!eq(contract.salesRepName, prevContract.salesRepName)) s.add("salesRepName");
+        if (!eq(contract.paymentSchedule, prevContract.paymentSchedule)) s.add("paymentSchedule");
+        if (!eq(contract.contractNotes, prevContract.contractNotes)) s.add("contractNotes");
+        return s;
+    }, [contract, prevContract]);
+    // 변경된 필드에 적용할 클래스
+    const changed = (field: string) =>
+        changedFields.has(field) ? "ring-2 ring-amber-400 rounded-xl bg-amber-50/40" : "";
+
     return (
         <>
             <div className="space-y-6">
@@ -427,7 +515,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Link
-                            href="/projects/contract-status"
+                            href="/projects/contract"
                             className="p-2 -ml-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-300"
                         >
                             <ArrowLeft className="h-5 w-5" />
@@ -609,6 +697,40 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                         </tr>
                                     )}
                                 </tbody>
+                                {contractList.length > 0 && (() => {
+                                    // 유효 계약금액 누적 계산
+                                    // - 신규: 합산에 추가
+                                    // - 변경(금액 변경): 이전 금액 빼고 새 금액 추가 (교체)
+                                    // - 변경(금액 동일): 무시
+                                    let total = 0;
+                                    let prevAmount: number | null = null;
+                                    for (const c of contractList) {
+                                        if (c.supplyAmount == null) continue;
+                                        if (c.contractType === "변경") {
+                                            if (prevAmount !== null && c.supplyAmount !== prevAmount) {
+                                                total = total - prevAmount + c.supplyAmount;
+                                            }
+                                        } else {
+                                            // 신규: 무조건 합산
+                                            total += c.supplyAmount;
+                                        }
+                                        prevAmount = c.supplyAmount;
+                                    }
+                                    const totalSum = total > 0 ? Math.round(total * 1.1) : 0;
+                                    return totalSum > 0 ? (
+                                        <tfoot>
+                                            <tr className="bg-blue-50/60 border-t-2 border-blue-200 h-[44px]">
+                                                <td colSpan={6} className="pl-4 pr-4 py-0 text-sm font-bold text-blue-700 text-right tracking-tight">
+                                                    계약금액 합계
+                                                </td>
+                                                <td className="pl-3 pr-4 py-0 text-right font-mono text-sm font-bold text-blue-800">
+                                                    {formatNumber(totalSum)}원
+                                                </td>
+                                                {!isReadOnly && <td />}
+                                            </tr>
+                                        </tfoot>
+                                    ) : null;
+                                })()}
                             </table>
                         </div>
                     )}
@@ -637,6 +759,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                             value={contractTitle}
                                             onChange={e => setContractTitle(e.target.value)}
                                             disabled={isReadOnly}
+                                            className={changed("contractTitle")}
                                         />
                                     </Field>
                                     <Field>
@@ -667,9 +790,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                     <Field className="relative">
                                         <FieldLabel>고객사</FieldLabel>
                                         {isReadOnly ? (
-                                            <Input value={customerSearch} disabled className="bg-gray-50" />
+                                            <Input value={customerSearch} disabled className={cn("bg-gray-50", changed("customerName"))} />
                                         ) : (
-                                            <div className="relative">
+                                            <div className={cn("relative", changed("customerName"))}>
                                                 <input
                                                     type="text"
                                                     value={customerSearch}
@@ -697,9 +820,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                     <Field className="relative">
                                         <FieldLabel>발주처</FieldLabel>
                                         {isReadOnly ? (
-                                            <Input value={ordererSearch} disabled className="bg-gray-50" />
+                                            <Input value={ordererSearch} disabled className={cn("bg-gray-50", changed("ordererName"))} />
                                         ) : (
-                                            <div className="relative">
+                                            <div className={cn("relative", changed("ordererName"))}>
                                                 <input
                                                     type="text"
                                                     value={ordererSearch}
@@ -727,9 +850,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                     <Field className="relative">
                                         <FieldLabel>영업대표</FieldLabel>
                                         {isReadOnly ? (
-                                            <Input value={salesSearch} disabled className="bg-gray-50" />
+                                            <Input value={salesSearch} disabled className={cn("bg-gray-50", changed("salesRepName"))} />
                                         ) : (
-                                            <div className="relative">
+                                            <div className={cn("relative", changed("salesRepName"))}>
                                                 <input
                                                     type="text"
                                                     value={salesSearch}
@@ -757,9 +880,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                     <Field className="relative">
                                         <FieldLabel>PM</FieldLabel>
                                         {isReadOnly ? (
-                                            <Input value={pmSearch} disabled className="bg-gray-50" />
+                                            <Input value={pmSearch} disabled className={cn("bg-gray-50", changed("managerName"))} />
                                         ) : (
-                                            <div className="relative">
+                                            <div className={cn("relative", changed("managerName"))}>
                                                 <input
                                                     type="text"
                                                     value={pmSearch}
@@ -786,27 +909,33 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                     {/* 공급가액 */}
                                     <Field>
                                         <FieldLabel>계약일</FieldLabel>
-                                        <DatePicker
-                                            date={parseLocalDate(contractDate)}
-                                            setDate={(d) => setContractDate(dateToStr(d))}
-                                            disabled={isReadOnly}
-                                        />
+                                        <div className={changed("contractDate")}>
+                                            <DatePicker
+                                                date={parseLocalDate(contractDate)}
+                                                setDate={(d) => setContractDate(dateToStr(d))}
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
                                     </Field>
                                     <Field>
                                         <FieldLabel>시작일</FieldLabel>
-                                        <DatePicker
-                                            date={parseLocalDate(contractStartDate)}
-                                            setDate={(d) => setContractStartDate(dateToStr(d))}
-                                            disabled={isReadOnly}
-                                        />
+                                        <div className={changed("contractStartDate")}>
+                                            <DatePicker
+                                                date={parseLocalDate(contractStartDate)}
+                                                setDate={(d) => setContractStartDate(dateToStr(d))}
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
                                     </Field>
                                     <Field>
                                         <FieldLabel>종료일</FieldLabel>
-                                        <DatePicker
-                                            date={parseLocalDate(contractEndDate)}
-                                            setDate={(d) => setContractEndDate(dateToStr(d))}
-                                            disabled={isReadOnly}
-                                        />
+                                        <div className={changed("contractEndDate")}>
+                                            <DatePicker
+                                                date={parseLocalDate(contractEndDate)}
+                                                setDate={(d) => setContractEndDate(dateToStr(d))}
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
                                     </Field>
                                     <Field>
                                         <FieldLabel>계약기간</FieldLabel>
@@ -827,7 +956,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                             }}
                                             placeholder="0"
                                             disabled={isReadOnly}
-                                            className="text-right font-mono"
+                                            className={cn("text-right font-mono", changed("supplyAmount"))}
                                         />
                                     </Field>
                                     <Field>
@@ -857,26 +986,40 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                             }}
                                             placeholder="0"
                                             disabled={isReadOnly}
-                                            className="text-right font-mono"
+                                            className={cn("text-right font-mono", changed("stampDuty"))}
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel>계약이행 (원)</FieldLabel>
+                                        <Input
+                                            value={performanceBondAmount}
+                                            onChange={e => setPerformanceBondAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                                            onBlur={e => {
+                                                const n = Number(e.target.value.replace(/,/g, ""));
+                                                if (n) setPerformanceBondAmount(n.toLocaleString());
+                                            }}
+                                            placeholder="0"
+                                            disabled={isReadOnly}
+                                            className={cn("text-right font-mono", changed("performanceBondAmount"))}
                                         />
                                     </Field>
                                     {/* 보증율 */}
                                     <Field>
-                                        <FieldLabel>이행보증율 (%)</FieldLabel>
+                                        <FieldLabel>계약이행 (%)</FieldLabel>
                                         <Input
                                             value={performanceBondRate}
                                             onChange={e => setPerformanceBondRate(e.target.value)}
                                             disabled={isReadOnly}
-                                            className="text-right font-mono"
+                                            className={cn("text-right font-mono", changed("performanceBondRate"))}
                                         />
                                     </Field>
                                     <Field>
-                                        <FieldLabel>하자보증율 (%)</FieldLabel>
+                                        <FieldLabel>하자이행 (%)</FieldLabel>
                                         <Input
                                             value={defectBondRate}
                                             onChange={e => setDefectBondRate(e.target.value)}
                                             disabled={isReadOnly}
-                                            className="text-right font-mono"
+                                            className={cn("text-right font-mono", changed("defectBondRate"))}
                                         />
                                     </Field>
                                 </div>
@@ -890,7 +1033,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                             rows={3}
                                             disabled={isReadOnly}
                                             placeholder="지급 일정을 입력하세요"
-                                            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-default resize-none"
+                                            className={cn("w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-default resize-none", changed("paymentSchedule"))}
                                         />
                                     </Field>
                                     <Field>
@@ -901,7 +1044,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                             rows={3}
                                             disabled={isReadOnly}
                                             placeholder="특이사항을 입력하세요"
-                                            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-default resize-none"
+                                            className={cn("w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-default resize-none", changed("contractNotes"))}
                                         />
                                     </Field>
                                 </div>

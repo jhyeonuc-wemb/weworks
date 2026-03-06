@@ -356,7 +356,10 @@ export default function ProfitabilityListPage() {
                                             </span>
                                         </TableCell>
                                         <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground/80 font-mono">
+                                            <span className={cn(
+                                                "text-sm font-bold font-mono",
+                                                (p.operating_profit || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+                                            )}>
                                                 {formatCurrency((p.operating_profit || 0) * 1000, "KRW", false)}
                                             </span>
                                         </TableCell>

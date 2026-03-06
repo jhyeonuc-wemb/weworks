@@ -379,7 +379,7 @@ export default function SettlementListPage() {
                       </TableCell>
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <span className={cn(
-                          "text-sm font-mono",
+                          "text-sm font-mono font-bold",
                           s.profit_diff >= 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                           {s.profit_diff > 0 ? "+" : ""}{formatCurrency(s.profit_diff * 1000, "KRW", false)}

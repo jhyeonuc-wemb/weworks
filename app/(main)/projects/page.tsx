@@ -416,7 +416,7 @@ export default function ProjectsPage() {
                       <TableCell align="center" className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm text-foreground/80">
                           {project.contractStartDate ? formatDate(project.contractStartDate) : "-"}
-                          {" ~ "}
+                          {"~"}
                           {project.contractEndDate ? formatDate(project.contractEndDate) : "-"}
                         </div>
                       </TableCell>

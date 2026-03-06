@@ -71,7 +71,22 @@ export async function GET(request: NextRequest) {
                 pp.completed_at,
                 (SELECT COUNT(*) FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_count,
                 (SELECT MAX(wc.contract_start_date) FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_start_date,
-                (SELECT MAX(wc.contract_end_date)   FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_end_date
+                (SELECT MAX(wc.contract_end_date)   FROM we_contracts wc WHERE wc.project_id = p.id) AS contract_end_date,
+                (WITH wc_ord AS (
+                    SELECT supply_amount, contract_type,
+                           LAG(supply_amount) OVER (ORDER BY created_at) AS prev_amount
+                    FROM we_contracts
+                    WHERE project_id = p.id AND supply_amount IS NOT NULL
+                )
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN contract_type = '변경' AND prev_amount IS NOT NULL AND supply_amount != prev_amount
+                            THEN supply_amount - prev_amount
+                        WHEN contract_type <> '변경'
+                            THEN supply_amount
+                        ELSE 0
+                    END
+                ), 0) FROM wc_ord) AS total_supply_amount
             FROM we_projects p
             LEFT JOIN we_clients c ON p.customer_id = c.id
             LEFT JOIN we_clients o ON p.orderer_id = o.id
@@ -118,6 +133,7 @@ export async function GET(request: NextRequest) {
             currentPhase: row.current_phase,
             contractStatus: row.contract_status,
             contractCount: Number(row.contract_count),
+            totalContractAmount: row.total_supply_amount ? Math.round(Number(row.total_supply_amount) * 1.1) : null,
             startedAt: row.started_at,
             completedAt: row.completed_at,
         }));

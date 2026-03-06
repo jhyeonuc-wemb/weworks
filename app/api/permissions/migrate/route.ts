@@ -39,7 +39,7 @@ export async function GET() {
       // 프로젝트 그룹 서브메뉴
       ['projects', '프로젝트 현황', '프로젝트', 30],
       ['projects/vrb', 'VRB 현황', '프로젝트', 40],
-      ['projects/contract-status', '계약 현황', '프로젝트', 50],
+      ['projects/contract', '계약 현황', '프로젝트', 50],
       ['projects/monitoring', '프로젝트 진행 현황', '프로젝트', 55],
       ['projects/profitability', '수지분석서 현황', '프로젝트', 60],
       ['projects/settlement', '수지정산서 현황', '프로젝트', 70],

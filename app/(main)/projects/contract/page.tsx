@@ -31,6 +31,7 @@ interface Contract {
     currentPhase: string;
     contractStatus: string;
     contractCount: number;
+    totalContractAmount: number | null;
     startedAt: string | null;
     completedAt: string | null;
 }
@@ -114,7 +115,7 @@ export default function ContractStatusPage() {
             }
         });
         return [
-            { value: "전체", label: "년도" },
+            { value: "전체", label: "연도" },
             ...Array.from(years).sort().reverse().map((y) => ({ value: y, label: `${y}년` })),
         ];
     }, [contracts]);
@@ -155,7 +156,7 @@ export default function ContractStatusPage() {
             alert("프로젝트를 선택해주세요.");
             return;
         }
-        router.push(`/projects/${selectedProjectId}/contract-status`);
+        router.push(`/projects/${selectedProjectId}/contract`);
     };
 
     // 정렬
@@ -275,11 +276,11 @@ export default function ContractStatusPage() {
                                 <TableHead className="w-[160px] px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">
                                     고객사
                                 </TableHead>
-                                <TableHead className="w-[150px] px-8 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
-                                    계약 금액
+                                <TableHead className="w-[150px] px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
+                                    계약금액(원)
                                 </TableHead>
                                 <TableHead className="w-[210px] px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">
-                                    계약 기간
+                                    계약기간
                                 </TableHead>
                                 <TableHead className="w-[110px] px-8 py-3 text-sm text-slate-900 text-center whitespace-nowrap">
                                     상태
@@ -321,10 +322,10 @@ export default function ContractStatusPage() {
                                     <TableRow
                                         key={contract.id}
                                         className="hover:bg-primary/[0.02] transition-colors group cursor-pointer"
-                                        onClick={() => router.push(`/projects/${contract.id}/contract-status`)}
+                                        onClick={() => router.push(`/projects/${contract.id}/contract`)}
                                     >
                                         <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground/80 font-mono">
+                                            <span className="text-sm text-foreground font-mono">
                                                 {contract.projectCode || "-"}
                                             </span>
                                         </TableCell>
@@ -334,21 +335,23 @@ export default function ContractStatusPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground/80 font-medium">
+                                            <span className="text-sm text-foreground font-medium">
                                                 {contract.customerName || "-"}
                                             </span>
                                         </TableCell>
-                                        <TableCell align="right" className="px-8 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground font-bold font-mono">
-                                                {contract.expectedAmount
-                                                    ? formatNumber(contract.expectedAmount)
-                                                    : "-"}
+                                        <TableCell align="right" className="px-4 py-3 whitespace-nowrap">
+                                            <span className="text-sm text-emerald-600 font-bold font-mono">
+                                                {contract.totalContractAmount
+                                                    ? formatNumber(contract.totalContractAmount)
+                                                    : contract.expectedAmount
+                                                        ? formatNumber(contract.expectedAmount)
+                                                        : "-"}
                                             </span>
                                         </TableCell>
                                         <TableCell align="center" className="px-8 py-3 whitespace-nowrap">
-                                            <span className="text-sm text-foreground/60 font-mono">
+                                            <span className="text-sm text-foreground font-medium">
                                                 {contract.contractStartDate
-                                                    ? `${contract.contractStartDate.slice(2).replace(/-/g, '.')} ~ ${contract.contractEndDate ? contract.contractEndDate.slice(2).replace(/-/g, '.') : "?"}`
+                                                    ? `${contract.contractStartDate.slice(2).replace(/-/g, '.')}~${contract.contractEndDate ? contract.contractEndDate.slice(2).replace(/-/g, '.') : "?"}`
                                                     : "-"}
                                             </span>
                                         </TableCell>
