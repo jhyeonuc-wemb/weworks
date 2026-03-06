@@ -127,6 +127,76 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // ── 마감일 체크 ──────────────────────────────────────────────────────
+        // 마감 설정 조회
+        const deadlineRes = await query(`SELECT deadline_day, is_enabled FROM we_work_log_deadline_config LIMIT 1`);
+        const deadlineCfg = deadlineRes.rows[0];
+
+        if (deadlineCfg?.is_enabled && workDate) {
+            const [workYear, workMonth] = workDate.split('-').map(Number);
+            const today = new Date();
+            const todayYear = today.getFullYear();
+            const todayMonth = today.getMonth() + 1;
+            const todayDay = today.getDate();
+
+            // 과거 달 여부 확인
+            const isClosedMonth =
+                workYear < todayYear ||
+                (workYear === todayYear && workMonth < todayMonth);
+
+            if (isClosedMonth) {
+                // 마감일 계산: 해당 달의 다음 달 deadline_day일
+                const deadlineYear = workMonth === 12 ? workYear + 1 : workYear;
+                const deadlineMonth = workMonth === 12 ? 1 : workMonth + 1;
+                const deadlineDay = deadlineCfg.deadline_day;
+
+                // 오늘이 마감일을 지났는지
+                const isPastDeadline =
+                    todayYear > deadlineYear ||
+                    (todayYear === deadlineYear && todayMonth > deadlineMonth) ||
+                    (todayYear === deadlineYear && todayMonth === deadlineMonth && todayDay > deadlineDay);
+
+                if (isPastDeadline) {
+                    // 월별 해제 여부 확인
+                    const unlockRes = await query(
+                        `SELECT id FROM we_work_log_deadline_unlocks
+                         WHERE target_year = $1 AND target_month = $2`,
+                        [workYear, workMonth]
+                    );
+                    if (unlockRes.rows.length === 0) {
+                        return NextResponse.json(
+                            { error: `${workYear}년 ${workMonth}월 작업일지는 마감되었습니다. (마감일: ${deadlineYear}-${String(deadlineMonth).padStart(2, '0')}-${String(deadlineDay).padStart(2, '0')})` },
+                            { status: 403 }
+                        );
+                    }
+                }
+            }
+        }
+
+        // 같은 날짜, 같은 사용자의 기존 작업일지와 시간이 겹치면 등록 불가
+        if (startTime && endTime) {
+            const overlapCheck = await query(
+                `SELECT id, start_time, end_time FROM we_work_logs
+                 WHERE user_id = $1
+                   AND work_date = $2
+                   AND start_time IS NOT NULL
+                   AND end_time IS NOT NULL
+                   AND start_time < $4   -- 기존 시작 < 신규 종료
+                   AND end_time   > $3   -- 기존 종료 > 신규 시작
+                `,
+                [user.id, workDate, startTime, endTime]
+            );
+            if (overlapCheck.rows.length > 0) {
+                const ov = overlapCheck.rows[0];
+                return NextResponse.json(
+                    {
+                        error: `시간이 겹칩니다. 기존 등록된 작업 시간: ${String(ov.start_time).slice(0, 5)} ~ ${String(ov.end_time).slice(0, 5)}`,
+                    },
+                    { status: 409 }
+                );
+            }
+        }
+
         const result = await query(
             `INSERT INTO we_work_logs 
         (user_id, work_date, start_time, end_time, work_hours, log_type, category, sub_category, project_id, title, memo)

@@ -136,6 +136,7 @@ export function DatePicker({
                     <Button
                         variant="ghost"
                         disabled={disabled}
+                        suppressHydrationWarning
                         className={cn(
                             "w-full justify-start text-left font-normal border border-gray-300 bg-white px-3 h-10 rounded-xl transition-all duration-200 focus:outline-none focus:ring-0",
                             !date && "text-gray-400",

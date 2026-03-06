@@ -8,6 +8,7 @@ import { WorkLogPanel } from "./components/work-log-panel";
 import type FullCalendar from "@fullcalendar/react";
 import type { WorkLog } from "./types";
 
+
 // SSR 이슈 방지 — FullCalendar는 클라이언트에서만 렌더
 const WorkLogCalendar = dynamic(
     () => import("./components/WorkLogCalendar"),
@@ -33,11 +34,15 @@ export default function WorkLogsPage() {
         return d.toLocaleDateString("en-CA");
     });
 
-    // 입력 패널 상태
     const [panelOpen, setPanelOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [selectedTime, setSelectedTime] = useState<string | undefined>();
     const [editLog, setEditLog] = useState<WorkLog | null>(null);
+
+    // 마감 설정
+    const [deadlineEnabled, setDeadlineEnabled] = useState(false);
+    const [deadlineDay, setDeadlineDay] = useState(4);
+    const [unlockedMonths, setUnlockedMonths] = useState<Set<string>>(new Set());
 
     const calendarRef = useRef<FullCalendar | null>(null);
 
@@ -58,6 +63,56 @@ export default function WorkLogsPage() {
     useEffect(() => {
         fetchLogs();
     }, [fetchLogs]);
+
+    // 마감 설정 로드
+    useEffect(() => {
+        fetch("/api/settings/work-log-deadline")
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data?.config) {
+                    setDeadlineEnabled(data.config.is_enabled);
+                    setDeadlineDay(data.config.deadline_day);
+                }
+            })
+            .catch(() => { });
+        // 올해/작년 해제 목록 로드
+        const years = [new Date().getFullYear() - 1, new Date().getFullYear()];
+        Promise.all(years.map(y => fetch(`/api/settings/work-log-deadline/unlocks?year=${y}`).then(r => r.ok ? r.json() : null)))
+            .then(results => {
+                const set = new Set<string>();
+                results.forEach(data => {
+                    (data?.unlocks || []).forEach((u: { target_year: number; target_month: number }) => {
+                        set.add(`${u.target_year}-${u.target_month}`);
+                    });
+                });
+                setUnlockedMonths(set);
+            })
+            .catch(() => { });
+    }, []);
+
+    // 날짜가 마감됐는지 체크
+    const isDateClosed = useCallback((dateStr: string): boolean => {
+        if (!deadlineEnabled) return false;
+        const [y, m] = dateStr.split('-').map(Number);
+        const today = new Date();
+        const todayY = today.getFullYear();
+        const todayM = today.getMonth() + 1;
+        const todayD = today.getDate();
+        // 현재 달이면 열림
+        if (y === todayY && m === todayM) return false;
+        // 미래달이면 열림
+        if (y > todayY || (y === todayY && m > todayM)) return false;
+        // 과거 달: 다음달 deadlineDay일을 지났는지 확인
+        const dlY = m === 12 ? y + 1 : y;
+        const dlM = m === 12 ? 1 : m + 1;
+        const isPast =
+            todayY > dlY ||
+            (todayY === dlY && todayM > dlM) ||
+            (todayY === dlY && todayM === dlM && todayD > deadlineDay);
+        if (!isPast) return false;
+        // 월별 해제 확인
+        return !unlockedMonths.has(`${y}-${m}`);
+    }, [deadlineEnabled, deadlineDay, unlockedMonths]);
 
     // 뷰 범위의 휴일 로드 — ref 기반으로 리렌더링 없이 중복 fetch 방지
     useEffect(() => {
@@ -95,6 +150,7 @@ export default function WorkLogsPage() {
     }, [dateFrom, dateTo]);
 
     const openPanel = (date: string, logOrTime?: WorkLog | string, time?: string) => {
+        if (isDateClosed(date)) return; // 마감된 날짜는 클릭 무시
         setSelectedDate(date);
         if (typeof logOrTime === "object" && logOrTime !== null) {
             setEditLog(logOrTime);
@@ -151,6 +207,7 @@ export default function WorkLogsPage() {
                     onEventClick={(log) => openPanel(log.workDate, log)}
                     onDatesSet={handleDatesSet}
                     calendarRef={calendarRef}
+                    isDateClosed={isDateClosed}
                 />
             </div>
 

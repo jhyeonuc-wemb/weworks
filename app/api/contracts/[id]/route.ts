@@ -27,9 +27,9 @@ export async function GET(
                 c.defect_bond_rate,
                 c.payment_schedule,
                 c.contract_notes,
-                c.contract_date,
-                c.contract_start_date,
-                c.contract_end_date,
+                c.contract_date::text          AS contract_date,
+                c.contract_start_date::text    AS contract_start_date,
+                c.contract_end_date::text      AS contract_end_date,
                 c.created_at,
                 c.updated_at,
                 p.project_code,
@@ -43,12 +43,18 @@ export async function GET(
                 COALESCE(c.orderer_name,   po.name)  AS orderer_name,
                 po.code         AS orderer_code,
                 u_m.id          AS manager_id,
-                COALESCE(c.manager_name,   u_m.name) AS manager_name,
-                r_m.name        AS manager_rank_name,
+                CASE
+                    WHEN c.manager_name IS NOT NULL THEN c.manager_name
+                    ELSE TRIM(CONCAT_WS(' ', u_m.name, r_m.name))
+                END             AS manager_name,
+                NULL::text      AS manager_rank_name,
                 d_m.name        AS manager_dept_name,
                 u_s.id          AS sales_rep_id,
-                COALESCE(c.sales_rep_name, u_s.name) AS sales_rep_name,
-                r_s.name        AS sales_rep_rank_name,
+                CASE
+                    WHEN c.sales_rep_name IS NOT NULL THEN c.sales_rep_name
+                    ELSE TRIM(CONCAT_WS(' ', u_s.name, r_s.name))
+                END             AS sales_rep_name,
+                NULL::text      AS sales_rep_rank_name,
                 d_s.name        AS sales_rep_dept_name
             FROM we_contracts c
             JOIN we_projects p ON p.id = c.project_id
@@ -71,9 +77,9 @@ export async function GET(
         const row = result.rows[0];
         let durationDays: number | null = null;
         if (row.contract_start_date && row.contract_end_date) {
-            const start = new Date(row.contract_start_date);
-            const end = new Date(row.contract_end_date);
-            durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            const s = new Date(String(row.contract_start_date).slice(0, 10));
+            const e = new Date(String(row.contract_end_date).slice(0, 10));
+            durationDays = Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         }
 
         return NextResponse.json({
@@ -90,9 +96,9 @@ export async function GET(
                 defectBondRate: row.defect_bond_rate ? Number(row.defect_bond_rate) : 2,
                 paymentSchedule: row.payment_schedule || '',
                 contractNotes: row.contract_notes || '',
-                contractDate: row.contract_date ? new Date(row.contract_date).toISOString().slice(0, 10) : null,
-                contractStartDate: row.contract_start_date ? new Date(row.contract_start_date).toISOString().slice(0, 10) : null,
-                contractEndDate: row.contract_end_date ? new Date(row.contract_end_date).toISOString().slice(0, 10) : null,
+                contractDate: row.contract_date ? String(row.contract_date).slice(0, 10) : null,
+                contractStartDate: row.contract_start_date ? String(row.contract_start_date).slice(0, 10) : null,
+                contractEndDate: row.contract_end_date ? String(row.contract_end_date).slice(0, 10) : null,
                 durationDays,
                 currentPhase: row.current_phase,
                 customerId: row.customer_id,

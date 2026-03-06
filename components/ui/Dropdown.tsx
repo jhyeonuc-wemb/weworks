@@ -180,20 +180,39 @@ export const Dropdown = ({
                     !isPremium && "justify-between"
                 )}
             >
-                <span className={cn(
-                    "truncate flex-1 font-medium",
-                    align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left"
-                )}>
-                    {selectedOption ? selectedOption.label : placeholder}
-                </span>
-                <ChevronDown
-                    size={16}
-                    className={cn(
-                        "flex-shrink-0 ml-2 transition-transform duration-200",
-                        disabled ? "text-gray-300" : "text-gray-400",
-                        isOpen && "rotate-180"
-                    )}
-                />
+                {align === "center" ? (
+                    // 가운데 정렬: span을 absolute full로 캐고, chevron은 absolute 우측 고정
+                    <>
+                        <span className="absolute inset-0 flex items-center justify-center font-medium truncate px-8">
+                            {selectedOption ? selectedOption.label : placeholder}
+                        </span>
+                        <ChevronDown
+                            size={16}
+                            className={cn(
+                                "absolute right-3 flex-shrink-0 transition-transform duration-200",
+                                disabled ? "text-gray-300" : "text-gray-400",
+                                isOpen && "rotate-180"
+                            )}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <span className={cn(
+                            "truncate flex-1 font-medium",
+                            align === "right" ? "text-right" : "text-left"
+                        )}>
+                            {selectedOption ? selectedOption.label : placeholder}
+                        </span>
+                        <ChevronDown
+                            size={16}
+                            className={cn(
+                                "flex-shrink-0 ml-2 transition-transform duration-200",
+                                disabled ? "text-gray-300" : "text-gray-400",
+                                isOpen && "rotate-180"
+                            )}
+                        />
+                    </>
+                )}
             </button>
 
             {isOpen && position && createPortal(

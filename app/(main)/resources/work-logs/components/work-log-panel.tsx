@@ -293,7 +293,11 @@ export function WorkLogPanel({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             });
-            if (!res.ok) throw new Error();
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                showToast(errData.error || "저장에 실패했습니다.", "error");
+                return;
+            }
             showToast(form.id ? "수정되었습니다." : "저장되었습니다.", "success");
             onSaved();
             onOpenChange(false);

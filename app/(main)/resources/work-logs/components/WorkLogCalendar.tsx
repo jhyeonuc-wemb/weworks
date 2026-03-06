@@ -16,11 +16,12 @@ import type { WorkLog } from "../types";
 
 interface WorkLogCalendarProps {
   logs: WorkLog[];
-  holidays?: Set<string>; // "YYYY-MM-DD" 형식의 휴일 날짜 집합
+  holidays?: Set<string>;
   onDateClick: (date: string, time?: string) => void;
   onEventClick: (log: WorkLog) => void;
   onDatesSet?: (info: { startStr: string; endStr: string }) => void;
   calendarRef?: React.RefObject<FullCalendar | null>;
+  isDateClosed?: (date: string) => boolean;
 }
 
 const CATEGORY_BG: Record<string, string> = {
@@ -67,6 +68,7 @@ export default function WorkLogCalendar({
   onEventClick,
   onDatesSet,
   calendarRef,
+  isDateClosed,
 }: WorkLogCalendarProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<string>("dayGridMonth");
@@ -116,7 +118,10 @@ export default function WorkLogCalendar({
 
   const dayCellClassNames = (arg: { date: Date; isToday: boolean }) => {
     const dateStr = arg.date.toLocaleDateString("en-CA"); // YYYY-MM-DD
-    return isHoliday(dateStr) ? ["fc-day-holiday"] : [];
+    const classes: string[] = [];
+    if (isHoliday(dateStr)) classes.push("fc-day-holiday");
+    if (isDateClosed?.(dateStr)) classes.push("fc-day-closed");
+    return classes;
   };
 
   const handleDatesSetInternal = (info: any) => {
@@ -251,6 +256,14 @@ export default function WorkLogCalendar({
         .fc-wrapper .fc-daygrid-day:hover {
           background-color: #f9fafb;
           cursor: pointer;
+        }
+        .fc-wrapper .fc-day-closed.fc-daygrid-day:hover {
+          background-color: transparent;
+          cursor: default;
+        }
+        .fc-wrapper .fc-day-closed .fc-event {
+          cursor: default;
+          pointer-events: none;
         }
         .fc-wrapper .fc-day-holiday .fc-daygrid-day-number,
         .fc-wrapper .fc-day-holiday .fc-col-header-cell-cushion {

@@ -21,6 +21,7 @@ import {
     GitBranch,
     Target,
     TrendingUp,
+    Lock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -136,6 +137,7 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
             { menuKey: "settings/difficulty-checklist", href: "/settings/difficulty-checklist", label: "난이도 체크리스트", icon: CheckCircle2, displayOrder: 66 },
             { menuKey: "settings/md-estimation", href: "/settings/md-estimation", label: "M/D 산정 항목", icon: FileText, displayOrder: 67 },
             { menuKey: "settings/holidays", href: "/settings/holidays", label: "휴일", icon: Calendar, displayOrder: 68 },
+            { menuKey: "settings/work-log-deadline", href: "/settings/work-log-deadline", label: "작업일지 마감 설정", icon: Lock, displayOrder: 69 },
         ],
     },
 ];

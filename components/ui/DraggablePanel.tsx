@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, GripHorizontal } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
@@ -116,10 +116,9 @@ export function DraggablePanel({
                     <div
                         ref={dragRef}
                         onMouseDown={onMouseDown}
-                        className="flex items-center justify-between p-4 bg-gray-50/80 border-b border-gray-100 cursor-grab active:cursor-grabbing hover:bg-gray-100/80 transition-colors shrink-0"
+                        className="flex items-center justify-between p-4 bg-gray-50/80 border-b border-gray-100 cursor-default transition-colors shrink-0"
                     >
                         <div className="flex items-center gap-3">
-                            <GripHorizontal className="h-5 w-5 text-gray-400" />
                             <div>
                                 {title && <h2 className="text-base font-bold text-gray-900">{title}</h2>}
                                 {description && <p className="text-xs text-gray-500">{description}</p>}

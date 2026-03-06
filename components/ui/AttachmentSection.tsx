@@ -21,6 +21,7 @@ interface AttachmentSectionProps {
     entityId: number;
     readonly?: boolean;
     hideUpload?: boolean;
+    hideTitle?: boolean;
     className?: string;
 }
 
@@ -42,7 +43,7 @@ function FileIcon({ mimeType, className }: { mimeType: string | null; className?
     return <File className={cls} />;
 }
 
-export function AttachmentSection({ entityType, entityId, readonly = false, hideUpload = false, className }: AttachmentSectionProps) {
+export function AttachmentSection({ entityType, entityId, readonly = false, hideUpload = false, hideTitle = false, className }: AttachmentSectionProps) {
     const { showToast, confirm } = useToast();
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -133,16 +134,27 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
     return (
         <div className={cn("space-y-4", className)}>
             {/* 섹션 헤더 */}
-            <div className="flex items-center justify-between">
-                <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                    <div className="w-1 h-5 bg-primary rounded-full" />
-                    <Paperclip className="h-4 w-4 text-gray-500" />
-                    첨부파일
-                    {attachments.length > 0 && (
-                        <span className="ml-1 text-sm font-medium text-gray-400">({attachments.length})</span>
-                    )}
-                </h4>
+            {!hideTitle && (
+                <div className="flex items-center justify-between">
+                    <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-primary rounded-full" />
+                        <Paperclip className="h-4 w-4 text-gray-500" />
+                        첨부파일
+                        {attachments.length > 0 && (
+                            <span className="ml-1 text-sm font-medium text-gray-400">({attachments.length})</span>
+                        )}
+                    </h4>
 
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={e => e.target.files && uploadFiles(e.target.files)}
+                    />
+                </div>
+            )}
+            {hideTitle && (
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -150,7 +162,7 @@ export function AttachmentSection({ entityType, entityId, readonly = false, hide
                     className="hidden"
                     onChange={e => e.target.files && uploadFiles(e.target.files)}
                 />
-            </div>
+            )}
 
             {/* 드래그앤드롭 영역 (읽기전용 아닐 때만) */}
             {!readonly && (

@@ -379,3 +379,103 @@ description: 위엠비 시스템 UI 표준 가이드 (Neo-Modern Light 스타일
 - **`cursor-not-allowed` 사용 금지:** 시스템 전체에서 `cursor-not-allowed`는 사용하지 않습니다. disabled 또는 읽기 전용 상태에서는 반드시 `cursor-default`를 사용합니다.
   - ❌ `disabled:cursor-not-allowed`, `cursor-not-allowed`
   - ✅ `disabled:cursor-default`, `cursor-default`
+
+## 날짜 처리 표준 (UTC 날짜 밀림 방지)
+
+DatePicker와 API 간 날짜 변환 시 **날짜 state를 `Date`가 아닌 `string`("YYYY-MM-DD")으로 관리**합니다.
+`new Date("YYYY-MM-DD")`는 UTC 자정으로 파싱되어 KST(UTC+9)에서 하루 밀리고,
+`toISOString()`은 UTC 변환으로 선택한 날짜보다 하루 앞선 문자열을 반환합니다.
+
+### ✅ 표준 패턴 (반드시 이 방식을 사용)
+
+```ts
+// ① 헬퍼 함수 정의
+// DB 문자열 → Date 객체 (DatePicker 표시용, 로컬 자정 기준)
+const parseLocalDate = (s: string | null | undefined): Date | undefined => {
+    if (!s) return undefined;
+    const [y, m, d] = s.split("T")[0].split("-").map(Number);
+    return new Date(y, m - 1, d);
+};
+// DatePicker의 Date → "YYYY-MM-DD" 문자열 (로컬 날짜 기준)
+const dateToStr = (d: Date | undefined): string => {
+    if (!d) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+};
+
+// ② State: Date 객체가 아닌 string으로 관리
+const [contractDate, setContractDate] = useState("");        // "YYYY-MM-DD" 또는 ""
+
+// ③ DB/API 응답 → State: T 이하 제거 후 string 저장
+setContractDate(c.contractDate?.split("T")[0] || "");
+
+// ④ DatePicker 연동
+<DatePicker
+    date={parseLocalDate(contractDate)}                       // string → Date (표시용)
+    setDate={(d) => setContractDate(dateToStr(d))}            // Date → string (저장)
+/>
+
+// ⑤ 저장 payload: string 그대로 사용 (변환 불필요)
+const payload = {
+    contractDate: contractDate || null,
+};
+```
+
+### ❌ 금지 패턴
+
+```ts
+// ❌ UTC 자정 파싱 → KST에서 하루 전날이 됨
+const [contractDate, setContractDate] = useState<Date | undefined>();
+setContractDate(new Date(c.contractDate));   // "2024-03-15" → 2024-03-14 09:00 KST
+
+// ❌ UTC 변환 → 선택한 날짜보다 하루 앞선 문자열 반환
+d.toISOString().slice(0, 10);               // 로컬 03-15 → UTC "2024-03-14"
+```
+
+
+
+## 인라인 검색 드롭다운 표준 (Input + Dropdown)
+
+고객사, 발주처, 영업대표, PM 등 텍스트 검색 + 드롭다운 선택 UI는 **onBlur + setTimeout** 패턴을 사용합니다.
+`fixed inset-0` 글로벌 오버레이 방식은 CSS stacking context 문제로 드롭다운 선택이 차단될 수 있으므로 사용하지 않습니다.
+
+### ✅ 표준 패턴
+
+```tsx
+<div className="relative">
+  <input
+    type="text"
+    value={search}
+    onChange={e => { setSearch(e.target.value); setShowDrop(true); setSelectedId(null); }}
+    onFocus={() => setShowDrop(true)}
+    onBlur={() => setTimeout(() => setShowDrop(false), 150)}  {/* ← 핵심: 150ms 딜레이 */}
+    placeholder="검색..."
+  />
+  {showDrop && filtered.length > 0 && (
+    <div className="absolute z-50 mt-1 max-h-40 w-full overflow-auto rounded-xl border bg-white shadow-lg">
+      {filtered.map(item => (
+        <button key={item.id} type="button"
+          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+          onClick={() => { setSearch(item.name); setSelectedId(item.id); setShowDrop(false); }}
+        >
+          {item.name}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+```
+
+### ❌ 금지 패턴
+
+```tsx
+{/* ❌ fixed inset-0 글로벌 오버레이 — stacking context 문제로 드롭다운 항목 클릭 차단 */}
+{showDrop && <div className="fixed inset-0 z-40" onClick={() => setShowDrop(false)} />}
+
+{/* ❌ onMouseDown e.preventDefault() 단독 사용 — 일부 환경에서 작동 안 함 */}
+<div onMouseDown={e => e.preventDefault()}>...</div>
+```
+
+
