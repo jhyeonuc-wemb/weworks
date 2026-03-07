@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { usePhaseStatus } from "@/hooks/queries/usePhaseStatus";
 
 export interface PhaseStatusDef {
     code: string;
@@ -16,9 +17,9 @@ export interface PhaseInfo {
     groupName: string;
     groupColor: string | null;
     path: string;
-    status: string;         // 현재 상태 코드 (project_phase_statuses 기반, 동적)
-    initialStatus: string;  // 이 단계의 첫 번째 상태 코드
-    finalStatus: string;    // 이 단계의 마지막 상태 코드 (= 완료)
+    status: string;
+    initialStatus: string;
+    finalStatus: string;
     startedAt: string | null;
     completedAt: string | null;
 }
@@ -27,100 +28,56 @@ export interface ProjectPhaseState {
     phases: PhaseInfo[];
     currentPhaseCode: string | null;
     currentPhase: PhaseInfo | null;
-    /** 이 화면의 단계 현재 상태 코드 */
     status: string;
-    /** 이 단계의 첫 번째 상태 (= 대기/미시작) */
     initialStatus: string;
-    /** 이 단계의 마지막 상태 (= 완료) */
     finalStatus: string;
-    /** status === initialStatus (= 아직 시작 안 함) */
     isInitialStatus: boolean;
-    /** status === finalStatus (= 완료) */
     isFinalStatus: boolean;
     loading: boolean;
     error: string | null;
 }
 
 /**
- * useProjectPhase
- * 
- * 프로젝트 단계/상태를 관리하는 중앙집중 훅.
- * 상태 코드는 project_phase_statuses 테이블에서 동적으로 읽습니다.
- * STANDBY/IN_PROGRESS/COMPLETED를 하드코딩하지 않습니다.
- * 
- * 대신 isInitialStatus / isFinalStatus 를 UI 조건 판단에 사용하세요:
- * - isInitialStatus: 아직 시작 안 한 상태 (구 STANDBY)
- * - !isInitialStatus && !isFinalStatus: 진행 중 상태 (구 IN_PROGRESS)
- * - isFinalStatus: 완료된 상태 (구 COMPLETED)
- * 
- * @example
- * const { status, isInitialStatus, isFinalStatus, onSaveSuccess, onCompleteSuccess } = useProjectPhase(projectId, 'vrb');
- * const canComplete = !isFinalStatus;
- * const isReadOnly = isFinalStatus;
+ * useProjectPhase - SWR 기반으로 개선된 버전
+ *
+ * 변경사항:
+ * - 내부 fetch/useState/useEffect → usePhaseStatus (SWR) 로 교체
+ * - loadPhaseStatus → SWR mutate()로 대체 (캐시 무효화 + 재조회)
+ * - completePhase/onCompleteSuccess 시그니처 유지
  */
 export function useProjectPhase(projectId: string | number | undefined, phaseCode: string) {
-    const [state, setState] = useState<ProjectPhaseState>({
-        phases: [],
-        currentPhaseCode: null,
-        currentPhase: null,
-        status: "",
-        initialStatus: "",
-        finalStatus: "",
-        isInitialStatus: true,
-        isFinalStatus: false,
-        loading: false,
-        error: null,
-    });
+    const { phases, currentPhaseCode, isLoading, error, mutate } = usePhaseStatus(projectId);
 
-    /** 단계 상태 로드 (GET /api/projects/[id]/phase-status) */
+    // 이 화면의 단계 정보
+    const thisPhase = phases.find((p: PhaseInfo) => p.code === phaseCode);
+    const currentStatus = thisPhase?.status ?? thisPhase?.initialStatus ?? "";
+    const initialStatus = thisPhase?.initialStatus ?? "";
+    const finalStatus = thisPhase?.finalStatus ?? "";
+    const isInitialStatus = !!initialStatus && currentStatus === initialStatus;
+    const isFinalStatus = !!finalStatus && currentStatus === finalStatus;
+
+    const currentPhase = phases.find((p: PhaseInfo) => p.code === currentPhaseCode) ?? null;
+
+    /** 단계 상태 수동 재로드 (SWR mutate로 캐시 무효화) */
     const loadPhaseStatus = useCallback(async () => {
-        if (!projectId) return;
-        setState(prev => ({ ...prev, loading: true, error: null }));
-        try {
-            const res = await fetch(`/api/projects/${projectId}/phase-status`);
-            if (!res.ok) throw new Error("phase-status 조회 실패");
-            const data = await res.json();
+        await mutate();
+    }, [mutate]);
 
-            const thisPhase = data.phases?.find((p: PhaseInfo) => p.code === phaseCode);
-            const currentStatus = thisPhase?.status ?? thisPhase?.initialStatus ?? "";
-            const initialStatus = thisPhase?.initialStatus ?? "";
-            const finalStatus = thisPhase?.finalStatus ?? "";
-
-            setState({
-                phases: data.phases || [],
-                currentPhaseCode: data.currentPhaseCode,
-                currentPhase: data.phases?.find((p: PhaseInfo) => p.code === data.currentPhaseCode) || null,
-                status: currentStatus,
-                initialStatus,
-                finalStatus,
-                isInitialStatus: currentStatus === initialStatus,
-                isFinalStatus: currentStatus === finalStatus,
-                loading: false,
-                error: null,
-            });
-        } catch (e: any) {
-            setState(prev => ({ ...prev, loading: false, error: e.message }));
-        }
-    }, [projectId, phaseCode]);
-
-    /**
-     * 저장 시 호출: 초기 상태(대기)이면 다음 상태(진행 중 계열)로 전환
-     * PATCH /api/projects/[id]/phase-progress
-     */
+    /** 저장 시 호출: 초기 상태이면 진행 상태로 전환 후 재로드 */
     const updateToInProgress = useCallback(async () => {
         if (!projectId) return;
         try {
             await fetch(`/api/projects/${projectId}/phase-progress`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phaseCode, action: "start" }), // 첫 번째 상태 → 두 번째 상태
+                body: JSON.stringify({ phaseCode, action: "start" }),
             });
         } catch (e) {
             console.warn("phase-progress update error:", e);
         }
     }, [projectId, phaseCode]);
 
-    /** 작성완료 → 마지막 상태로 전환 + 다음 단계 전환 (POST /api/projects/[id]/advance-phase) */
+    /** 작성완료 → 마지막 상태로 전환 + 다음 단계 전환 */
     const completePhase = useCallback(async (opts?: { targetPhaseCode?: string }): Promise<{ nextPhaseCode: string | null }> => {
         if (!projectId) return { nextPhaseCode: null };
         const res = await fetch(`/api/projects/${projectId}/advance-phase`, {
@@ -133,27 +90,32 @@ export function useProjectPhase(projectId: string | number | undefined, phaseCod
         return { nextPhaseCode: data.nextPhaseCode || null };
     }, [projectId, phaseCode]);
 
-    /** 저장 후 공통 처리: 초기 상태이면 진행 상태로 전환 후 상태 재로드 */
+    /** 저장 후 공통 처리 */
     const onSaveSuccess = useCallback(async () => {
-        if (state.isInitialStatus) {
+        if (isInitialStatus) {
             await updateToInProgress();
         }
-        await loadPhaseStatus();
-    }, [state.isInitialStatus, updateToInProgress, loadPhaseStatus]);
+        await mutate();
+    }, [isInitialStatus, updateToInProgress, mutate]);
 
-    /** 작성완료 후 공통 처리: 마지막 상태로 전환 + 다음 단계 전환 후 재로드 */
+    /** 작성완료 후 공통 처리 */
     const onCompleteSuccess = useCallback(async (opts?: { targetPhaseCode?: string }) => {
         const result = await completePhase(opts);
-        await loadPhaseStatus();
+        await mutate();
         return result;
-    }, [completePhase, loadPhaseStatus]);
-
-    useEffect(() => {
-        loadPhaseStatus();
-    }, [loadPhaseStatus]);
+    }, [completePhase, mutate]);
 
     return {
-        ...state,
+        phases,
+        currentPhaseCode,
+        currentPhase,
+        status: currentStatus,
+        initialStatus,
+        finalStatus,
+        isInitialStatus,
+        isFinalStatus,
+        loading: isLoading,
+        error: error?.message ?? null,
         loadPhaseStatus,
         updateToInProgress,
         completePhase,

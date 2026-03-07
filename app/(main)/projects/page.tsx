@@ -10,6 +10,7 @@ import { formatPercent } from "@/lib/utils/format";
 import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, StatusBadge, useToast } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
 import { ProjectModal } from "@/components/projects/ProjectModal";
+import { useProjects } from "@/hooks/queries/useProjects";
 
 
 // 날짜 포맷팅 함수
@@ -63,8 +64,8 @@ const sortOptions = [
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ✅ SWR 기반 프로젝트 목록 조회
+  const { projects, isLoading: loading, mutate: mutateProjects } = useProjects();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchYear, setSearchYear] = useState("전체");
   const [searchPhase, setSearchPhase] = useState("전체");
@@ -203,26 +204,7 @@ export default function ProjectsPage() {
       });
   }, [searchPhase]);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
 
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/projects`);
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data.projects || []);
-      } else {
-        setProjects(defaultProjects);
-      }
-    } catch (error) {
-      setProjects(defaultProjects);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSaveProject = async (data: any) => {
     const url = selectedProject ? `/api/projects/${selectedProject.id}` : "/api/projects";
@@ -236,8 +218,8 @@ export default function ProjectsPage() {
       });
 
       if (response.ok) {
-        fetchProjects();
-        setIsModalOpen(false); // Close modal on successful save
+        await mutateProjects(); // ✅ SWR 캐시 자동 갱신
+        setIsModalOpen(false);
         showAlert("프로젝트가 성공적으로 저장되었습니다.", "success");
       } else {
         showAlert("저장에 실패했습니다.", "error");

@@ -9,9 +9,11 @@ import { Search, Menu, X, ChevronLeft, LogOut, User } from "lucide-react";
 import { SearchInput } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { UserProfilePanel } from "@/components/UserProfilePanel";
+import { SWRProvider } from "@/lib/swr-provider";
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+
 
 interface User {
   id: string;
@@ -274,8 +276,10 @@ function LayoutContent({ children }: MainLayoutProps) {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-slate-50 text-slate-400 font-medium">Loading layout...</div>}>
-      <LayoutContent>{children}</LayoutContent>
-    </Suspense>
+    <SWRProvider>
+      <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-slate-50 text-slate-400 font-medium">Loading layout...</div>}>
+        <LayoutContent>{children}</LayoutContent>
+      </Suspense>
+    </SWRProvider>
   );
 }

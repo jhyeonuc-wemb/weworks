@@ -9,6 +9,10 @@ import { formatCurrency, formatNumber } from "@/lib/utils/currency";
 import { DatePicker, Dropdown, Button, Input, Select, Badge, Textarea, StatusBadge, useToast } from "@/components/ui";
 import type { AlertType } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useClients } from "@/hooks/queries/useClients";
+import { useUsers } from "@/hooks/queries/useUsers";
+import { useCurrentUser } from "@/hooks/queries/useCurrentUser";
+import { useProject } from "@/hooks/queries/useProject";
 
 interface User {
   id: number;
@@ -166,12 +170,10 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
   ({ projectId, onStatusChange, onTabChange }, ref) => {
     const id = projectId;
     const router = useRouter();
-    const [project, setProject] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [currentVrbId, setCurrentVrbId] = useState<number | null>(null);
     const [isNewVrb, setIsNewVrb] = useState(false);
-    const [currentUser, setCurrentUser] = useState<any>(null);
     const [vrbStatus, setVrbStatus] = useState<string>("STANDBY");
     const [rejectionReason, setRejectionReason] = useState<string>("");
 
@@ -196,9 +198,14 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
     // 완료 상태일 때는 수정 불가
     const isReadOnly = vrbStatus === 'COMPLETED';
 
-    // 기준정보 데이터
-    const [users, setUsers] = useState<User[]>([]);
-    const [clients, setClients] = useState<Client[]>([]);
+    // ✅ SWR 기준정보 - 전역 캐시 공유로 탭 이동 시 재호출 없음
+    const { clients } = useClients();
+    const { users } = useUsers();
+    const { currentUser } = useCurrentUser();
+    // ✅ SWR 프로젝트 조회 - projects/[id]/page.tsx와 캐시 공유
+    const { project: swrProject } = useProject(id);
+    const [project, setProject] = useState<any>(null);
+
 
     // 검색 및 드롭다운 상태
     const [customerSearch, setCustomerSearch] = useState("");
@@ -323,104 +330,56 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
       }
     });
 
-    // 프로젝트 및 VRB 데이터 로드
+    // ✅ SWR 프로젝트 데이터가 도착 시 project state 동기화
     useEffect(() => {
-      const fetchData = async () => {
+      if (swrProject && !project) {
+        const proj = {
+          id: swrProject.id,
+          name: swrProject.name,
+          projectCode: swrProject.projectCode,
+          customerName: swrProject.customerName || "미지정",
+          contractStartDate: swrProject.contractStartDate,
+          contractEndDate: swrProject.contractEndDate,
+          currency: swrProject.currency || "KRW",
+          salesRepresentativeName: swrProject.salesRepresentativeName,
+        };
+        setProject(proj);
+        // 세일즈매니저 검색어 초기설정 (이미 vsb 데이터가 있는 경우 하위 useEffect에서 처리한다)
+        if (!salesSearch && swrProject.salesRepresentativeName) {
+          setSalesSearch(swrProject.salesRepresentativeName);
+        }
+      }
+    }, [swrProject]);
+    // VRB 데이터 로드 (project SWR 데이터 도착 후 실행)
+    useEffect(() => {
+      const loadVrbData = async () => {
+        const proj = swrProject ? {
+          id: swrProject.id,
+          name: swrProject.name,
+          projectCode: swrProject.projectCode,
+          customerName: swrProject.customerName || "미지정",
+          contractStartDate: swrProject.contractStartDate,
+          contractEndDate: swrProject.contractEndDate,
+          currency: swrProject.currency || "KRW",
+          salesRepresentativeName: swrProject.salesRepresentativeName,
+        } : null;
+
         try {
-          let proj: any = null;
-
-          // 기준정보 데이터 가져오기 (고객사, 사용자)
-          // 기준정보 데이터 가져오기 (고객사, 사용자, 내 정보)
-          const [clientsRes, usersRes, meRes] = await Promise.all([
-            fetch("/api/clients"),
-            fetch("/api/users"),
-            fetch("/api/auth/me"),
-          ]);
-
-          if (clientsRes.ok) {
-            const clientsData = await clientsRes.json();
-            setClients(clientsData.clients || []);
-          }
-
-          if (usersRes.ok) {
-            const usersData = await usersRes.json();
-            setUsers(usersData.users || []);
-          }
-
-          if (meRes.ok) {
-            const meData = await meRes.json();
-            setCurrentUser(meData.user);
-          }
-
-
-          // 프로젝트 정보 가져오기
-          const projectResponse = await fetch(`/api/projects/${id}`);
-          if (projectResponse.ok) {
-            const projectData = await projectResponse.json();
-            proj = {
-              id: projectData.project.id,
-              name: projectData.project.name,
-              projectCode: projectData.project.projectCode,
-              customerName: projectData.project.customerName || "미지정",
-              contractStartDate: projectData.project.contractStartDate,
-              contractEndDate: projectData.project.contractEndDate,
-              currency: projectData.project.currency || "KRW",
-              salesRepresentativeName: projectData.project.salesRepresentativeName,
-            };
-            setProject(proj);
-          }
-
-          // 기존 VRB Review 가져오기
           const vrbResponse = await fetch(`/api/vrb-reviews?projectId=${id}`);
           if (vrbResponse.ok) {
             const vrbData = await vrbResponse.json();
             const allReviews = vrbData.reviews || [];
 
-            console.log('[VRB INIT] API 응답:', {
-              '전체 리뷰 개수': allReviews.length,
-              '각 리뷰의 project_id': allReviews.map((r: any) => ({
-                id: r.id,
-                project_id: r.project_id,
-                project_id_type: typeof r.project_id,
-                status: r.status,
-                version: r.version
-              })),
-              '현재 프로젝트 ID': id,
-              '프로젝트 ID 타입': typeof id
-            });
-
             // 프로젝트 ID로 한 번 더 필터링 (안전장치)
             const currentProjectId = parseInt(id, 10);
             const reviews = allReviews.filter(
               (review: any) => {
-                // project_id를 명시적으로 숫자로 변환해서 비교
                 const reviewProjectId = typeof review.project_id === 'string'
                   ? parseInt(review.project_id, 10)
                   : Number(review.project_id);
-                const matches = reviewProjectId === currentProjectId;
-                if (!matches) {
-                  console.log('[VRB INIT] 필터링 제외:', {
-                    reviewId: review.id,
-                    reviewProjectId: review.project_id,
-                    reviewProjectIdParsed: reviewProjectId,
-                    currentProjectId: currentProjectId,
-                    '타입 비교': typeof reviewProjectId === typeof currentProjectId
-                  });
-                }
-                return matches;
+                return reviewProjectId === currentProjectId;
               }
             );
-
-            console.log('[VRB INIT] 필터링 결과:', {
-              '필터링 전 개수': allReviews.length,
-              '필터링 후 개수': reviews.length,
-              '필터링된 리뷰': reviews.map((r: any) => ({
-                id: r.id,
-                project_id: r.project_id,
-                status: r.status,
-                version: r.version
-              }))
-            });
 
             if (reviews.length > 0) {
               // 최신 버전 선택
@@ -468,7 +427,6 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                   businessBackground: review.business_background || "",
                   businessScope: review.business_scope || "",
                   keyContents: (review.keyContents || []).map((c: any) => {
-                    // API에서 이미 정규화된 날짜를 사용 (null이면 빈 문자열)
                     const normalizedDate = c.content_date && c.content_date !== null ? String(c.content_date) : "";
                     return {
                       date: normalizedDate,
@@ -477,7 +435,6 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                     };
                   }),
                   keyActivities: (review.keyActivities || []).map((a: any) => {
-                    // API에서 이미 정규화된 날짜를 사용 (null이면 빈 문자열)
                     const normalizedDate = a.activity_date && a.activity_date !== null ? String(a.activity_date) : "";
                     return {
                       date: normalizedDate,
@@ -519,8 +476,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                     externalPurchase2Base: review.worst_external_purchase2_base || "operating_profit",
                     includeExternalPurchase: review.worst_include_external_purchase === true || review.worst_include_external_purchase === 1 || false,
                     includeExternalPurchase2: review.worst_include_external_purchase2 === true || review.worst_include_external_purchase2 === 1 || false,
-                    operatingProfit1: 0, // 계산으로 채워짐
-                    operatingProfit1Percent: 0, // 계산으로 채워짐
+                    operatingProfit1: 0,
+                    operatingProfit1Percent: 0,
                     operatingProfitEP1: parseFloat(review.worst_operating_profit) || 0,
                     operatingProfitEP1Percent: parseFloat(review.worst_operating_profit_percent) || 0,
                     operatingProfitEP2: parseFloat(review.worst_operating_profit2) || 0,
@@ -558,8 +515,8 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                     externalPurchase2Base: review.best_external_purchase2_base || "operating_profit",
                     includeExternalPurchase: review.best_include_external_purchase === true || review.best_include_external_purchase === 1 || false,
                     includeExternalPurchase2: review.best_include_external_purchase2 === true || review.best_include_external_purchase2 === 1 || false,
-                    operatingProfit1: 0, // 계산으로 채워짐
-                    operatingProfit1Percent: 0, // 계산으로 채워짐
+                    operatingProfit1: 0,
+                    operatingProfit1Percent: 0,
                     operatingProfitEP1: parseFloat(review.best_operating_profit) || 0,
                     operatingProfitEP1Percent: parseFloat(review.best_operating_profit_percent) || 0,
                     operatingProfitEP2: parseFloat(review.best_operating_profit2) || 0,
@@ -576,7 +533,6 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
               setCurrentVrbId(null);
 
               if (proj) {
-                // 프로젝트 정보로 초기화 및 검색어 설정
                 const customerName = proj.customerName || "";
                 const salesName = proj.salesRepresentativeName || "";
 
@@ -599,39 +555,22 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
                 const estimations = mdData.estimations || [];
 
                 if (estimations.length > 0) {
-                  // 최신 완료된 M/D 산정 찾기
                   const completedEstimation = estimations.find((e: any) => e.status === 'completed') || estimations[0];
                   const estimationId = completedEstimation.id;
 
-                  // M/D 산정 상세 데이터 가져오기
                   const detailResponse = await fetch(`/api/md-estimations/${estimationId}`);
                   if (detailResponse.ok) {
                     const detailData = await detailResponse.json();
                     const estimation = detailData.estimation;
 
-                    // 최종 M/M 값 사용 (상세 내역의 M/M 값)
                     const finalDevelopmentMm = parseFloat(estimation.finalDevelopmentMm) || 0;
                     const finalModeling3dMm = parseFloat(estimation.finalModeling3dMm) || 0;
                     const finalPidMm = parseFloat(estimation.finalPidMm) || 0;
 
-                    console.log('[VRB] 신규 VRB 생성 - M/D 산정에서 Best Case 예상 M/M 가져오기:', {
-                      finalDevelopmentMm,
-                      finalModeling3dMm,
-                      finalPidMm,
-                      total: finalDevelopmentMm + finalModeling3dMm + finalPidMm,
-                    });
-
-                    // M/M 항목들을 Best Case에 설정 (최종 M/M 값 사용, 소수점 2자리로 반올림)
                     const mmItems: Array<{ item: string; mm: number }> = [];
-                    if (finalDevelopmentMm > 0) {
-                      mmItems.push({ item: "개발", mm: parseFloat(finalDevelopmentMm.toFixed(2)) });
-                    }
-                    if (finalModeling3dMm > 0) {
-                      mmItems.push({ item: "3D 모델링", mm: parseFloat(finalModeling3dMm.toFixed(2)) });
-                    }
-                    if (finalPidMm > 0) {
-                      mmItems.push({ item: "P&ID", mm: parseFloat(finalPidMm.toFixed(2)) });
-                    }
+                    if (finalDevelopmentMm > 0) mmItems.push({ item: "개발", mm: parseFloat(finalDevelopmentMm.toFixed(2)) });
+                    if (finalModeling3dMm > 0) mmItems.push({ item: "3D 모델링", mm: parseFloat(finalModeling3dMm.toFixed(2)) });
+                    if (finalPidMm > 0) mmItems.push({ item: "P&ID", mm: parseFloat(finalPidMm.toFixed(2)) });
 
                     const totalMm = parseFloat((finalDevelopmentMm + finalModeling3dMm + finalPidMm).toFixed(2));
 
@@ -649,13 +588,16 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
             }
           }
         } catch (error) {
-          console.error("Error fetching data:", error);
+          console.error("Error fetching VRB data:", error);
         } finally {
           setLoading(false);
         }
       };
-      fetchData();
-    }, [id]);
+
+      loadVrbData();
+    }, [id, swrProject]);
+
+
 
     const handleAddContent = () => {
       setVrbData((prev) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -32,6 +32,8 @@ import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { ProjectAiAnalysis } from "./components/ProjectAiAnalysis";
+import { useProject } from "@/hooks/queries/useProject";
+import { usePhaseStatus } from "@/hooks/queries/usePhaseStatus";
 
 interface Project {
   id: number;
@@ -144,8 +146,6 @@ export default function ProjectDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -166,63 +166,23 @@ export default function ProjectDetailPage({
     }
   };
 
-  // 단계별 진행 상태 (we_project_phase_progress 기반)
-  const [phaseProgress, setPhaseProgress] = useState<any[]>([]);
-  const [currentPhaseCode, setCurrentPhaseCode] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (id) fetchPhaseProgress();
-  }, [id]);
-
-  const fetchPhaseProgress = async () => {
-    try {
-      const response = await fetch(`/api/projects/${id}/phase-status`, { cache: 'no-store' });
-      if (response.ok) {
-        const data = await response.json();
-        setPhaseProgress(data.phases || []);
-        setCurrentPhaseCode(data.currentPhaseCode);
-      }
-    } catch (error) {
-      console.error('Error fetching phase progress:', error);
-    }
-  };
-
-
-  useEffect(() => {
-    fetchProject();
-  }, [id]);
-
-  const fetchProject = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/projects/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setProject(data.project);
-      } else {
-        console.error("Failed to fetch project");
-      }
-    } catch (error) {
-      console.error("Error fetching project:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ✅ SWR 병렬 fetch: project + phaseStatus 동시에 시작 (waterfall 제거)
+  const { project, isLoading: loadingProject, mutate: mutateProject } = useProject(id);
+  const { phases: phaseProgress, currentPhaseCode, isLoading: loadingPhase } = usePhaseStatus(id);
+  const loading = loadingProject || loadingPhase;
 
   // 편집 저장 (ProjectModal용)
   const handleSaveProject = async (data: any) => {
     try {
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (response.ok) {
         setIsEditModalOpen(false);
-        await fetchProject(); // 프로젝트 정보 새로고침
+        await mutateProject(); // ✅ SWR 캐시 무효화로 즉시 갱신
         showAlert("프로젝트가 수정되었습니다.", "success");
       } else {
         const error = await response.json();
