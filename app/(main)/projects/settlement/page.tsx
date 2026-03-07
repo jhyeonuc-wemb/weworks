@@ -7,6 +7,9 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
+import { useProjects } from "@/hooks/queries/useProjects";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr";
 
 interface Settlement {
   id: number;
@@ -55,40 +58,18 @@ export default function SettlementListPage() {
   const [searchYear, setSearchYear] = useState("전체");
   const [searchStatus, setSearchStatus] = useState("전체");
   const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [sortOption, setSortOption] = useState("project_code_desc");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState("project_code_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      const settlementRes = await fetch("/api/settlement");
-      if (settlementRes.ok) {
-        const data = await settlementRes.json();
-        setSettlements(data.settlements || []);
-      }
-
-      const projectRes = await fetch("/api/projects");
-      if (projectRes.ok) {
-        const data = await projectRes.json();
-        setProjects(data.projects || []);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ✅ SWR 훅으로 병렬 조회
+  const { projects: rawProjects, isLoading: projectsLoading } = useProjects();
+  const { data: settlementData, isLoading: settlementLoading, mutate: mutateSettlements } = useSWR("/api/settlement", fetcher, { revalidateOnFocus: false });
+  const projects = (rawProjects ?? []) as Project[];
+  const settlements = (settlementData?.settlements ?? []) as Settlement[];
+  const loading = projectsLoading || settlementLoading;
 
   const sortedSettlements = useMemo(() => {
     let filtered = settlements;
@@ -190,7 +171,7 @@ export default function SettlementListPage() {
       });
 
       if (response.ok) {
-        setSettlements(settlements.filter((s) => s.id !== id));
+        mutateSettlements((prev: any) => prev ? { ...prev, settlements: (prev.settlements || []).filter((s: any) => s.id !== id) } : prev, false);
       } else {
         alert("삭제에 실패했습니다.");
       }

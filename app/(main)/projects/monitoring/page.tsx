@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, FolderOpen, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
+import { useMonitoring } from "@/hooks/queries/useMonitoring";
+import { useCodes } from "@/hooks/queries/useCodes";
 
 // 공통 UI 컴포넌트 임포트
 import {
@@ -41,50 +43,20 @@ interface ProjectMonitoring {
 
 export default function ProjectMonitoringPage() {
     const router = useRouter();
-    const [data, setData] = useState<ProjectMonitoring[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [searchYear, setSearchYear] = useState("전체");
     const [searchStatus, setSearchStatus] = useState("전체");
 
-    const [statusOptions, setStatusOptions] = useState<{ value: string; label: string }[]>([
-        { value: "전체", label: "상태" }
-    ]);
-
-    useEffect(() => {
-        fetchData();
-        fetchStatusCodes();
-    }, []);
-
-    const fetchStatusCodes = async () => {
-        try {
-            const res = await fetch('/api/codes?parentCode=CD_002_06');
-            if (res.ok) {
-                const json = await res.json();
-                const codes = json.codes.map((c: any) => ({ value: c.name, label: c.name }));
-                setStatusOptions([{ value: "전체", label: "상태" }, ...codes]);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch('/api/monitoring');
-            const json = await res.json();
-            if (json.data) {
-                setData(json.data);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ✅ SWR 훅으로 병렬 조회
+    const { monitoring, isLoading: loading, mutate: mutateMonitoring } = useMonitoring();
+    const { codes: statusCodesRaw } = useCodes("CD_002_06");
+    const data = (monitoring?.data ?? []) as ProjectMonitoring[];
+    const statusOptions = [
+        { value: "전체", label: "상태" },
+        ...statusCodesRaw.map((c) => ({ value: c.name, label: c.name })),
+    ];
 
     const calculateTotalMM = (internal: number | string, external: number | string) => {
         return (parseFloat(String(internal || 0)) + parseFloat(String(external || 0))).toFixed(1);
@@ -190,7 +162,7 @@ export default function ProjectMonitoringPage() {
                 />
                 <div className="ml-auto">
                     <button
-                        onClick={fetchData}
+                        onClick={() => mutateMonitoring()}
                         className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 h-10 text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
                     >
                         <RefreshCw className="h-4 w-4" />

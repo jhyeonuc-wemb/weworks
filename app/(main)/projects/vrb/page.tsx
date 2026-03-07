@@ -7,6 +7,9 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge, Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { useProjects } from "@/hooks/queries/useProjects";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr";
 
 interface Project {
   id: number;
@@ -54,9 +57,6 @@ export default function VrbReviewListPage() {
   const [searchStatus, setSearchStatus] = useState("전체");
   const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [reviews, setReviews] = useState<VrbReview[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState("project_code_desc");
   const [resultFilter, setResultFilter] = useState("all");
@@ -66,6 +66,13 @@ export default function VrbReviewListPage() {
   const [isRateHovered, setIsRateHovered] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ✅ SWR 훅으로 병렬 조회
+  const { projects: rawProjects, isLoading: projectsLoading } = useProjects();
+  const { data: reviewsData, isLoading: reviewsLoading, mutate: mutateReviews } = useSWR("/api/vrb-reviews", fetcher, { revalidateOnFocus: false });
+  const projects = (rawProjects ?? []) as Project[];
+  const reviews = (reviewsData?.reviews ?? []) as VrbReview[];
+  const loading = projectsLoading || reviewsLoading;
 
   useEffect(() => {
     setIsMounted(true);
@@ -81,35 +88,7 @@ export default function VrbReviewListPage() {
     hoverTimeoutRef.current = setTimeout(() => {
       if (type === 'profit') setIsProfitHovered(false);
       else setIsRateHovered(false);
-    }, 150); // 150ms buffer
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [projectsRes, reviewsRes] = await Promise.all([
-        fetch("/api/projects"),
-        fetch("/api/vrb-reviews"),
-      ]);
-
-      if (projectsRes.ok) {
-        const projectsData = await projectsRes.json();
-        setProjects(projectsData.projects || []);
-      }
-
-      if (reviewsRes.ok) {
-        const reviewsData = await reviewsRes.json();
-        setReviews(reviewsData.reviews || []);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
+    }, 150);
   };
 
   const sortedReviews = useMemo(() => {
@@ -219,7 +198,7 @@ export default function VrbReviewListPage() {
       });
 
       if (response.ok) {
-        setReviews(reviews.filter((review) => review.id !== id));
+        mutateReviews((prev: any) => prev ? { ...prev, reviews: (prev.reviews || []).filter((r: any) => r.id !== id) } : prev, false);
       } else {
         alert("삭제에 실패했습니다.");
       }

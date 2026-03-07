@@ -1,6 +1,9 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
+import { useUsers } from "@/hooks/queries/useUsers";
+import { useMonitoring } from "@/hooks/queries/useMonitoring";
+import { useCodes } from "@/hooks/queries/useCodes";
 import { SummaryTab } from "./components/SummaryTab";
 import { ProfitabilityStatusBadge } from "./components/ProfitabilityStatusBadge";
 import {
@@ -46,13 +49,28 @@ export default function ProjectMonitoringDetailPage({
 }) {
     const { id } = use(params);
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [project, setProject] = useState<ProjectMonitoring | null>(null);
-    const [users, setUsers] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
-    const [statusCodes, setStatusCodes] = useState<{ value: string; label: string }[]>([]);
-    const [stateCodes, setStateCodes] = useState<{ value: string; label: string }[]>([]);
     const [activeTab, setActiveTab] = useState("info");
+
+    // ✅ SWR 훅으로 기준 데이터 병렬 조회
+    const { users } = useUsers();
+    const { monitoring, isLoading: loading } = useMonitoring();
+    const { codes: statusCodesRaw } = useCodes("CD_002_06");
+    const { codes: stateCodesRaw } = useCodes("CD_002_07");
+
+    const statusCodes = statusCodesRaw.map((c) => ({ value: c.name, label: c.name }));
+    const stateCodes = stateCodesRaw.map((c) => ({ value: c.name, label: c.name }));
+
+    // 현재 프로젝트 찾기 (SWR 캐시에서)
+    const foundProject = monitoring?.data?.find((p: any) => p.id.toString() === id) ?? null;
+    const [project, setProject] = useState<ProjectMonitoring | null>(null);
+
+    // SWR 데이터 도착 시 project state 동기화
+    useEffect(() => {
+        if (foundProject && !project) {
+            setProject(foundProject);
+        }
+    }, [foundProject]);
 
     // 수지분석서 관련 상태
     const [profitabilityVersions, setProfitabilityVersions] = useState<any[]>([]);
@@ -60,54 +78,20 @@ export default function ProjectMonitoringDetailPage({
     const [profitData, setProfitData] = useState<any>(null);
 
     useEffect(() => {
-        fetchData();
-        fetchUsers();
-        fetchCodes();
-    }, [id]);
-
-    useEffect(() => {
-        if (id) {
-            fetchProfitabilityVersions();
-        }
-    }, [id]);
-
-    useEffect(() => {
-        if (selectedProfitId) {
-            fetchProfitabilityDetail(selectedProfitId);
-        } else {
-            setProfitData(null);
-        }
-    }, [selectedProfitId]);
-
-    const fetchUsers = async () => {
-        try {
-            const res = await fetch('/api/users');
-            const json = await res.json();
-            if (json.users) {
-                setUsers(json.users);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch('/api/monitoring');
-            const json = await res.json();
-            if (json.data) {
-                const found = json.data.find((p: any) => p.id.toString() === id);
-                if (found) {
-                    setProject(found);
+        if (!id) return;
+        const loadProfitability = async () => {
+            try {
+                const res = await fetch(`/api/profitability?projectId=${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const versions = data.profitabilities || [];
+                    setProfitabilityVersions(versions);
+                    if (versions.length > 0) setSelectedProfitId(versions[0].id);
                 }
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+            } catch (e) { console.error(e); }
+        };
+        loadProfitability();
+    }, [id]);
 
     const fetchProfitabilityVersions = async () => {
         try {
@@ -116,33 +100,9 @@ export default function ProjectMonitoringDetailPage({
                 const data = await res.json();
                 const versions = data.profitabilities || [];
                 setProfitabilityVersions(versions);
-                if (versions.length > 0) {
-                    setSelectedProfitId(versions[0].id);
-                }
+                if (versions.length > 0) setSelectedProfitId(versions[0].id);
             }
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const fetchCodes = async () => {
-        try {
-            // 프로젝트 상태 (CD_002_06)
-            const resStatus = await fetch('/api/codes?parentCode=CD_002_06');
-            if (resStatus.ok) {
-                const data = await resStatus.json();
-                setStatusCodes(data.codes.map((c: any) => ({ value: c.name, label: c.name })));
-            }
-
-            // 진행 상태 (CD_002_07)
-            const resState = await fetch('/api/codes?parentCode=CD_002_07');
-            if (resState.ok) {
-                const data = await resState.json();
-                setStateCodes(data.codes.map((c: any) => ({ value: c.name, label: c.name })));
-            }
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     };
 
     const fetchProfitabilityDetail = async (profitId: number) => {

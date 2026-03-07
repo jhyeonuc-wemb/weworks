@@ -20,6 +20,7 @@ export function useUsers() {
             email: string;
             role_name: string;
             rank_name?: string;
+            department_name?: string;
         }>,
         isLoading,
         error,

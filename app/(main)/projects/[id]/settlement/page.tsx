@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -1796,7 +1796,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_prod_rev_own' && (settlement.actual_prod_rev_own || 0) === 0 ? "" : ((settlement.actual_prod_rev_own || 0) === 0 ? "0" : (settlement.actual_prod_rev_own || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_prod_rev_own')}
@@ -1815,7 +1815,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_prod_rev_ext' && (settlement.actual_prod_rev_ext || 0) === 0 ? "" : ((settlement.actual_prod_rev_ext || 0) === 0 ? "0" : (settlement.actual_prod_rev_ext || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_prod_rev_ext')}
@@ -1843,7 +1843,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_svc_rev_own' && (settlement.actual_svc_rev_own || 0) === 0 ? "" : ((settlement.actual_svc_rev_own || 0) === 0 ? "0" : (settlement.actual_svc_rev_own || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_svc_rev_own')}
@@ -1862,7 +1862,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_svc_rev_ext' && (settlement.actual_svc_rev_ext || 0) === 0 ? "" : ((settlement.actual_svc_rev_ext || 0) === 0 ? "0" : (settlement.actual_svc_rev_ext || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_svc_rev_ext')}
@@ -1901,7 +1901,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_prod_cost_own' && (settlement.actual_prod_cost_own || 0) === 0 ? "" : ((settlement.actual_prod_cost_own || 0) === 0 ? "0" : (settlement.actual_prod_cost_own || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_prod_cost_own')}
@@ -1933,7 +1933,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_prod_cost_ext' && (settlement.actual_prod_cost_ext || 0) === 0 ? "" : ((settlement.actual_prod_cost_ext || 0) === 0 ? "0" : (settlement.actual_prod_cost_ext || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_prod_cost_ext')}
@@ -1980,7 +1980,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           step="0.01"
                           value={focusedField === 'actual_svc_mm_own' && (settlement.actual_svc_mm_own || 0) === 0 ? "" : (focusedField === 'actual_svc_mm_own' ? (settlement.actual_svc_mm_own || "") : (settlement.actual_svc_mm_own || 0).toFixed(2))}
                           onFocus={() => setFocusedField('actual_svc_mm_own')}
@@ -1996,7 +1996,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={focusedField === 'actual_svc_cost_own' && (settlement.actual_svc_cost_own || 0) === 0 ? "" : ((settlement.actual_svc_cost_own || 0) === 0 ? "0" : (settlement.actual_svc_cost_own || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_svc_cost_own')}
                           onBlur={() => setFocusedField(null)}
@@ -2027,7 +2027,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="number"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           step="0.01"
                           value={focusedField === 'actual_svc_mm_ext' && (settlement.actual_svc_mm_ext || 0) === 0 ? "" : (focusedField === 'actual_svc_mm_ext' ? (settlement.actual_svc_mm_ext || "") : (settlement.actual_svc_mm_ext || 0).toFixed(2))}
                           onFocus={() => setFocusedField('actual_svc_mm_ext')}
@@ -2043,7 +2043,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={focusedField === 'actual_svc_cost_ext' && (settlement.actual_svc_cost_ext || 0) === 0 ? "" : ((settlement.actual_svc_cost_ext || 0) === 0 ? "0" : (settlement.actual_svc_cost_ext || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_svc_cost_ext')}
                           onBlur={() => setFocusedField(null)}
@@ -2088,7 +2088,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={focusedField === 'actual_expense_general' && (settlement.actual_expense_general || 0) === 0 ? "" : ((settlement.actual_expense_general || 0) === 0 ? "0" : (settlement.actual_expense_general || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_expense_general')}
                           onBlur={() => setFocusedField(null)}
@@ -2106,7 +2106,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={focusedField === 'actual_expense_special' && (settlement.actual_expense_special || 0) === 0 ? "" : ((settlement.actual_expense_special || 0) === 0 ? "0" : (settlement.actual_expense_special || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_expense_special')}
                           onBlur={() => setFocusedField(null)}
@@ -2133,7 +2133,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_prod_cost_own' && (settlement.actual_prod_cost_own || 0) === 0 ? "" : (settlement.actual_prod_cost_own || 0).toLocaleString()}
                           onFocus={() => setFocusedField('actual_prod_cost_own')}
@@ -2152,7 +2152,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_biz_cost_indirect' && (settlement.actual_biz_cost_indirect || 0) === 0 ? "" : ((settlement.actual_biz_cost_indirect || 0) === 0 ? "0" : (settlement.actual_biz_cost_indirect || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_biz_cost_indirect')}
@@ -2189,7 +2189,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_extra_revenue' && (settlement.actual_extra_revenue || 0) === 0 ? "" : ((settlement.actual_extra_revenue || 0) === 0 ? "0" : (settlement.actual_extra_revenue || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_extra_revenue')}
@@ -2208,7 +2208,7 @@ const fetchData = async () => {
                       <td className="border border-gray-400 bg-[#EBF1DE] text-right p-0 h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           disabled={isReadOnly}
                           value={focusedField === 'actual_extra_cost' && (settlement.actual_extra_cost || 0) === 0 ? "" : ((settlement.actual_extra_cost || 0) === 0 ? "0" : (settlement.actual_extra_cost || 0).toLocaleString())}
                           onFocus={() => setFocusedField('actual_extra_cost')}
@@ -2347,7 +2347,7 @@ const fetchData = async () => {
                                 <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                    className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                     value={baseItem?.actualProposalPrice ? baseItem.actualProposalPrice.toLocaleString() : ''}
                                     onChange={(e) => handleProductActualChange(i, 'internal', 'actualProposalPrice', e.target.value)}
                                     placeholder="0"
@@ -2362,7 +2362,7 @@ const fetchData = async () => {
                                 <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                    className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                     value={baseItem?.actualCostPrice ? baseItem.actualCostPrice.toLocaleString() : ''}
                                     onChange={(e) => handleProductActualChange(i, 'internal', 'actualCostPrice', e.target.value)}
                                     placeholder="0"
@@ -2426,7 +2426,7 @@ const fetchData = async () => {
                                 <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                    className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                     value={baseItem?.actualProposalPrice ? baseItem.actualProposalPrice.toLocaleString() : ''}
                                     onChange={(e) => handleProductActualChange(i, 'external', 'actualProposalPrice', e.target.value)}
                                     placeholder="0"
@@ -2441,7 +2441,7 @@ const fetchData = async () => {
                                 <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                    className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                     value={baseItem?.actualCostPrice ? baseItem.actualCostPrice.toLocaleString() : ''}
                                     onChange={(e) => handleProductActualChange(i, 'external', 'actualCostPrice', e.target.value)}
                                     placeholder="0"
@@ -2634,7 +2634,7 @@ const fetchData = async () => {
                           <tr className="h-[35px]">
                             <td rowSpan={2} className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.affiliationGroup?.startsWith('외주') ? '외부' : '내부'}
                                 onChange={(e) => {
                                   const isExternal = e.target.value === '외부';
@@ -2650,7 +2650,7 @@ const fetchData = async () => {
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.companyName || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'companyName', e.target.value)}
                                 placeholder=""
@@ -2659,7 +2659,7 @@ const fetchData = async () => {
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.role || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'role', e.target.value)}
                                 placeholder=""
@@ -2668,7 +2668,7 @@ const fetchData = async () => {
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <input
                                 type="text"
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-left px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.detailedTask || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'detailedTask', e.target.value)}
                                 placeholder=""
@@ -2676,7 +2676,7 @@ const fetchData = async () => {
                             </td>
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.affiliationGroup || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'affiliationGroup', e.target.value)}
                               >
@@ -2688,7 +2688,7 @@ const fetchData = async () => {
                             </td>
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.grade || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'grade', e.target.value)}
                               >
@@ -2700,7 +2700,7 @@ const fetchData = async () => {
                             </td>
                             <td className="border border-gray-300 bg-white p-0 text-sm h-[35px]">
                               <select
-                                className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
+                                className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-center px-[10px] appearance-none hover:bg-blue-50/50 transition-colors rounded-none"
                                 value={item.wmbRank || ''}
                                 onChange={(e) => handleManpowerChange(item.id || 0, 'wmbRank', e.target.value)}
                               >
@@ -2716,7 +2716,7 @@ const fetchData = async () => {
                                   <input
                                     type="text"
                                     list={`users-list-${item.id}`}
-                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm text-center px-[4px] rounded-none focus:bg-white"
+                                    className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm text-center px-[4px] rounded-none focus:bg-white"
                                     value={item.name || ''}
                                     onChange={(e) => handleManpowerChange(item.id || 0, 'name', e.target.value)}
                                     placeholder=""
@@ -2776,7 +2776,7 @@ const fetchData = async () => {
                                 <input
                                   type="number"
                                   step="0.01"
-                                  className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                  className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                   placeholder="0"
                                   value={item.actualMonthlyAllocation?.[month] == null ? '' : item.actualMonthlyAllocation[month]}
                                   onChange={(e) => handleActualAllocationChange(item.id || 0, month, e.target.value)}
@@ -2786,7 +2786,7 @@ const fetchData = async () => {
                             <td className="border border-gray-300 bg-[#EBF1DE] p-0 text-right text-sm h-[35px] font-medium">
                               <input
                                 type="text"
-                                className="w-full h-full text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                className="w-full h-full text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                 value={item.actualInternalAmount != null
                                   ? item.actualInternalAmount.toLocaleString()
                                   : (Number(actualTotalMM) > 0 ? Math.round((item.internalUnitPrice || 0) * Number(actualTotalMM)).toLocaleString() : '')}
@@ -2948,7 +2948,7 @@ const fetchData = async () => {
                                   <div className="flex items-center gap-1 h-full hover:bg-blue-50/50 transition-colors">
                                     <input
                                       type="text"
-                                      className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm px-[10px] rounded-none focus:bg-white"
+                                      className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm px-[10px] rounded-none focus:bg-white"
                                       value={item.companyName}
                                       onChange={(e) => handleExtCompanyChange(item.id, 'companyName', e.target.value)}
                                       placeholder="업체명"
@@ -2959,7 +2959,7 @@ const fetchData = async () => {
                                 <td rowSpan={4} className="border border-gray-300 bg-white p-0 h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
+                                    className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                     value={item.role1}
                                     onChange={(e) => handleExtCompanyChange(item.id, 'role1', e.target.value)}
                                     placeholder="역할Ⅰ"
@@ -2968,7 +2968,7 @@ const fetchData = async () => {
                                 <td rowSpan={4} className="border border-gray-300 bg-white p-0 h-[35px]">
                                   <input
                                     type="text"
-                                    className="w-full h-full block border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
+                                    className="w-full h-full block border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none"
                                     value={item.role2}
                                     onChange={(e) => handleExtCompanyChange(item.id, 'role2', e.target.value)}
                                     placeholder="역할Ⅱ"
@@ -2982,7 +2982,7 @@ const fetchData = async () => {
                                     <input
                                       type="number"
                                       step="0.01"
-                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                      className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.planMM[month] && Number(item.planMM[month]) !== 0 ? item.planMM[month] : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'planMM', month, e.target.value)}
                                       placeholder="0"
@@ -2998,7 +2998,7 @@ const fetchData = async () => {
                                   <td key={`ext-plan-amt-${item.id}-${month}`} className="border border-gray-300 bg-[#FFFFCC] p-0 h-[35px]">
                                     <input
                                       type="text"
-                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                      className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.planAmt[month] && parseInt(item.planAmt[month].replace(/,/g, '')) !== 0 ? parseInt(item.planAmt[month].replace(/,/g, '')).toLocaleString() : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'planAmt', month, e.target.value.replace(/,/g, ''))}
                                       placeholder="0"
@@ -3016,7 +3016,7 @@ const fetchData = async () => {
                                     <input
                                       type="number"
                                       step="0.01"
-                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                      className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.execMM[month] && Number(item.execMM[month]) !== 0 ? item.execMM[month] : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'execMM', month, e.target.value)}
                                       placeholder="0"
@@ -3032,7 +3032,7 @@ const fetchData = async () => {
                                   <td key={`ext-exec-amt-${item.id}-${month}`} className="border border-gray-300 bg-[#EBF1DE] p-0 h-[35px]">
                                     <input
                                       type="text"
-                                      className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                                      className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                                       value={item.execAmt[month] && parseInt(item.execAmt[month].replace(/,/g, '')) !== 0 ? parseInt(item.execAmt[month].replace(/,/g, '')).toLocaleString() : ''}
                                       onChange={(e) => handleExtValueChange(item.id, 'execAmt', month, e.target.value.replace(/,/g, ''))}
                                       placeholder="0"
@@ -3178,7 +3178,7 @@ const fetchData = async () => {
                       <td className="border border-gray-300 p-0 bg-[#FFFFCC] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.planStandard === 0 ? '' : item.planStandard.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'planStandard', e.target.value)}
                           placeholder="0"
@@ -3187,7 +3187,7 @@ const fetchData = async () => {
                       <td className="border border-gray-300 p-0 bg-[#FFFFCC] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-blue-50/50 transition-colors rounded-none focus:bg-white"
                           value={item.planLatest === 0 ? '' : item.planLatest.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'planLatest', e.target.value)}
                           placeholder="0"
@@ -3206,7 +3206,7 @@ const fetchData = async () => {
                       <td className="border border-gray-300 p-0 bg-[#EBF1DE] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={item.sellAdmin === 0 ? '' : item.sellAdmin.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'sellAdmin', e.target.value)}
                           placeholder="0"
@@ -3215,7 +3215,7 @@ const fetchData = async () => {
                       <td className="border border-gray-300 p-0 bg-[#EBF1DE] text-right text-sm h-[35px]">
                         <input
                           type="text"
-                          className="w-full h-full block text-right border-0 focus:ring-2 focus:ring-inset focus:ring-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
+                          className="w-full h-full block text-right border-0 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 bg-transparent text-sm p-0 px-[10px] hover:bg-black/5 transition-colors rounded-none focus:bg-white"
                           value={item.cost === 0 ? '' : item.cost.toLocaleString()}
                           onChange={(e) => handleExpenseChange(index, 'cost', e.target.value)}
                           placeholder="0"

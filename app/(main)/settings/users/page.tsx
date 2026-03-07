@@ -3,6 +3,10 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Script from "next/script";
+import { useDepartments } from "@/hooks/queries/useDepartments";
+import { useCodes } from "@/hooks/queries/useCodes";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr";
 
 declare global {
   interface Window {
@@ -120,10 +124,32 @@ function UsersContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDept, setSelectedDept] = useState("all");
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [positions, setPositions] = useState<CommonCode[]>([]);
-  const [grades, setGrades] = useState<CommonCode[]>([]);
+
+  // ✅ SWR 훅으로 기준 데이터 병렬 조회
+  const { departments: rawDepts } = useDepartments();
+  const departments = rawDepts as any as Department[];
+  const { codes: positionCodes } = useCodes("CD_001_01");
+  const { codes: gradeCodes } = useCodes("CD_001_02");
+  const { codes: roleCodes } = useCodes("CD_001_04");
+  const positions = positionCodes as any as CommonCode[];
+  const grades = gradeCodes as any as CommonCode[];
+  const roles = roleCodes as any as CommonCode[];
+
+  // ✅ SWR 동적 키로 users 조회 (searchTerm 의존)
+  const usersKey = searchTerm ? `/api/users?search=${encodeURIComponent(searchTerm)}` : "/api/users";
+  const { data: usersData, isLoading: swrLoading, mutate: mutateUsers } = useSWR(usersKey, fetcher, {
+    dedupingInterval: 300,
+    revalidateOnFocus: false,
+  });
+
+  // SWR users를 기존 users state와 동기화
+  useEffect(() => {
+    if (usersData?.users) setUsers(usersData.users);
+  }, [usersData]);
+  useEffect(() => {
+    setLoading(swrLoading);
+  }, [swrLoading]);
+
   const [formData, setFormData] = useState({
     username: "",
     name: "",
@@ -146,93 +172,10 @@ function UsersContent() {
     must_change_password: true,
   });
 
-
-  useEffect(() => {
-    const search = searchParams.get('search');
-    if (search) setSearchTerm(search);
-    const dept = searchParams.get('dept');
-    if (dept) setSelectedDept(dept);
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchUsers();
-    fetchDepartments();
-    fetchCommonCodes();
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm) {
-      const timer = setTimeout(() => {
-        fetchUsers();
-      }, 300);
-      return () => clearTimeout(timer);
-    } else {
-      fetchUsers();
-    }
-  }, [searchTerm]);
-
   const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.append("search", searchTerm);
-
-      const response = await fetch(`/api/users?${params.toString()}`);
-      console.log('Fetch users response:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Users data:', data);
-        setUsers(data.users || []);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to fetch users:', response.status, errorData);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
+    mutateUsers();
   };
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await fetch("/api/departments");
-      if (response.ok) {
-        const data = await response.json();
-        setDepartments(data.departments || []);
-      }
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-    }
-  };
-
-
-  const fetchCommonCodes = async () => {
-    try {
-      // 직급(Position) 조회
-      const posRes = await fetch("/api/codes?parentCode=CD_001_01");
-      if (posRes.ok) {
-        const data = await posRes.json();
-        setPositions(data.codes || []);
-      }
-
-      // 등급(Grade) 조회
-      const gradeRes = await fetch("/api/codes?parentCode=CD_001_02");
-      if (gradeRes.ok) {
-        const data = await gradeRes.json();
-        setGrades(data.codes || []);
-      }
-      // 역할(Role) 조회
-      const roleRes = await fetch("/api/codes?parentCode=CD_001_04");
-      if (roleRes.ok) {
-        const data = await roleRes.json();
-        setRoles(data.codes || []);
-      }
-    } catch (error) {
-      console.error("Error fetching common codes:", error);
-    }
-  };
 
   const handleOpenPanel = (user?: User, e?: React.MouseEvent) => {
     if (e) {

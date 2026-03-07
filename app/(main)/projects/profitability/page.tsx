@@ -7,6 +7,9 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { formatPercent } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { SearchInput, Dropdown, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, StatusBadge } from "@/components/ui";
+import { useProjects } from "@/hooks/queries/useProjects";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr";
 
 interface Project {
     id: number;
@@ -49,41 +52,17 @@ export default function ProfitabilityListPage() {
     const [searchStatus, setSearchStatus] = useState("전체");
     const [statusOptions, setStatusOptions] = useState<{ value: string, label: string }[]>([{ value: "전체", label: "상태" }]);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [profitabilities, setProfitabilities] = useState<Profitability[]>([]);
-    const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [sortOption, setSortOption] = useState("project_code_desc");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [projectsRes, profitabilityRes] = await Promise.all([
-                fetch("/api/projects"),
-                fetch("/api/profitability?latestOnly=true"),
-            ]);
-
-            if (projectsRes.ok) {
-                const projectsData = await projectsRes.json();
-                setProjects(projectsData.projects || []);
-            }
-
-            if (profitabilityRes.ok) {
-                const profitabilityData = await profitabilityRes.json();
-                setProfitabilities(profitabilityData.profitabilities || []);
-            }
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ✅ SWR 훅으로 병렬 조회
+    const { projects: rawProjects, isLoading: projectsLoading } = useProjects();
+    const { data: profitData, isLoading: profitLoading, mutate: mutateProfitabilities } = useSWR("/api/profitability?latestOnly=true", fetcher, { revalidateOnFocus: false });
+    const projects = (rawProjects ?? []) as Project[];
+    const profitabilities = (profitData?.profitabilities ?? []) as Profitability[];
+    const loading = projectsLoading || profitLoading;
 
     const sortedProfitabilities = useMemo(() => {
         let filtered = profitabilities;
@@ -185,7 +164,7 @@ export default function ProfitabilityListPage() {
             });
 
             if (response.ok) {
-                setProfitabilities(profitabilities.filter((prof) => prof.id !== id));
+                mutateProfitabilities((prev: any) => prev ? { ...prev, profitabilities: (prev.profitabilities || []).filter((p: any) => p.id !== id) } : prev, false);
             } else {
                 alert("삭제에 실패했습니다.");
             }
