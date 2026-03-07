@@ -121,12 +121,12 @@ export function useProjectPhase(projectId: string | number | undefined, phaseCod
     }, [projectId, phaseCode]);
 
     /** 작성완료 → 마지막 상태로 전환 + 다음 단계 전환 (POST /api/projects/[id]/advance-phase) */
-    const completePhase = useCallback(async (): Promise<{ nextPhaseCode: string | null }> => {
+    const completePhase = useCallback(async (opts?: { targetPhaseCode?: string }): Promise<{ nextPhaseCode: string | null }> => {
         if (!projectId) return { nextPhaseCode: null };
         const res = await fetch(`/api/projects/${projectId}/advance-phase`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ currentPhaseCode: phaseCode }),
+            body: JSON.stringify({ currentPhaseCode: phaseCode, targetPhaseCode: opts?.targetPhaseCode }),
         });
         if (!res.ok) throw new Error("단계 완료 처리 실패");
         const data = await res.json();
@@ -142,8 +142,8 @@ export function useProjectPhase(projectId: string | number | undefined, phaseCod
     }, [state.isInitialStatus, updateToInProgress, loadPhaseStatus]);
 
     /** 작성완료 후 공통 처리: 마지막 상태로 전환 + 다음 단계 전환 후 재로드 */
-    const onCompleteSuccess = useCallback(async () => {
-        const result = await completePhase();
+    const onCompleteSuccess = useCallback(async (opts?: { targetPhaseCode?: string }) => {
+        const result = await completePhase(opts);
         await loadPhaseStatus();
         return result;
     }, [completePhase, loadPhaseStatus]);

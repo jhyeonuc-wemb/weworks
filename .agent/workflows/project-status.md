@@ -63,6 +63,46 @@ description: 프로젝트 단계 관리 및 단계별 상태 표준 가이드
 
 ---
 
+## 3-1. 단계 건너뛰기 (Skip-to-Closure)
+
+특정 단계에서 결과에 따라 중간 단계를 모두 건너뛰고 **종료(closure)** 단계로 직접 이동할 수 있습니다.
+
+```
+작성완료 버튼 (분기 조건 충족 시)
+  └→ 확인 다이얼로그: "모든 진행 프로세스가 즉시 종료 처리됩니다" 경고
+  └→ confirm 후 → advance-phase API { targetPhaseCode: 'closure' }
+        ① 현재 단계의 마지막 상태로 완료 처리
+        ② we_projects.current_phase = 'closure'
+        ③ closure 단계의 첫 번째 상태로 초기화
+```
+
+### 구현 대상 단계 및 분기 조건
+
+| 단계 | 분기 조건 | 이동 대상 |
+|---|---|---|
+| **VRB** | `review_result === 'STOP'` (심의결과: 미진행) | `closure` |
+| 리드 | *(미구현, 추후)* | `closure` |
+| 영업기회 | *(미구현, 추후)* | `closure` |
+| 프로젝트 진행 | *(미구현, 추후)* | `closure` |
+| 하자보증 | *(미구현, 추후)* | `closure` |
+
+### 호출 방법
+
+```ts
+// advance-phase API에 targetPhaseCode 추가
+POST /api/projects/[id]/advance-phase
+{ currentPhaseCode: 'vrb', targetPhaseCode: 'closure' }
+
+// useProjectPhase 훅
+await onCompleteSuccess({ targetPhaseCode: 'closure' });
+```
+
+> [!CAUTION]
+> Skip-to-Closure 처리 후에는 이후 단계로 진행할 수 없습니다.  
+> 반드시 사용자에게 **경고 confirm 다이얼로그**를 통해 명시적 동의를 받은 후 실행합니다.
+
+---
+
 ## 4. Phase API (통합 API — 3개만 사용)
 
 > [!IMPORTANT]

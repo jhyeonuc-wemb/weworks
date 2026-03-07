@@ -24,7 +24,7 @@ export async function POST(
         const { id } = await params;
         const projectId = parseInt(id);
         const body = await request.json();
-        const { currentPhaseCode } = body;
+        const { currentPhaseCode, targetPhaseCode } = body;
 
         if (!currentPhaseCode) {
             return NextResponse.json(
@@ -35,9 +35,9 @@ export async function POST(
 
         // advanceProjectPhase가 모든 처리를 담당:
         // - 현재 단계 마지막 상태로 완료 처리
-        // - 다음 단계 첫 번째 상태로 초기화
+        // - targetPhaseCode 지정 시 해당 단계로 직접 이동 (분기), 없으면 순차 이동
         // - we_projects.current_phase 갱신
-        const nextPhaseCode = await advanceProjectPhase(projectId, currentPhaseCode);
+        const nextPhaseCode = await advanceProjectPhase(projectId, currentPhaseCode, targetPhaseCode);
 
         return NextResponse.json({
             success: true,

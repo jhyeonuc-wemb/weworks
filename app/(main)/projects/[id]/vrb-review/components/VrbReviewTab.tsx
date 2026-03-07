@@ -1357,10 +1357,25 @@ const VrbReviewTab = forwardRef<VrbReviewTabHandle, VrbReviewTabProps>(
       save: handleSave,
       deleteVrb: handleDelete,
       complete: async () => {
-        await handleSave();
-        await handleStatusChange('COMPLETED');
-        // ✅ page.tsx의 onStatusChange → onCompleteSuccess() 호출하여 phase_progress 업데이트
-        onStatusChange?.('COMPLETED', currentVrbId, vrbData.reviewResult);
+        // 심의결과가 '미진행'인 경우 종료 경고 다이얼로그 표시
+        if (vrbData.reviewResult === 'STOP') {
+          confirm({
+            title: 'VRB 작성완료 — 프로젝트 종료',
+            message: "심의결과가 '미진행'으로 설정되어 있습니다.\n작성완료 시 프로젝트의 모든 진행 프로세스가 즉시 종료 처리되며, 이후 단계로 진행할 수 없습니다.\n\n계속하시겠습니까?",
+            confirmText: '종료 처리',
+            onConfirm: async () => {
+              await handleSave();
+              await handleStatusChange('COMPLETED');
+              onStatusChange?.('COMPLETED', currentVrbId, vrbData.reviewResult);
+            },
+          });
+        } else {
+          // 진행 또는 미선택: 기존 동작 (다이얼로그 없이 바로 완료)
+          await handleSave();
+          await handleStatusChange('COMPLETED');
+          // ✅ page.tsx의 onStatusChange → onCompleteSuccess() 호출하여 phase_progress 업데이트
+          onStatusChange?.('COMPLETED', currentVrbId, vrbData.reviewResult);
+        }
       },
     }));
 

@@ -123,7 +123,8 @@ export async function initProjectPhases(projectId: number): Promise<string | nul
  */
 export async function advanceProjectPhase(
     projectId: number,
-    currentPhaseCode: string
+    currentPhaseCode: string,
+    targetPhaseCode?: string
 ): Promise<string | null> {
     // 1. 현재 단계의 마지막 상태로 업데이트 (완료 처리)
     const finalStatus = await getFinalStatus(currentPhaseCode);
@@ -142,18 +143,34 @@ export async function advanceProjectPhase(
 
     const currentOrder = currentPhaseRes.rows[0].display_order;
 
-    // 3. 다음 활성 단계 조회 + 첫 번째 상태 코드
-    const nextPhaseRes = await query(
-        `SELECT pp.code, pp.name,
-                (SELECT pps.code FROM project_phase_statuses pps
-                 WHERE pps.phase_id = pp.id
-                 ORDER BY pps.display_order ASC LIMIT 1) AS initial_status
-         FROM project_phases pp
-         WHERE pp.display_order > $1 AND pp.is_active = true
-         ORDER BY pp.display_order ASC
-         LIMIT 1`,
-        [currentOrder]
-    );
+    // 3. 다음 단계 조회 (targetPhaseCode 지정 시 직접 이동, 없으면 순차 이동)
+    let nextPhaseRes;
+    if (targetPhaseCode) {
+        // 분기 이동: 지정된 단계로 직접 이동
+        nextPhaseRes = await query(
+            `SELECT pp.code, pp.name,
+                    (SELECT pps.code FROM project_phase_statuses pps
+                     WHERE pps.phase_id = pp.id
+                     ORDER BY pps.display_order ASC LIMIT 1) AS initial_status
+             FROM project_phases pp
+             WHERE pp.code = $1 AND pp.is_active = true
+             LIMIT 1`,
+            [targetPhaseCode]
+        );
+    } else {
+        // 순차 이동: 다음 활성 단계 조회
+        nextPhaseRes = await query(
+            `SELECT pp.code, pp.name,
+                    (SELECT pps.code FROM project_phase_statuses pps
+                     WHERE pps.phase_id = pp.id
+                     ORDER BY pps.display_order ASC LIMIT 1) AS initial_status
+             FROM project_phases pp
+             WHERE pp.display_order > $1 AND pp.is_active = true
+             ORDER BY pp.display_order ASC
+             LIMIT 1`,
+            [currentOrder]
+        );
+    }
 
     if (nextPhaseRes.rows.length === 0) {
         // 마지막 단계 - 프로젝트 최종 완료

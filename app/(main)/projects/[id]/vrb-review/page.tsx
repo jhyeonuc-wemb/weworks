@@ -196,7 +196,9 @@ export default function VrbReviewPage({
               setVrbReviewResult(reviewResult);
               // ✅ 훅의 표준 메서드 사용
               if (status === "COMPLETED") {
-                await onCompleteSuccess();
+                // 심의결과가 '미진행'이면 종료 단계로 직접 이동 (분기)
+                const isMijinhaeng = reviewResult === 'STOP';
+                await onCompleteSuccess(isMijinhaeng ? { targetPhaseCode: 'closure' } : undefined);
               } else {
                 await loadPhaseStatus();
               }
