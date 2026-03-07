@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, use, useEffect, useCallback, useMemo } from "react";
+import { useProject } from "@/hooks/queries/useProject";
+import { useCurrentUser } from "@/hooks/queries/useCurrentUser";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -66,8 +68,6 @@ export default function ProfitabilityPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("summary");
   const [currency] = useState<Currency>("KRW");
   // 버전 관리 상태
@@ -85,7 +85,6 @@ export default function ProfitabilityPage({
   const [projectUnitPrices, setProjectUnitPrices] = useState<ProjectUnitPrice[]>([]);
   const [header, setHeader] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [versionCommentModal, setVersionCommentModal] = useState<{ open: boolean; comment: string }>({ open: false, comment: '' });
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
@@ -119,42 +118,25 @@ export default function ProfitabilityPage({
     otherCost: 0,
   });
 
-  // 프로젝트 정보 로드
-  useEffect(() => {
-    const fetchProject = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/projects/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProject({
-            id: data.project.id,
-            name: data.project.name,
-            projectCode: data.project.projectCode,
-            customerName: data.project.customerName || "미지정",
-            contractStartDate: data.project.contractStartDate,
-            contractEndDate: data.project.contractEndDate,
-            currency: (data.project.currency || "KRW") as any,
-            managerName: data.project.managerName || "미지정",
-            managerRank: data.project.manager_rank_name || "",
-          });
-        }
+  // ─── SWR 기준 데이터 ─────────────────────────────────────────────────────
+  const { project: rawProject, isLoading: projectLoading } = useProject(id);
+  const { currentUser } = useCurrentUser();
 
-        // 내 정보 로드
-        const meRes = await fetch("/api/auth/me");
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          setCurrentUser(meData.user);
-        }
-      } catch (error) {
-        console.error("Error fetching project:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProject();
-  }, [id]);
+  // useProject 데이터를 로컬 Project 타입으로 변환
+  const project: Project | null = rawProject ? {
+    id: rawProject.id,
+    name: rawProject.name,
+    projectCode: rawProject.projectCode,
+    customerName: rawProject.customerName || "미지정",
+    contractStartDate: rawProject.contractStartDate ?? null,
+    contractEndDate: rawProject.contractEndDate ?? null,
+    currency: (rawProject.currency || "KRW") as any,
+    managerName: rawProject.managerName || "미지정",
+    managerRank: rawProject.manager_rank_name || "",
+  } : null;
+
+  const loading = projectLoading;
+
 
   // 기준단가표 로드
   const loadUnitPrices = useCallback(async () => {

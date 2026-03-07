@@ -1,6 +1,9 @@
 "use client";
 
 import { use, useState, useEffect, useCallback, useMemo } from "react";
+import { useUsers } from "@/hooks/queries/useUsers";
+import { useClients } from "@/hooks/queries/useClients";
+import { useProject } from "@/hooks/queries/useProject";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, FileSignature, Trash2, ChevronRight, CheckCircle2, Paperclip } from "lucide-react";
 import {
@@ -94,12 +97,19 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const { status: phaseStatus, isFinalStatus, initialStatus, onSaveSuccess, onCompleteSuccess, loadPhaseStatus } = useProjectPhase(projectId, "contract");
     const isReadOnly = isFinalStatus;
 
-    // 프로젝트 기본 정보 (헤더 표시용)
-    const [project, setProject] = useState<{
-        name: string;
-        projectCode?: string;
-        customerName?: string;
-    } | null>(null);
+    // ─── SWR 기준 데이터 ─────────────────────────────────────────────────────
+    const { users: rawUsers } = useUsers();
+    const { clients: rawClients } = useClients();
+    const { project: rawProject } = useProject(projectId);
+
+    // 로컬 타입으로 캐스팅
+    const users = rawUsers as unknown as UserOption[];
+    const clients = rawClients as unknown as ClientOption[];
+    const project = rawProject ? {
+        name: rawProject.name,
+        projectCode: rawProject.projectCode,
+        customerName: rawProject.customerName || undefined,
+    } : null;
 
     // 계약 목록
     const [contractList, setContractList] = useState<ContractSummary[]>([]);
@@ -125,10 +135,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const [contractStartDate, setContractStartDate] = useState("");
     const [contractEndDate, setContractEndDate] = useState("");
 
-    // 검색 목록 옵션
-    const [users, setUsers] = useState<UserOption[]>([]);
-    const [clients, setClients] = useState<ClientOption[]>([]);
-
     // 고객사/발주처/영업대표/PM 선택 상태
     const [customerSearch, setCustomerSearch] = useState("");
     const [ordererSearch, setOrdererSearch] = useState("");
@@ -143,15 +149,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
     const [selectedSalesRepId, setSelectedSalesRepId] = useState<number | null>(null);
 
-    // 참조 데이터 로드 (users, clients)
-    useEffect(() => {
-        Promise.all([fetch("/api/users"), fetch("/api/clients")])
-            .then(async ([ur, cr]) => {
-                if (ur.ok) { const d = await ur.json(); setUsers(d.users || []); }
-                if (cr.ok) { const d = await cr.json(); setClients(d.clients || []); }
-            });
-    }, []);
-
     // 필터링
     const filteredCustomers = clients.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
     const filteredOrderers = clients.filter(c => c.name.toLowerCase().includes(ordererSearch.toLowerCase()));
@@ -162,22 +159,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         return hasPmRole && u.name.toLowerCase().includes(pmSearch.toLowerCase());
     });
     const filteredSales = users.filter(u => u.role_name?.toLowerCase() === "sales" && u.name.toLowerCase().includes(salesSearch.toLowerCase()));
-
-    // 프로젝트 정보 로드
-    useEffect(() => {
-        fetch(`/api/projects/${projectId}`)
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                if (data?.project) {
-                    setProject({
-                        name: data.project.name,
-                        projectCode: data.project.projectCode,
-                        customerName: data.project.customerName || undefined,
-                    });
-                }
-            })
-            .catch(() => { });
-    }, [projectId]);
 
     // 계약 목록 조회
     const fetchContractList = useCallback(async () => {
