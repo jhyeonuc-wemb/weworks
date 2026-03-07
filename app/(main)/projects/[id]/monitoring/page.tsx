@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useMemo } from "react";
 import { useUsers } from "@/hooks/queries/useUsers";
 import { useMonitoring } from "@/hooks/queries/useMonitoring";
 import { useCodes } from "@/hooks/queries/useCodes";
@@ -61,16 +61,21 @@ export default function ProjectMonitoringDetailPage({
     const statusCodes = statusCodesRaw.map((c) => ({ value: c.name, label: c.name }));
     const stateCodes = stateCodesRaw.map((c) => ({ value: c.name, label: c.name }));
 
-    // 현재 프로젝트 찾기 (SWR 캐시에서)
-    const foundProject = monitoring?.data?.find((p: any) => p.id.toString() === id) ?? null;
+    // 현재 프로젝트 찾기 (SWR 캐시에서) - useMemo로 참조 안정화
+    const foundProject = useMemo(
+        () => monitoring?.data?.find((p: any) => p.id.toString() === id) ?? null,
+        [monitoring?.data, id]
+    );
     const [project, setProject] = useState<ProjectMonitoring | null>(null);
 
-    // SWR 데이터 도착 시 project state 동기화
+    // SWR 데이터 도착 시 project state 동기화 (foundProject.id 기준으로 1회만 실행)
     useEffect(() => {
         if (foundProject && !project) {
             setProject(foundProject);
         }
-    }, [foundProject]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [foundProject?.id]);
+
 
     // 수지분석서 관련 상태
     const [profitabilityVersions, setProfitabilityVersions] = useState<any[]>([]);
