@@ -122,18 +122,23 @@ export default function ProfitabilityPage({
   const { project: rawProject, isLoading: projectLoading } = useProject(id);
   const { currentUser } = useCurrentUser();
 
-  // useProject 데이터를 로컬 Project 타입으로 변환
-  const project: Project | null = rawProject ? {
-    id: rawProject.id,
-    name: rawProject.name,
-    projectCode: rawProject.projectCode,
-    customerName: rawProject.customerName || "미지정",
-    contractStartDate: rawProject.contractStartDate ?? null,
-    contractEndDate: rawProject.contractEndDate ?? null,
-    currency: (rawProject.currency || "KRW") as any,
-    managerName: rawProject.managerName || "미지정",
-    managerRank: rawProject.manager_rank_name || "",
-  } : null;
+  // useProject 데이터를 로컬 Project 타입으로 변환 (useMemo로 참조 안정화)
+  // ⚠️ useMemo 없이 inline 객체로 두면 매 렌더마다 새 참조 → loadUnitPrices useCallback
+  //    재생성 → useEffect 무한 실행 → unit-prices API 반복 호출
+  const project: Project | null = useMemo(() => {
+    if (!rawProject) return null;
+    return {
+      id: rawProject.id,
+      name: rawProject.name,
+      projectCode: rawProject.projectCode,
+      customerName: rawProject.customerName || "미지정",
+      contractStartDate: rawProject.contractStartDate ?? null,
+      contractEndDate: rawProject.contractEndDate ?? null,
+      currency: (rawProject.currency || "KRW") as any,
+      managerName: rawProject.managerName || "미지정",
+      managerRank: rawProject.manager_rank_name || "",
+    };
+  }, [rawProject]);
 
   const loading = projectLoading;
 
